@@ -1,0 +1,40 @@
+name: Supabase Database Keep-Alive (Uyku Önleyici)
+
+on:
+  schedule:
+    # Her 2 günde bir gece 04:00 UTC'de otomatik çalışır (7 günlük uyku sınırını kesinlikle önler)
+    - cron: '0 4 */2 * *'
+  workflow_dispatch:
+    # İstenildiğinde GitHub Actions sekmesinden tek tuşla anında tetiklenebilir
+
+jobs:
+  ping-supabase:
+    name: Ping Supabase Database
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Lightweight REST Ping to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://jsqzzikbwilltyfopfyk.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "ℹ️ Bilgi: SUPABASE_ANON_KEY repo secret olarak tanımlanmamış."
+            echo "GitHub Actions ping'inin çalışması için: Repo Settings -> Secrets and variables -> Actions kısmına SUPABASE_ANON_KEY ekleyin."
+            exit 0
+          fi
+
+          echo "💓 Supabase veritabanına hafif canlılık (heartbeat) pingi gönderiliyor..."
+          HTTP_STATUS=$(curl -s -o response.json -w "%{http_code}" \
+            -X GET "${SUPABASE_URL}/rest/v1/partnerships?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+
+          echo "HTTP Durum Kodu: ${HTTP_STATUS}"
+          cat response.json
+          echo ""
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Başarılı: Supabase veritabanı aktif tutuldu, 7 günlük inaktivite sayacı sıfırlandı!"
+          else
+            echo "⚠️ Uyarı: İstek beklenmedik bir durum kodu döndürdü (${HTTP_STATUS}), ancak ağ trafiği veritabanını tetikledi."
+          fi
