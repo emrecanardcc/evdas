@@ -68,6 +68,7 @@ class Expense {
   final DateTime createdAt;
   final bool isPendingSync; // Çevrimdışı eklenmiş ve henüz buluta eşitlenmemiş
   final bool isDeletionPending; // Ortak kararla silinme oylaması sürecinde
+  final Map<String, double>? splitMemberWeights; // Özel bölüşüm payları/ağırlıkları
 
   Expense({
     required this.id,
@@ -83,6 +84,7 @@ class Expense {
     DateTime? createdAt,
     this.isPendingSync = false,
     this.isDeletionPending = false,
+    this.splitMemberWeights,
   })  : expenseDate = expenseDate ?? DateTime.now(),
         createdAt = createdAt ?? DateTime.now();
 
@@ -105,6 +107,11 @@ class Expense {
           : DateTime.now(),
       isPendingSync: json['is_pending_sync'] as bool? ?? false,
       isDeletionPending: json['is_deletion_pending'] as bool? ?? false,
+      splitMemberWeights: json['split_member_weights'] != null
+          ? (json['split_member_weights'] as Map<String, dynamic>).map(
+              (k, v) => MapEntry(k, (v as num).toDouble()),
+            )
+          : null,
     );
   }
 
@@ -124,6 +131,7 @@ class Expense {
       'created_at': createdAt.toIso8601String(),
       'is_pending_sync': isPendingSync,
       'is_deletion_pending': isDeletionPending,
+      'split_member_weights': splitMemberWeights,
     };
   }
 
@@ -161,6 +169,7 @@ class Expense {
     DateTime? createdAt,
     bool? isPendingSync,
     bool? isDeletionPending,
+    Map<String, double>? splitMemberWeights,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -176,6 +185,7 @@ class Expense {
       createdAt: createdAt ?? this.createdAt,
       isPendingSync: isPendingSync ?? this.isPendingSync,
       isDeletionPending: isDeletionPending ?? this.isDeletionPending,
+      splitMemberWeights: splitMemberWeights ?? this.splitMemberWeights,
     );
   }
 }

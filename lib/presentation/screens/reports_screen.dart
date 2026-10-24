@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/export_service.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/models/expense.dart';
 import '../../domain/reporting_engine.dart';
 import '../providers/app_providers.dart';
+import '../providers/customization_provider.dart';
+import '../widgets/animated_rolling_number.dart';
 
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
@@ -15,6 +18,7 @@ class ReportsScreen extends ConsumerWidget {
     final house = ref.watch(householdProvider);
     final report = ref.watch(partnershipReportProvider);
     final currentRange = ref.watch(reportTimeRangeProvider);
+    final isPrivacy = ref.watch(privacyModeProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -22,27 +26,51 @@ class ReportsScreen extends ConsumerWidget {
             style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_rounded),
-            tooltip: 'Raporu Paylaş',
-            onPressed: () {
+            icon: const Icon(Icons.file_download_outlined),
+            tooltip: 'Harcamaları CSV Dışa Aktar',
+            onPressed: () async {
+              final expenses = ref.read(expensesProvider);
+              if (expenses.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Dışa aktarılacak harcama bulunamadı.')),
+                );
+                return;
+              }
+              await ExportService.exportExpensesToCsv(
+                expenses: expenses,
+                members: house?.members ?? [],
+                householdName: house?.name ?? 'Evdaş Ortaklığı',
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.description_outlined),
+            tooltip: 'Detaylı Finansal Raporu Paylaş',
+            onPressed: () async {
               if (house != null) {
-                final reportText = report.toSummaryString(house.name);
-                SharePlus.instance.share(
-                  ShareParams(
-                    text: reportText,
-                    subject: '${house.name} Gider Raporu',
-                  ),
+                await ExportService.exportFormattedReport(
+                  report: report,
+                  householdName: house.name,
                 );
               }
             },
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await ref.read(expenseRepositoryProvider).syncWithCloud();
+          ref.read(householdProvider.notifier).refresh();
+          ref.read(expensesProvider.notifier).refresh();
+          ref.read(paymentRequestsProvider.notifier).refresh();
+          ref.read(approvalRequestsProvider.notifier).refresh();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             // 1. ZAMAN ARALIĞI SEÇİCİ
             Row(
               children: ReportTimeRange.values.map((range) {
@@ -73,7 +101,7 @@ class ReportsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
 
             // 2. NET GİDER ÖZET KARTLARI
-            _buildSummaryCard(context, report),
+            _buildSummaryCard(context, report, isPrivacy),
 
             const SizedBox(height: 20),
 
@@ -112,7 +140,7 @@ class ReportsScreen extends ConsumerWidget {
                 ),
               )
             else
-              ...report.categorySpends.map((cat) => _buildCategoryCard(context, cat)),
+              ...report.categorySpends.map((cat) => _buildCategoryCard(context, cat, isPrivacy)),
 
             const SizedBox(height: 20),
 
@@ -141,10 +169,22 @@ class ReportsScreen extends ConsumerWidget {
                                 style: const TextStyle(
                                     fontSize: 14, fontWeight: FontWeight.w700),
                               ),
-                              Text(
-                                '${CurrencyFormatter.formatClean(mem.amount)} (%${mem.percentage.toStringAsFixed(1)})',
-                                style: const TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.w700),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  AnimatedRollingNumber(
+                                    value: mem.amount,
+                                    isMasked: isPrivacy,
+                                    style: const TextStyle(
+                                        fontSize: 14, fontWeight: FontWeight.w700),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '(%${mem.percentage.toStringAsFixed(1)})',
+                                    style: const TextStyle(
+                                        fontSize: 14, fontWeight: FontWeight.w700),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -259,7 +299,7 @@ class ReportsScreen extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              CurrencyFormatter.formatClean(debt.amount),
+                              CurrencyFormatter.formatClean(debt.amount, checkPrivacy: true),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
@@ -302,10 +342,11 @@ class ReportsScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildSummaryCard(BuildContext context, PartnershipReport report) {
+  Widget _buildSummaryCard(BuildContext context, PartnershipReport report, bool isPrivacy) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -330,8 +371,9 @@ class ReportsScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    CurrencyFormatter.formatClean(report.grandTotal),
+                  AnimatedRollingNumber(
+                    value: report.grandTotal,
+                    isMasked: isPrivacy,
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
@@ -372,8 +414,9 @@ class ReportsScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      CurrencyFormatter.formatClean(report.totalJointExpenses),
+                    AnimatedRollingNumber(
+                      value: report.totalJointExpenses,
+                      isMasked: isPrivacy,
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w700),
                     ),
@@ -392,8 +435,9 @@ class ReportsScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      CurrencyFormatter.formatClean(report.perMemberAverage),
+                    AnimatedRollingNumber(
+                      value: report.perMemberAverage,
+                      isMasked: isPrivacy,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -410,7 +454,7 @@ class ReportsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCategoryCard(BuildContext context, CategorySpend cat) {
+  Widget _buildCategoryCard(BuildContext context, CategorySpend cat, bool isPrivacy) {
     final catColor = _getCategoryColor(cat.category);
     final catIcon = _getCategoryIcon(cat.category);
 
@@ -455,7 +499,7 @@ class ReportsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      CurrencyFormatter.formatClean(cat.amount),
+                      CurrencyFormatter.formatClean(cat.amount, checkPrivacy: true),
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w800),
                     ),

@@ -47,6 +47,7 @@ class DebtEngine {
 
     final memberMap = {for (final m in members) m.id: m};
     final jointSpent = <String, double>{for (final m in members) m.id: 0.0};
+    final jointOwed = <String, double>{for (final m in members) m.id: 0.0};
     final netBalance = <String, double>{for (final m in members) m.id: 0.0};
     final directPersonalDebts = <Expense>[];
 
@@ -58,6 +59,38 @@ class DebtEngine {
         totalJoint += exp.amount;
         jointSpent[exp.paidByMemberId] =
             (jointSpent[exp.paidByMemberId] ?? 0.0) + exp.amount;
+
+        // Eşit olmayan / ağırlıklı bölüşüm veya muafiyet kontrolü
+        final weights = exp.splitMemberWeights;
+        if (weights != null && weights.isNotEmpty) {
+          double totalWeight = 0.0;
+          weights.forEach((memberId, w) {
+            if (w > 0 && jointOwed.containsKey(memberId)) {
+              totalWeight += w;
+            }
+          });
+
+          if (totalWeight > 0) {
+            weights.forEach((memberId, weight) {
+              if (weight > 0 && jointOwed.containsKey(memberId)) {
+                final share = exp.amount * (weight / totalWeight);
+                jointOwed[memberId] = (jointOwed[memberId] ?? 0.0) + share;
+              }
+            });
+          } else {
+            final equalShare =
+                members.isNotEmpty ? (exp.amount / members.length) : 0.0;
+            for (final m in members) {
+              jointOwed[m.id] = (jointOwed[m.id] ?? 0.0) + equalShare;
+            }
+          }
+        } else {
+          final equalShare =
+              members.isNotEmpty ? (exp.amount / members.length) : 0.0;
+          for (final m in members) {
+            jointOwed[m.id] = (jointOwed[m.id] ?? 0.0) + equalShare;
+          }
+        }
       } else if (exp.type == ExpenseType.personalDebt) {
         directPersonalDebts.add(exp);
         // Şahsi borç: paidByMemberId alacaklı (+), debtorMemberId borçlu (-)
@@ -85,7 +118,8 @@ class DebtEngine {
     // Ortak harcama dengesini net bakiyeye ekle
     for (final member in members) {
       final spent = jointSpent[member.id] ?? 0.0;
-      final jointDiff = spent - perPersonShare;
+      final owed = jointOwed[member.id] ?? 0.0;
+      final jointDiff = spent - owed;
       netBalance[member.id] = (netBalance[member.id] ?? 0.0) + jointDiff;
     }
 

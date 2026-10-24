@@ -1,12 +1,13 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'core/services/heartbeat_service.dart';
+import 'core/services/haptic_service.dart';
+import 'core/services/sound_service.dart';
 import 'core/services/supabase_service.dart';
 import 'core/theme/app_theme.dart';
 import 'data/repositories/expense_repository.dart';
 import 'presentation/providers/app_providers.dart';
+import 'presentation/providers/customization_provider.dart';
 import 'presentation/screens/auth_screen.dart';
 import 'presentation/screens/home_screen.dart';
 
@@ -19,11 +20,12 @@ void main() async {
   // Canlı Supabase altyapısını başlat
   await SupabaseService.initialize();
 
-  // Supabase uyku modu önleyici heartbeat pingi (UI'yi bloklamaz)
-  unawaited(HeartbeatService.pingIfNeeded());
-
   // Yerel veritabanı / SharedPreferences başlat
   final expenseRepo = await ExpenseRepository.init();
+
+  // Haptik ve Ses Servislerini başlat
+  await HapticService.init(expenseRepo.prefs);
+  await SoundService.init(expenseRepo.prefs);
 
   runApp(
     ProviderScope(
@@ -35,22 +37,30 @@ void main() async {
   );
 }
 
-class EvdasApp extends StatelessWidget {
+class EvdasApp extends ConsumerWidget {
   const EvdasApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Oturum açıksa doğrudan ana ekrana, değilse Auth ekranına yönlendir
     final initialScreen = SupabaseService.isAuthenticated
         ? const HomeScreen()
         : const AuthScreen();
 
+    final themeType = ref.watch(themeModeProvider);
+    final accentColor = ref.watch(accentColorProvider);
+    final font = ref.watch(fontFamilyProvider);
+
+    final dynamicTheme = AppTheme.buildTheme(
+      type: themeType,
+      accentColor: accentColor.color,
+      font: font,
+    );
+
     return MaterialApp(
       title: 'Evdaş',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      theme: dynamicTheme,
       home: initialScreen,
     );
   }

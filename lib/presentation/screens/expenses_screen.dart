@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/export_service.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../data/models/approval_request.dart';
 import '../../data/models/expense.dart';
 import '../../data/models/household_member.dart';
 import '../providers/app_providers.dart';
+import '../providers/customization_provider.dart';
 import '../widgets/approval_center_modal.dart';
 
 class ExpensesScreen extends ConsumerStatefulWidget {
@@ -27,6 +29,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     final house = ref.watch(householdProvider);
     final currentMember = ref.watch(currentMemberProvider);
     final pendingCount = ref.watch(pendingApprovalsCountProvider);
+    // Watch privacyMode to trigger rebuild on toggle
+    ref.watch(privacyModeProvider);
 
     // ⚡ TEK GEÇİŞTE (O(N)) FİLTRELEME VE SAYAÇ HESAPLAMA
     int jointCount = 0;
@@ -64,6 +68,23 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
           IconButton(
+            icon: const Icon(Icons.file_download_outlined),
+            tooltip: 'Harcamaları CSV Dışa Aktar',
+            onPressed: () async {
+              if (expenses.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Dışa aktarılacak harcama bulunamadı.')),
+                );
+                return;
+              }
+              await ExportService.exportExpensesToCsv(
+                expenses: filtered.isNotEmpty ? filtered : expenses,
+                members: house?.members ?? [],
+                householdName: house?.name ?? 'Evdaş Ortaklığı',
+              );
+            },
+          ),
+          IconButton(
             icon: Badge(
               isLabelVisible: pendingCount > 0,
               label: Text('$pendingCount'),
@@ -81,69 +102,87 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Filtre Butonları
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              children: [
-                _buildFilterChip('all', 'Tümü (${expenses.length})'),
-                const SizedBox(width: 8),
-                _buildFilterChip('joint', 'Ortak ($jointCount)'),
-                const SizedBox(width: 8),
-                _buildFilterChip('personal', 'Şahsi ($personalCount)'),
-                const SizedBox(width: 8),
-                _buildFilterChip('settlement', 'Ödeşme ($settlementCount)'),
-              ],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await ref.read(expenseRepositoryProvider).syncWithCloud();
+          ref.read(householdProvider.notifier).refresh();
+          ref.read(expensesProvider.notifier).refresh();
+          ref.read(paymentRequestsProvider.notifier).refresh();
+          ref.read(approvalRequestsProvider.notifier).refresh();
+        },
+        child: Column(
+          children: [
+            // Filtre Butonları
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                children: [
+                  _buildFilterChip('all', 'Tümü (${expenses.length})'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('joint', 'Ortak ($jointCount)'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('personal', 'Şahsi ($personalCount)'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('settlement', 'Ödeşme ($settlementCount)'),
+                ],
+              ),
             ),
-          ),
 
-          Expanded(
-            child: filtered.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.receipt_long_outlined,
-                          size: 64,
-                          color: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.color
-                              ?.withValues(alpha: 0.4),
+            Expanded(
+              child: filtered.isEmpty
+                  ? LayoutBuilder(
+                      builder: (context, constraints) => SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.receipt_long_outlined,
+                                  size: 64,
+                                  color: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.color
+                                      ?.withValues(alpha: 0.4),
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Kayıtlı harcama bulunamadı',
+                                  style: TextStyle(
+                                      fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Kayıtlı harcama bulunamadı',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ],
+                      ),
+                    )
+                  : ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final item = filtered[index];
+                        final paidBy =
+                            memberNameMap[item.paidByMemberId] ?? defaultMemberName;
+                        final debtor = item.debtorMemberId != null
+                            ? memberNameMap[item.debtorMemberId]
+                            : null;
+
+                        return RepaintBoundary(
+                          child: _buildExpenseCard(
+                              item, paidBy, debtor, currentMember, house?.members.length ?? 1),
+                        );
+                      },
                     ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final item = filtered[index];
-                      final paidBy =
-                          memberNameMap[item.paidByMemberId] ?? defaultMemberName;
-                      final debtor = item.debtorMemberId != null
-                          ? memberNameMap[item.debtorMemberId]
-                          : null;
-
-                      return RepaintBoundary(
-                        child: _buildExpenseCard(
-                            item, paidBy, debtor, currentMember, house?.members.length ?? 1),
-                      );
-                    },
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -221,7 +260,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                             fontSize: 15, fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 3),
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -243,7 +285,25 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          if (item.splitMemberWeights != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.purple.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                    color: Colors.purple.withValues(alpha: 0.3)),
+                              ),
+                              child: const Text(
+                                '⚖️ Özel Bölüşüm',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.purple,
+                                ),
+                              ),
+                            ),
                           Text(
                             '• ${DateFormatter.formatSmart(item.expenseDate)}',
                             style: TextStyle(
@@ -262,7 +322,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      CurrencyFormatter.formatClean(item.amount),
+                      CurrencyFormatter.formatClean(item.amount, checkPrivacy: true),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,

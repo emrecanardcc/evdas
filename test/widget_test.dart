@@ -129,5 +129,18 @@ void main() {
     expect(find.text('Şahsi Borç'), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
     expect(find.text('9'), findsOneWidget);
+
+    // Çift fonksiyonlu kaydet butonları ve akıllı etiketler
+    expect(find.text('Tutar Girin'), findsOneWidget);
+    expect(find.text('Kaydet & Devam Et'), findsOneWidget);
+    expect(find.text('Market'), findsWidgets);
+    expect(find.text('Fatura'), findsWidgets);
+    expect(find.text('Ekmek'), findsOneWidget);
+
+    // Numpad ile tutar girme testi: 5 tuşuna bas
+    await tester.tap(find.text('5'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('⚡ Kaydet & Kapat'), findsOneWidget);
   });
 }

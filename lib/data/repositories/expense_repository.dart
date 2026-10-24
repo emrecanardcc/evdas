@@ -21,6 +21,7 @@ class ExpenseRepository {
   static const String _keyCurrentUserId = 'evdas_current_user_id_v2';
 
   final SharedPreferences _prefs;
+  SharedPreferences get prefs => _prefs;
   final _uuid = const Uuid();
 
   // ⚡ L1 IN-MEMORY CACHE (Sıfır Gecikme & Sıfır Gereksiz JSON Çözümleme)
@@ -194,7 +195,7 @@ class ExpenseRepository {
 
     for (final exp in queue) {
       try {
-        await client.from('expenses').upsert({
+        final payload = <String, dynamic>{
           'id': exp.id,
           'partnership_id': exp.householdId,
           'title': exp.title,
@@ -209,7 +210,21 @@ class ExpenseRepository {
           'debtor_member_id': exp.debtorMemberId,
           'expense_date': exp.expenseDate.toIso8601String(),
           'notes': exp.notes,
-        });
+        };
+        if (exp.splitMemberWeights != null) {
+          payload['split_member_weights'] = exp.splitMemberWeights;
+        }
+
+        try {
+          await client.from('expenses').upsert(payload);
+        } catch (_) {
+          if (payload.containsKey('split_member_weights')) {
+            payload.remove('split_member_weights');
+            await client.from('expenses').upsert(payload);
+          } else {
+            rethrow;
+          }
+        }
 
         syncedCount++;
 
@@ -612,7 +627,7 @@ class ExpenseRepository {
     if (isOnline) {
       unawaited(() async {
         try {
-          await client.from('expenses').insert({
+          final payload = <String, dynamic>{
             'id': finalExpense.id,
             'partnership_id': finalExpense.householdId,
             'title': finalExpense.title,
@@ -627,7 +642,21 @@ class ExpenseRepository {
             'debtor_member_id': finalExpense.debtorMemberId,
             'expense_date': finalExpense.expenseDate.toIso8601String(),
             'notes': finalExpense.notes,
-          });
+          };
+          if (finalExpense.splitMemberWeights != null) {
+            payload['split_member_weights'] = finalExpense.splitMemberWeights;
+          }
+
+          try {
+            await client.from('expenses').insert(payload);
+          } catch (_) {
+            if (payload.containsKey('split_member_weights')) {
+              payload.remove('split_member_weights');
+              await client.from('expenses').insert(payload);
+            } else {
+              rethrow;
+            }
+          }
         } catch (_) {
           // Ağ hatası oluştuysa çevrimdışı kuyruğa al ve yerel bayrağı güncelle
           await _addToOfflineQueue(finalExpense);

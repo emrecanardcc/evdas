@@ -1,17 +1,24 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/haptic_service.dart';
+import '../../core/services/sound_service.dart';
 import '../../core/services/supabase_service.dart';
+import '../../core/theme/customization_models.dart';
+import '../../core/utils/calculator_engine.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/models/expense.dart';
 import '../../data/models/household_member.dart';
 import '../../data/models/partnership.dart';
 import '../providers/app_providers.dart';
+import '../providers/customization_provider.dart';
 import '../widgets/approval_center_modal.dart';
 import '../widgets/category_selector.dart';
 import '../widgets/custom_numpad.dart';
+import '../widgets/instant_saved_dialog.dart';
 
 class QuickExpenseScreen extends ConsumerStatefulWidget {
   const QuickExpenseScreen({super.key});
@@ -30,6 +37,22 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
   String? _debtorMemberId;
   bool _iAmCreditor = true;
 
+  // Eşit Olmayan / Ağırlıklı Bölüşüm ve Muafiyet Durumu
+  bool _isCustomSplit = false;
+  bool _isCustomSplitExpanded = false;
+  final Map<String, double> _splitWeights = {};
+  final Set<String> _excludedMemberIds = {};
+
+  final List<({String title, ExpenseCategory category, IconData icon})>
+      _smartTags = const [
+    (title: 'Market', category: ExpenseCategory.market, icon: Icons.shopping_cart_outlined),
+    (title: 'Fatura', category: ExpenseCategory.fatura, icon: Icons.bolt_outlined),
+    (title: 'Ekmek', category: ExpenseCategory.mutfak, icon: Icons.bakery_dining_outlined),
+    (title: 'Kahve', category: ExpenseCategory.mutfak, icon: Icons.coffee_outlined),
+    (title: 'Ulaşım', category: ExpenseCategory.ulasim, icon: Icons.directions_car_outlined),
+    (title: 'Yemek', category: ExpenseCategory.mutfak, icon: Icons.restaurant_outlined),
+  ];
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -38,19 +61,24 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
 
   void _onDigit(String digit) {
     setState(() {
+      final lastToken = _amountStr.split(' ').last;
       if (digit == '.') {
-        if (!_amountStr.contains('.')) {
-          _amountStr += '.';
+        if (!lastToken.contains('.')) {
+          if (lastToken.isEmpty) {
+            _amountStr += '0.';
+          } else {
+            _amountStr += '.';
+          }
         }
       } else {
         if (_amountStr == '0') {
           _amountStr = digit;
         } else {
-          if (_amountStr.contains('.')) {
-            final parts = _amountStr.split('.');
+          if (lastToken.contains('.')) {
+            final parts = lastToken.split('.');
             if (parts.length > 1 && parts[1].length >= 2) return;
           }
-          if (_amountStr.length < 9) {
+          if (_amountStr.length < 24) {
             _amountStr += digit;
           }
         }
@@ -58,12 +86,36 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
     });
   }
 
+  void _onOperator(String op) {
+    setState(() {
+      final trimmed = _amountStr.trim();
+      if (trimmed.endsWith('+') ||
+          trimmed.endsWith('-') ||
+          trimmed.endsWith('×') ||
+          trimmed.endsWith('÷') ||
+          trimmed.endsWith('%')) {
+        _amountStr = '${trimmed.substring(0, trimmed.length - 1)} $op ';
+      } else {
+        _amountStr = '$trimmed $op ';
+      }
+    });
+  }
+
+  void _onEquals() {
+    final res = CalculatorEngine.evaluate(_amountStr);
+    setState(() {
+      _amountStr = res % 1 == 0 ? res.toInt().toString() : res.toStringAsFixed(2);
+    });
+  }
+
   void _onDelete() {
     setState(() {
-      if (_amountStr.length <= 1) {
+      final trimmed = _amountStr.trim();
+      if (trimmed.length <= 1) {
         _amountStr = '0';
       } else {
-        _amountStr = _amountStr.substring(0, _amountStr.length - 1);
+        _amountStr = trimmed.substring(0, trimmed.length - 1).trim();
+        if (_amountStr.isEmpty) _amountStr = '0';
       }
     });
   }
@@ -74,9 +126,39 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
     });
   }
 
-  Future<void> _saveExpense() async {
-    final amount = double.tryParse(_amountStr);
-    if (amount == null || amount <= 0) {
+  void _addQuickAmount(double delta) {
+    HapticService.selection();
+    SoundService.playNumpadTick();
+    final current = CalculatorEngine.evaluate(_amountStr);
+    final next = current + delta;
+    setState(() {
+      _amountStr = next % 1 == 0 ? next.toInt().toString() : next.toStringAsFixed(2);
+    });
+  }
+
+  void _roundToNearest10() {
+    HapticService.selection();
+    SoundService.playNumpadTick();
+    final current = CalculatorEngine.evaluate(_amountStr);
+    final rounded = (current / 10).round() * 10;
+    setState(() {
+      _amountStr = rounded.toString();
+    });
+  }
+
+  void _applySmartTag(
+      ({String title, ExpenseCategory category, IconData icon}) tag) {
+    HapticService.selection();
+    SoundService.playNumpadTick();
+    setState(() {
+      _titleController.text = tag.title;
+      _selectedCategory = tag.category;
+    });
+  }
+
+  Future<void> _saveExpense({bool shouldClose = false}) async {
+    final amount = CalculatorEngine.evaluate(_amountStr);
+    if (amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Lütfen geçerli bir tutar girin.'),
@@ -127,6 +209,17 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
       }
     }
 
+    // Özel bölüşüm ağırlıklarını hazırla
+    Map<String, double>? finalWeights;
+    if (_selectedType == ExpenseType.joint && _isCustomSplit) {
+      finalWeights = {};
+      for (final m in house.members) {
+        if (!_excludedMemberIds.contains(m.id)) {
+          finalWeights[m.id] = _splitWeights[m.id] ?? 1.0;
+        }
+      }
+    }
+
     final newExpense = Expense(
       id: _uuid.v4(),
       householdId: house.id,
@@ -137,11 +230,13 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
       paidByMemberId: paidBy,
       debtorMemberId: debtor,
       expenseDate: DateTime.now(),
+      splitMemberWeights: finalWeights,
     );
 
     await ref.read(expensesProvider.notifier).addExpense(newExpense);
 
-    HapticFeedback.mediumImpact();
+    HapticService.success();
+    SoundService.playKaChing();
 
     if (!mounted) return;
 
@@ -154,37 +249,57 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
             .displayName
         : null;
 
-    final message = isPersonal
-        ? '🔔 ${CurrencyFormatter.formatClean(amount)} şahsi borç kaydedildi ($debtorName ➔ $paidByName)'
-        : '🔔 $paidByName ${CurrencyFormatter.formatClean(amount)} ortak ev masrafı kaydetti!';
+    if (shouldClose) {
+      // ⚡ Kasa Modu Kapatma Protokolü
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        await SystemNavigator.pop();
+      } else {
+        await InstantSavedDialog.show(
+          context,
+          amount: amount,
+          title: title,
+          paidByName: paidByName,
+          debtorName: debtorName,
+          isPersonal: isPersonal,
+        );
+      }
+    } else {
+      final message = isPersonal
+          ? '🔔 ${CurrencyFormatter.formatClean(amount)} şahsi borç kaydedildi ($debtorName ➔ $paidByName)'
+          : '🔔 $paidByName ${CurrencyFormatter.formatClean(amount)} ortak ev masrafı kaydetti!';
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+          backgroundColor:
+              isPersonal ? AppColors.personalDebt : AppColors.positive,
+          duration: const Duration(milliseconds: 2200),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        backgroundColor:
-            isPersonal ? AppColors.personalDebt : AppColors.positive,
-        duration: const Duration(milliseconds: 2200),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+      );
+    }
 
     setState(() {
       _amountStr = '0';
       _titleController.clear();
       _selectedType = ExpenseType.joint;
       _selectedCategory = ExpenseCategory.market;
+      _isCustomSplit = false;
+      _isCustomSplitExpanded = false;
+      _splitWeights.clear();
+      _excludedMemberIds.clear();
     });
   }
 
@@ -194,7 +309,10 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
     final allPartnerships = ref.watch(allPartnershipsProvider);
     final currentMember = ref.watch(currentMemberProvider);
     final pendingCount = ref.watch(pendingApprovalsCountProvider);
-    final amount = double.tryParse(_amountStr) ?? 0.0;
+    final isPrivacy = ref.watch(privacyModeProvider);
+    final numpadLayout = ref.watch(numpadLayoutProvider);
+
+    final amount = CalculatorEngine.evaluate(_amountStr);
     final otherMembers = (house?.members ?? [])
         .where((m) => m.id != currentMember?.id)
         .toList();
@@ -254,6 +372,18 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
           },
         ),
         actions: [
+          // GİZLİ BAKİYE MODU BUTONU (Tek Tıkla •••• Maskeleme)
+          IconButton(
+            icon: Icon(
+              isPrivacy ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+              color: isPrivacy ? AppColors.personalDebt : null,
+            ),
+            tooltip: isPrivacy ? 'Bakiyeleri Göster' : 'Bakiyeleri Gizle',
+            onPressed: () {
+              HapticService.selection();
+              ref.read(privacyModeProvider.notifier).toggle();
+            },
+          ),
           IconButton(
             icon: Badge(
               isLabelVisible: pendingCount > 0,
@@ -317,110 +447,472 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 physics: const BouncingScrollPhysics(),
                 child: Column(
-            children: [
-              const SizedBox(height: 8),
-
-              // 1. TÜR SEÇİCİ (Ortak Masraf vs Şahsi Borç)
-              _buildTypeSelector(otherMembers.isNotEmpty),
-
-              if (_selectedType == ExpenseType.personalDebt &&
-                  otherMembers.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                _buildPersonalDebtDirection(otherMembers),
-                const SizedBox(height: 10),
-                _buildDebtorChips(otherMembers),
-              ],
-
-              const SizedBox(height: 12),
-
-              // 2. TUTAR ALANI
-              Text(
-                '₺ ${_amountStr == '0' ? '0' : _amountStr}',
-                style: TextStyle(
-                  fontSize: 42,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -1,
-                  color: _selectedType == ExpenseType.personalDebt
-                      ? AppColors.personalDebt
-                      : house.type.color,
-                ),
-              ),
-
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32.0, vertical: 2.0),
-                child: TextField(
-                  controller: _titleController,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    hintText: _selectedType == ExpenseType.personalDebt
-                        ? 'Şahsi Borç Açıklaması (Zorunlu, ör: Sinema, Nakit Borç)'
-                        : 'Açıklama (opsiyonel, ör: ${_selectedCategory.displayName})',
-                    hintStyle: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.color
-                          ?.withValues(alpha: 0.6),
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                  ),
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w500),
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // 3. KATEGORİ SEÇİCİ (Sadece Ortak Masraflar için - Şahsi borçta tür olmaz)
-              if (_selectedType == ExpenseType.joint) ...[
-                CategorySelector(
-                  selectedCategory: _selectedCategory,
-                  onSelect: (cat) => setState(() => _selectedCategory = cat),
-                ),
-                const SizedBox(height: 10),
-              ],
-
-              // 4. SAYISAL TUŞ TAKIMI
-              CustomNumpad(
-                onDigitPressed: _onDigit,
-                onDeletePressed: _onDelete,
-                onClearPressed: _onClear,
-              ),
-
-              const SizedBox(height: 12),
-
-              // 5. KAYDET BUTONU
-              ElevatedButton(
-                onPressed: amount > 0 ? _saveExpense : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedType == ExpenseType.personalDebt
-                      ? AppColors.personalDebt
-                      : house.type.color,
-                  disabledBackgroundColor:
-                      Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFF334155)
-                          : const Color(0xFFE2E8F0),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.bolt_rounded, size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      amount > 0
-                          ? 'Kaydet (${CurrencyFormatter.formatClean(amount)})'
-                          : 'Tutar Girin',
-                      style: const TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.w700),
+                    const SizedBox(height: 8),
+
+                    // 1. TÜR SEÇİCİ (Ortak Masraf vs Şahsi Borç)
+                    _buildTypeSelector(otherMembers.isNotEmpty),
+
+                    if (_selectedType == ExpenseType.personalDebt &&
+                        otherMembers.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      _buildPersonalDebtDirection(otherMembers),
+                      const SizedBox(height: 10),
+                      _buildDebtorChips(otherMembers),
+                    ],
+
+                    const SizedBox(height: 10),
+
+                    // 2. TUTAR ALANI (HESAP MAKİNESİ VE GİZLİLİK DESTEKLİ)
+                    isPrivacy
+                        ? Text(
+                            CurrencyFormatter.formatMasked(),
+                            style: TextStyle(
+                              fontSize: 38,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -1,
+                              color: _selectedType == ExpenseType.personalDebt
+                                  ? AppColors.personalDebt
+                                  : house.type.color,
+                            ),
+                          )
+                        : Text(
+                            CurrencyFormatter.activePlacement ==
+                                    CurrencyPlacement.before
+                                ? '${CurrencyFormatter.activeSymbol} ${_amountStr == '0' ? '0' : _amountStr}'
+                                : '${_amountStr == '0' ? '0' : _amountStr} ${CurrencyFormatter.activeSymbol}',
+                            style: TextStyle(
+                              fontSize: _amountStr.length > 9 ? 30 : 40,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -1,
+                              color: _selectedType == ExpenseType.personalDebt
+                                  ? AppColors.personalDebt
+                                  : house.type.color,
+                            ),
+                          ),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0, vertical: 2.0),
+                      child: TextField(
+                        controller: _titleController,
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          hintText: _selectedType == ExpenseType.personalDebt
+                              ? 'Şahsi Borç Açıklaması (Zorunlu, ör: Sinema, Nakit Borç)'
+                              : 'Açıklama (opsiyonel, ör: ${_selectedCategory.displayName})',
+                          hintStyle: TextStyle(
+                            fontSize: 13,
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.color
+                                ?.withValues(alpha: 0.6),
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                        ),
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
                     ),
+
+                    // 2b. AKILLI ETİKETLER (Klavye Açmadan Tek Tıkla Seçim)
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: _smartTags.map((tag) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 6.0),
+                            child: ActionChip(
+                              avatar: Icon(tag.icon, size: 14),
+                              label: Text(tag.title),
+                              labelStyle: const TextStyle(
+                                  fontSize: 11, fontWeight: FontWeight.w700),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 0),
+                              onPressed: () => _applySmartTag(tag),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    // 2c. HIZLI TUTAR ÇİPLERİ (+50, +100, +250, Yuvarla)
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildQuickAmountChip(
+                              CurrencyFormatter.activePlacement == CurrencyPlacement.before
+                                  ? '+${CurrencyFormatter.activeSymbol}50'
+                                  : '+50 ${CurrencyFormatter.activeSymbol}',
+                              () => _addQuickAmount(50)),
+                          const SizedBox(width: 6),
+                          _buildQuickAmountChip(
+                              CurrencyFormatter.activePlacement == CurrencyPlacement.before
+                                  ? '+${CurrencyFormatter.activeSymbol}100'
+                                  : '+100 ${CurrencyFormatter.activeSymbol}',
+                              () => _addQuickAmount(100)),
+                          const SizedBox(width: 6),
+                          _buildQuickAmountChip(
+                              CurrencyFormatter.activePlacement == CurrencyPlacement.before
+                                  ? '+${CurrencyFormatter.activeSymbol}250'
+                                  : '+250 ${CurrencyFormatter.activeSymbol}',
+                              () => _addQuickAmount(250)),
+                          const SizedBox(width: 6),
+                          _buildQuickAmountChip('En Yakın 10\'a Yuvarla',
+                              _roundToNearest10, isRound: true),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // 3. KATEGORİ SEÇİCİ
+                    if (_selectedType == ExpenseType.joint) ...[
+                      CategorySelector(
+                        selectedCategory: _selectedCategory,
+                        onSelect: (cat) => setState(() => _selectedCategory = cat),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // 3b. EŞİT OLMAYAN MASRAF BÖLÜŞÜMÜ (Ağırlıklı Pay & Muafiyet)
+                      if (house.members.length > 1) ...[
+                        _buildUnequalSplitSection(house),
+                        const SizedBox(height: 8),
+                      ],
+                    ],
+
+                    // 4. SAYISAL TUŞ TAKIMI (HESAP MAKİNESİ VE ATM DÜZENİ DESTEKLİ)
+                    CustomNumpad(
+                      onDigitPressed: _onDigit,
+                      onDeletePressed: _onDelete,
+                      onClearPressed: _onClear,
+                      onOperatorPressed: _onOperator,
+                      onEqualsPressed: _onEquals,
+                      layout: numpadLayout,
+                      showCalculator: true,
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // 5. ÇİFT FONKSİYONLU KAYDET BUTONLARI (KASA MODU)
+                    Row(
+                      children: [
+                        // Ana Buton: "⚡ Kaydet & Kapat"
+                        Expanded(
+                          flex: 3,
+                          child: ElevatedButton(
+                            onPressed: amount > 0
+                                ? () => _saveExpense(shouldClose: true)
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  _selectedType == ExpenseType.personalDebt
+                                      ? AppColors.personalDebt
+                                      : house.type.color,
+                              disabledBackgroundColor:
+                                  Theme.of(context).brightness == Brightness.dark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFE2E8F0),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.flash_on_rounded, size: 20),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    amount > 0
+                                        ? '⚡ Kaydet & Kapat'
+                                        : 'Tutar Girin',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+
+                        // İkincil Buton: "Kaydet & Devam Et"
+                        Expanded(
+                          flex: 2,
+                          child: OutlinedButton(
+                            onPressed: amount > 0
+                                ? () => _saveExpense(shouldClose: false)
+                                : null,
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(54),
+                              side: BorderSide(
+                                color: amount > 0
+                                    ? (_selectedType == ExpenseType.personalDebt
+                                        ? AppColors.personalDebt
+                                        : house.type.color)
+                                    : Colors.grey.withValues(alpha: 0.3),
+                                width: 1.5,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: const Text(
+                              'Kaydet & Devam Et',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-            ],
+      ),
+    );
+  }
+
+  Widget _buildQuickAmountChip(String label, VoidCallback onTap, {bool isRound = false}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isRound
+              ? AppColors.primary.withValues(alpha: 0.12)
+              : Theme.of(context).cardTheme.color,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isRound
+                ? AppColors.primary.withValues(alpha: 0.4)
+                : Theme.of(context).colorScheme.outline,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: isRound ? AppColors.primary : null,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUnequalSplitSection(Partnership house) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _isCustomSplit
+              ? AppColors.primary.withValues(alpha: 0.5)
+              : Theme.of(context).colorScheme.outline,
+        ),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            dense: true,
+            visualDensity: VisualDensity.compact,
+            title: Row(
+              children: [
+                Icon(
+                  Icons.balance_rounded,
+                  size: 16,
+                  color: _isCustomSplit ? AppColors.primary : null,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _isCustomSplit
+                        ? 'Özel / Ağırlıklı Bölüşüm Aktif'
+                        : 'Masraf Bölüşümü: Eşit (Tüm Ortaklar)',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight:
+                          _isCustomSplit ? FontWeight.w800 : FontWeight.w600,
+                      color: _isCustomSplit ? AppColors.primary : null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            trailing: Icon(
+              _isCustomSplitExpanded
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.keyboard_arrow_down_rounded,
+              size: 20,
+            ),
+            onTap: () {
+              setState(() {
+                _isCustomSplitExpanded = !_isCustomSplitExpanded;
+              });
+            },
+          ),
+          if (_isCustomSplitExpanded) ...[
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Özel Bölüşüm Kullan:',
+                        style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                      Switch.adaptive(
+                        value: _isCustomSplit,
+                        activeTrackColor: AppColors.primary,
+                        onChanged: (val) {
+                          setState(() {
+                            _isCustomSplit = val;
+                            if (val && _splitWeights.isEmpty) {
+                              for (final m in house.members) {
+                                _splitWeights[m.id] = 1.0;
+                              }
+                            }
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  if (_isCustomSplit) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Ortakları masraftan muaf tutabilir veya pay çarpanı belirleyebilirsiniz:',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...house.members.map((m) {
+                      final isExcluded = _excludedMemberIds.contains(m.id);
+                      final weight = _splitWeights[m.id] ?? 1.0;
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: !isExcluded,
+                              activeColor: AppColors.primary,
+                              onChanged: (checked) {
+                                setState(() {
+                                  if (checked == true) {
+                                    _excludedMemberIds.remove(m.id);
+                                    _splitWeights[m.id] = 1.0;
+                                  } else {
+                                    if (house.members.length -
+                                            _excludedMemberIds.length >
+                                        1) {
+                                      _excludedMemberIds.add(m.id);
+                                      _splitWeights.remove(m.id);
+                                    }
+                                  }
+                                });
+                              },
+                            ),
+                            Expanded(
+                              child: Text(
+                                m.displayName,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: isExcluded
+                                      ? FontWeight.w400
+                                      : FontWeight.w700,
+                                  decoration: isExcluded
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            if (!isExcluded) ...[
+                              _buildWeightChoice(m.id, 1.0, weight == 1.0),
+                              const SizedBox(width: 4),
+                              _buildWeightChoice(m.id, 2.0, weight == 2.0),
+                              const SizedBox(width: 4),
+                              _buildWeightChoice(m.id, 3.0, weight == 3.0),
+                            ] else
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.negative
+                                      .withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  'MUAF',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.negative,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeightChoice(String memberId, double weight, bool isSelected) {
+    return InkWell(
+      onTap: () {
+        HapticService.selection();
+        setState(() {
+          _splitWeights[memberId] = weight;
+        });
+      },
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : Theme.of(context).colorScheme.outline,
+          ),
+        ),
+        child: Text(
+          '${weight.toInt()}x Pay',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: isSelected ? Colors.white : null,
           ),
         ),
       ),

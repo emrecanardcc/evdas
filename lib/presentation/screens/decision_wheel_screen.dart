@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/haptic_service.dart';
+import '../../core/services/sound_service.dart';
 import '../../data/models/household_member.dart';
 import '../providers/app_providers.dart';
+import '../widgets/confetti_overlay.dart';
 
 class DecisionWheelScreen extends ConsumerStatefulWidget {
   const DecisionWheelScreen({super.key});
@@ -71,7 +73,8 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
         final currentSlice = (normalizedAngle / sliceAngle).floor();
         if (currentSlice != _lastTickSlice) {
           _lastTickSlice = currentSlice;
-          HapticFeedback.selectionClick();
+          HapticService.selection();
+          SoundService.playWheelTick();
         }
       }
     });
@@ -79,7 +82,11 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _isSpinning = false;
-        HapticFeedback.heavyImpact();
+        HapticService.heavy();
+        SoundService.playSettlementChime();
+        if (mounted) {
+          ConfettiOverlay.show(context);
+        }
         _showWinnerDialog();
       }
     });

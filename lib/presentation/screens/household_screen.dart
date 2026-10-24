@@ -4,14 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/legal_texts.dart';
+import '../../core/services/export_service.dart';
 import '../../core/services/feedback_service.dart';
+import '../../core/services/haptic_service.dart';
 import '../../core/services/share_service.dart';
+import '../../core/services/sound_service.dart';
 import '../../core/services/supabase_service.dart';
+import '../../core/theme/customization_models.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/models/approval_request.dart';
 import '../../data/models/household_member.dart';
 import '../../data/models/partnership.dart';
 import '../providers/app_providers.dart';
+import '../providers/customization_provider.dart';
 import '../widgets/approval_center_modal.dart';
 import '../widgets/feedback_dialog.dart';
 import '../widgets/legal_document_modal.dart';
@@ -144,13 +149,25 @@ class HouseholdScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: house == null
-          ? _buildNoPartnershipView(context, ref, currentMember)
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await ref.read(expenseRepositoryProvider).syncWithCloud();
+          ref.read(householdProvider.notifier).refresh();
+          ref.read(expensesProvider.notifier).refresh();
+          ref.read(paymentRequestsProvider.notifier).refresh();
+          ref.read(approvalRequestsProvider.notifier).refresh();
+        },
+        child: house == null
+            ? SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: _buildNoPartnershipView(context, ref, currentMember),
+              )
+            : SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
             // 1. ORTAKLIK BAŞLIĞI & KONTENJAN (Max 6 Üye)
             Card(
               child: Padding(
@@ -755,8 +772,9 @@ class HouseholdScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showAddMemberDialog(BuildContext context, WidgetRef ref) {
     final nameController = TextEditingController();
@@ -1431,6 +1449,412 @@ class HouseholdScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildCustomizationSection(
+      BuildContext context, WidgetRef ref, Partnership? house) {
+    final theme = Theme.of(context);
+    final activeTheme = ref.watch(themeModeProvider);
+    final activeAccent = ref.watch(accentColorProvider);
+    final activeFont = ref.watch(fontFamilyProvider);
+    final activeLayout = ref.watch(numpadLayoutProvider);
+    final activeCurrency = ref.watch(currencySymbolProvider);
+    final activePlacement = ref.watch(currencyPlacementProvider);
+    final activeDecimal = ref.watch(decimalRuleProvider);
+    final isPrivacy = ref.watch(privacyModeProvider);
+    final hapticLvl = ref.watch(hapticLevelProvider);
+    final soundEnabled = ref.watch(soundEnabledProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // GÖRÜNÜM VE ÖZELLEŞTİRME
+        Text(
+          'GÖRÜNÜM VE ÖZELLEŞTİRME',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+            color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Tema Modu
+                Row(
+                  children: [
+                    Icon(Icons.palette_outlined, size: 18, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    const Text('Tema Modu',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: AppThemeType.values.map((t) {
+                    final isSel = t == activeTheme;
+                    return ChoiceChip(
+                      selected: isSel,
+                      showCheckmark: false,
+                      label: Text(t.displayName),
+                      onSelected: (_) {
+                        HapticService.selection();
+                        ref.read(themeModeProvider.notifier).setTheme(t);
+                      },
+                    );
+                  }).toList(),
+                ),
+                const Divider(height: 24),
+
+                // Canlı Vurgu Rengi
+                Row(
+                  children: [
+                    Icon(Icons.color_lens_outlined, size: 18, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text('Vurgu Rengi (${activeAccent.displayName})',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: AccentColorOption.values.map((opt) {
+                    final isSel = opt == activeAccent;
+                    return GestureDetector(
+                      onTap: () {
+                        HapticService.selection();
+                        ref.read(accentColorProvider.notifier).setColor(opt);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: opt.color,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSel ? Colors.white : Colors.transparent,
+                            width: 3,
+                          ),
+                          boxShadow: isSel
+                              ? [
+                                  BoxShadow(
+                                    color: opt.color.withValues(alpha: 0.6),
+                                    blurRadius: 8,
+                                    spreadRadius: 2,
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: isSel
+                            ? const Icon(Icons.check, color: Colors.white, size: 20)
+                            : null,
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const Divider(height: 24),
+
+                // Tipografi
+                Row(
+                  children: [
+                    Icon(Icons.font_download_outlined, size: 18, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    const Text('Tipografi (Google Fonts)',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: AppFontFamily.values.map((f) {
+                    final isSel = f == activeFont;
+                    return ChoiceChip(
+                      selected: isSel,
+                      showCheckmark: false,
+                      label: Text(f.displayName),
+                      onSelected: (_) {
+                        HapticService.selection();
+                        ref.read(fontFamilyProvider.notifier).setFont(f);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // KULLANIM VE NUMPAD DÜZENİ
+        Text(
+          'KULLANIM VE NUMPAD DÜZENİ',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+            color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Numpad Düzeni
+                Row(
+                  children: [
+                    Icon(Icons.dialpad_outlined, size: 18, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    const Text('Numpad Düzeni',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: NumpadLayoutType.values.map((l) {
+                    final isSel = l == activeLayout;
+                    return ChoiceChip(
+                      selected: isSel,
+                      showCheckmark: false,
+                      label: Text(l.displayName),
+                      onSelected: (_) {
+                        HapticService.selection();
+                        ref.read(numpadLayoutProvider.notifier).setLayout(l);
+                      },
+                    );
+                  }).toList(),
+                ),
+                const Divider(height: 24),
+
+                // Para Birimi
+                Row(
+                  children: [
+                    Icon(Icons.attach_money_outlined, size: 18, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    const Text('Para Birimi Sembolü',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: CurrencySymbol.values.map((s) {
+                    final isSel = s == activeCurrency;
+                    return ChoiceChip(
+                      selected: isSel,
+                      showCheckmark: false,
+                      label: Text('${s.symbol} ${s.displayName}'),
+                      onSelected: (_) {
+                        HapticService.selection();
+                        ref.read(currencySymbolProvider.notifier).setSymbol(s);
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 14),
+
+                // Sembol Konumu
+                const Text('Sembol Yerleşimi',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  children: CurrencyPlacement.values.map((p) {
+                    final isSel = p == activePlacement;
+                    return ChoiceChip(
+                      selected: isSel,
+                      showCheckmark: false,
+                      label: Text(p.displayName),
+                      onSelected: (_) {
+                        HapticService.selection();
+                        ref.read(currencyPlacementProvider.notifier).setPlacement(p);
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 14),
+
+                // Ondalık Kuralı
+                const Text('Ondalık Gösterimi',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  children: DecimalRule.values.map((r) {
+                    final isSel = r == activeDecimal;
+                    return ChoiceChip(
+                      selected: isSel,
+                      showCheckmark: false,
+                      label: Text(r.displayName),
+                      onSelected: (_) {
+                        HapticService.selection();
+                        ref.read(decimalRuleProvider.notifier).setRule(r);
+                      },
+                    );
+                  }).toList(),
+                ),
+                const Divider(height: 24),
+
+                // Gizli Bakiye Modu
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.visibility_off_outlined,
+                        color: theme.colorScheme.primary, size: 20),
+                  ),
+                  title: const Text('Gizli Bakiye Modu (•••• ₺)',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  subtitle: const Text('Uygulama genelindeki tutarları maskeler',
+                      style: TextStyle(fontSize: 11)),
+                  value: isPrivacy,
+                  onChanged: (_) {
+                    HapticService.light();
+                    ref.read(privacyModeProvider.notifier).toggle();
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // SES VE DOKUNMATİK TİTREŞİM
+        Text(
+          'SES VE DOKUNMATİK TİTREŞİM',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+            color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.vibration_outlined, size: 18, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    const Text('Haptik Geri Bildirim Şiddeti',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: HapticLevel.values.map((lvl) {
+                    final isSel = lvl == hapticLvl;
+                    return ChoiceChip(
+                      selected: isSel,
+                      showCheckmark: false,
+                      label: Text(lvl.displayName),
+                      onSelected: (_) {
+                        ref.read(hapticLevelProvider.notifier).setLevel(lvl);
+                        HapticService.light();
+                      },
+                    );
+                  }).toList(),
+                ),
+                const Divider(height: 24),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.volume_up_outlined,
+                        color: theme.colorScheme.primary, size: 20),
+                  ),
+                  title: const Text('UI Ses Efektleri',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  subtitle: const Text('Numpad tık, Ka-Ching, çark ve ödeşme sesleri',
+                      style: TextStyle(fontSize: 11)),
+                  value: soundEnabled,
+                  onChanged: (val) async {
+                    await ref.read(soundEnabledProvider.notifier).setEnabled(val);
+                    if (val) {
+                      SoundService.playKaChing();
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // VERİ VE DIŞA AKTARMA
+        Text(
+          'VERİ YÖNETİMİ VE DIŞA AKTARMA',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+            color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: Column(
+            children: [
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.file_download_outlined,
+                      color: AppColors.primary, size: 20),
+                ),
+                title: const Text('Tüm Harcamaları CSV Olarak Dışa Aktar',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                subtitle: const Text('Excel ve E-Tablolar uyumlu UTF-8 döküm',
+                    style: TextStyle(fontSize: 11)),
+                trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                onTap: () async {
+                  final expenses = ref.read(expensesProvider);
+                  if (expenses.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Dışa aktarılacak harcama bulunamadı.')),
+                    );
+                    return;
+                  }
+                  await ExportService.exportExpensesToCsv(
+                    expenses: expenses,
+                    members: house?.members ?? [],
+                    householdName: house?.name ?? 'Evdaş Ortaklığı',
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
   Widget _buildSettingsSection(
       BuildContext context, WidgetRef ref, Partnership? house, HouseholdMember? currentMember) {
     final theme = Theme.of(context);
@@ -1438,6 +1862,8 @@ class HouseholdScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _buildCustomizationSection(context, ref, house),
+
         // 1. DESTEK VE GERİ BİLDİRİM
         Text(
           'DESTEK VE GERİ BİLDİRİM',

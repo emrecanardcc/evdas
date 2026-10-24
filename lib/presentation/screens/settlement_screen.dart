@@ -3,10 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/share_service.dart';
+import '../../core/services/sound_service.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/models/payment_request.dart';
 import '../../data/models/settlement_item.dart';
 import '../providers/app_providers.dart';
+import '../providers/customization_provider.dart';
+import '../widgets/animated_rolling_number.dart';
+import '../widgets/confetti_overlay.dart';
 
 class SettlementScreen extends ConsumerWidget {
   const SettlementScreen({super.key});
@@ -17,6 +21,7 @@ class SettlementScreen extends ConsumerWidget {
     final currentMember = ref.watch(currentMemberProvider);
     final debtResult = ref.watch(debtEngineResultProvider);
     final allPayments = ref.watch(paymentRequestsProvider);
+    final isPrivacy = ref.watch(privacyModeProvider);
 
     final myBalance = (currentMember != null)
         ? (debtResult.netBalanceByMember[currentMember.id] ?? 0.0)
@@ -37,11 +42,20 @@ class SettlementScreen extends ConsumerWidget {
         title: const Text('Hesaplaşma & Ödeşme',
             style: TextStyle(fontWeight: FontWeight.w700)),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await ref.read(expenseRepositoryProvider).syncWithCloud();
+          ref.read(householdProvider.notifier).refresh();
+          ref.read(expensesProvider.notifier).refresh();
+          ref.read(paymentRequestsProvider.notifier).refresh();
+          ref.read(approvalRequestsProvider.notifier).refresh();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             // 0. AYLIK HESAPLAŞMA GÜNÜ HATIRLATICI KARTI
             if (house != null) ...[
               _buildSettlementDayCard(context, house.settlementDay),
@@ -61,7 +75,7 @@ class SettlementScreen extends ConsumerWidget {
 
             // 2. NET BAKİYE DURUM KARTI
             _buildBalanceCard(context, myBalance, isCreditor, isDebtor, isSettled,
-                currentMember?.displayName ?? 'Sen'),
+                currentMember?.displayName ?? 'Sen', isPrivacy),
 
             const SizedBox(height: 16),
 
@@ -87,26 +101,33 @@ class SettlementScreen extends ConsumerWidget {
 
             if (debtResult.settlements.isEmpty)
               Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.check_circle_outline_rounded,
-                          color: AppColors.positive, size: 48),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Hesaplar Tamamen Denk',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Şu an kimsenin kimseye borcu bulunmuyor.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () {
+                    SoundService.playSettlementChime();
+                    ConfettiOverlay.show(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.check_circle_outline_rounded,
+                            color: AppColors.positive, size: 48),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Hesaplar Tamamen Denk 🎉',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          'Şu an kimsenin kimseye borcu bulunmuyor. Kutlamak için dokun!',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               )
@@ -125,6 +146,7 @@ class SettlementScreen extends ConsumerWidget {
                   toMember?.iban,
                   isMyDebt,
                   currentMember?.id,
+                  isPrivacy,
                 );
               }),
 
@@ -193,7 +215,7 @@ class SettlementScreen extends ConsumerWidget {
                             fontWeight: FontWeight.w600, fontSize: 14)),
                     subtitle: Text('$debtor ➔ $creditor'),
                     trailing: Text(
-                      CurrencyFormatter.formatClean(e.amount),
+                      CurrencyFormatter.formatClean(e.amount, checkPrivacy: true),
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         color: AppColors.personalDebt,
@@ -207,8 +229,9 @@ class SettlementScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   /// Gelen Ödeme Bildirimi (Alacaklının Onaylama / Reddetme Kartı)
   Widget _buildIncomingApprovalBanner(
@@ -263,7 +286,7 @@ class SettlementScreen extends ConsumerWidget {
                               fontSize: 14, fontWeight: FontWeight.w700),
                         ),
                         Text(
-                          CurrencyFormatter.formatClean(req.amount),
+                          CurrencyFormatter.formatClean(req.amount, checkPrivacy: true),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
@@ -310,7 +333,9 @@ class SettlementScreen extends ConsumerWidget {
                             await ref
                                 .read(paymentRequestsProvider.notifier)
                                 .confirmPayment(req.id);
+                            SoundService.playSettlementChime();
                             if (context.mounted) {
+                              ConfettiOverlay.show(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
@@ -359,7 +384,7 @@ class SettlementScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: requests.map((req) {
                 return Text(
-                  '${req.toMemberName}\'ye ${CurrencyFormatter.formatClean(req.amount)} ödeme bildirdiniz (Onay bekleniyor)',
+                  '${req.toMemberName}\'ye ${CurrencyFormatter.formatClean(req.amount, checkPrivacy: true)} ödeme bildirdiniz (Onay bekleniyor)',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -381,6 +406,7 @@ class SettlementScreen extends ConsumerWidget {
     bool isDebtor,
     bool isSettled,
     String userName,
+    bool isPrivacy,
   ) {
     Color cardColor;
     Color textColor;
@@ -391,13 +417,13 @@ class SettlementScreen extends ConsumerWidget {
     if (isCreditor) {
       cardColor = AppColors.positive.withValues(alpha: 0.12);
       textColor = AppColors.positive;
-      statusTitle = '${CurrencyFormatter.formatClean(myBalance)} Alacaklısın';
+      statusTitle = 'Alacaklısın';
       statusSubtitle = 'Ortaklarından sana ödenecek net tutar.';
       statusIcon = Icons.arrow_downward_rounded;
     } else if (isDebtor) {
       cardColor = AppColors.negative.withValues(alpha: 0.12);
       textColor = AppColors.negative;
-      statusTitle = '${CurrencyFormatter.formatClean(-myBalance)} Borçlusun';
+      statusTitle = 'Borçlusun';
       statusSubtitle = 'Ortaklarına ödemen gereken net tutar.';
       statusIcon = Icons.arrow_upward_rounded;
     } else {
@@ -438,14 +464,26 @@ class SettlementScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 14),
-          Text(
-            statusTitle,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: textColor,
+          if (isSettled)
+            Text(
+              statusTitle,
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: textColor,
+              ),
+            )
+          else
+            AnimatedRollingNumber(
+              value: myBalance.abs(),
+              isMasked: isPrivacy,
+              suffix: ' $statusTitle',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: textColor,
+              ),
             ),
-          ),
           const SizedBox(height: 4),
           Text(
             statusSubtitle,
@@ -466,6 +504,7 @@ class SettlementScreen extends ConsumerWidget {
     String? iban,
     bool isMyDebt,
     String? currentUserId,
+    bool isPrivacy,
   ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -496,8 +535,9 @@ class SettlementScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                Text(
-                  CurrencyFormatter.formatClean(item.amount),
+                AnimatedRollingNumber(
+                  value: item.amount,
+                  isMasked: isPrivacy,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,

@@ -176,6 +176,8 @@ create table if not exists public.expenses (
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+alter table public.expenses add column if not exists split_member_weights jsonb;
+
 alter table public.expenses enable row level security;
 
 drop policy if exists "Ortaklık üyeleri harcamaları görebilir" on public.expenses;
