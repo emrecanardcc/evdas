@@ -625,6 +625,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                                       ? const Color(0xFF334155)
                                       : const Color(0xFFE2E8F0),
                               padding: const EdgeInsets.symmetric(vertical: 14),
+                              minimumSize: const Size.fromHeight(54),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
@@ -640,9 +641,10 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                                         ? '⚡ Kaydet & Kapat'
                                         : 'Tutar Girin',
                                     style: const TextStyle(
-                                      fontSize: 15,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.w800,
                                     ),
+                                    maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
@@ -661,6 +663,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                                 : null,
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size.fromHeight(54),
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
                               side: BorderSide(
                                 color: amount > 0
                                     ? (_selectedType == ExpenseType.personalDebt
@@ -675,10 +678,12 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                             ),
                             child: const Text(
                               'Kaydet & Devam Et',
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                               ),
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -698,7 +703,9 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        constraints: const BoxConstraints(minHeight: 38),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isRound
               ? AppColors.primary.withValues(alpha: 0.12)
@@ -713,7 +720,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: FontWeight.w700,
             color: isRound ? AppColors.primary : null,
           ),
@@ -1079,6 +1086,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   icon,
@@ -1086,14 +1094,18 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                   color: isSelected ? Colors.white : activeColor,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: isSelected
-                        ? Colors.white
-                        : Theme.of(context).textTheme.bodyLarge?.color,
+                Flexible(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected
+                          ? Colors.white
+                          : Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
                   ),
                 ),
               ],

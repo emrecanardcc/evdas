@@ -143,13 +143,17 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
           ],
         ),
       ),
+      actionsOverflowDirection: VerticalDirection.down,
+      actionsOverflowButtonSpacing: 8,
       actions: [
         TextButton(
           onPressed: _isSending ? null : () => Navigator.pop(context),
+          style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
           child: const Text('İptal'),
         ),
         ElevatedButton.icon(
           onPressed: _isSending ? null : _handleSend,
+          style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
           icon: _isSending
               ? const SizedBox(
                   width: 14,

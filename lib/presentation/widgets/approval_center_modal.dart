@@ -308,7 +308,7 @@ class ApprovalCenterModal extends ConsumerWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.negative,
                         side: const BorderSide(color: AppColors.negative),
-                        minimumSize: const Size(0, 44),
+                        minimumSize: const Size(0, 48),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
@@ -330,7 +330,7 @@ class ApprovalCenterModal extends ConsumerWidget {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.positive,
-                        minimumSize: const Size(0, 44),
+                        minimumSize: const Size(0, 48),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
@@ -420,11 +420,15 @@ class ApprovalCenterModal extends ConsumerWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.negative,
                         side: const BorderSide(color: AppColors.negative),
-                        minimumSize: const Size(0, 44),
+                        minimumSize: const Size(0, 48),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
-                      child: const Text('Almadım / Reddet'),
+                      child: const Text(
+                        'Almadım / Reddet',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -437,11 +441,15 @@ class ApprovalCenterModal extends ConsumerWidget {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.settlement,
-                        minimumSize: const Size(0, 44),
+                        minimumSize: const Size(0, 48),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
-                      child: const Text('Ödemeyi Aldım (Onayla)'),
+                      child: const Text(
+                        'Ödemeyi Aldım (Onayla)',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
                 ],

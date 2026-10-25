@@ -113,10 +113,14 @@ class ReportsScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Kategori Dağılımı',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                const Expanded(
+                  child: Text(
+                    'Kategori Dağılımı',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   '${report.categorySpends.length} kategori',
                   style: TextStyle(
@@ -224,18 +228,24 @@ class ReportsScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.handshake_rounded,
-                          size: 20, color: AppColors.personalDebt),
-                      SizedBox(width: 6),
-                      Text(
-                        'Şahsi Borçlar',
-                        style: TextStyle(
-                            fontSize: 17, fontWeight: FontWeight.w800),
-                      ),
-                    ],
+                  const Expanded(
+                    child: Row(
+                      children: [
+                        Icon(Icons.handshake_rounded,
+                            size: 20, color: AppColors.personalDebt),
+                        SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Şahsi Borçlar',
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w800),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Text(
                     '${report.personalDebtsBreakdown.length} borç ilişkisi',
                     style: TextStyle(

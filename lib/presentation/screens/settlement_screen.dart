@@ -84,10 +84,14 @@ class SettlementScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Ödeşme Listesi',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                const Expanded(
+                  child: Text(
+                    'Ödeşme Listesi',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   '${debtResult.settlements.length} transfer',
                   style: TextStyle(
@@ -311,8 +315,10 @@ class SettlementScreen extends ConsumerWidget {
                       ),
                     ],
                     const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         TextButton(
                           onPressed: () async {
@@ -329,11 +335,11 @@ class SettlementScreen extends ConsumerWidget {
                           },
                           style: TextButton.styleFrom(
                             foregroundColor: AppColors.negative,
-                            minimumSize: const Size(0, 44),
+                            minimumSize: const Size(0, 48),
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
                           ),
                           child: const Text('Reddet (Gelmedi)'),
                         ),
-                        const SizedBox(width: 8),
                         ElevatedButton(
                           onPressed: () async {
                             HapticFeedback.heavyImpact();
@@ -354,7 +360,7 @@ class SettlementScreen extends ConsumerWidget {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.positive,
-                            minimumSize: const Size(0, 44),
+                            minimumSize: const Size(0, 48),
                             padding: const EdgeInsets.symmetric(horizontal: 14),
                           ),
                           child: const Text('Hesaba Geçti (Onayla)'),
@@ -681,9 +687,12 @@ class SettlementScreen extends ConsumerWidget {
             ],
           ),
         ),
+        actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 8,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
+            style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('İptal'),
           ),
           ElevatedButton(

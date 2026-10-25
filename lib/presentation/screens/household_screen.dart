@@ -48,9 +48,12 @@ class HouseholdScreen extends ConsumerWidget {
               color: house?.displayColor ?? AppColors.primary,
             ),
             const SizedBox(width: 8),
-            Text(
-              house?.name ?? 'Ortaklık',
-              style: const TextStyle(fontWeight: FontWeight.w700),
+            Flexible(
+              child: Text(
+                house?.name ?? 'Ortaklık',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
@@ -197,6 +200,8 @@ class HouseholdScreen extends ConsumerWidget {
                                   Expanded(
                                     child: Text(
                                       house.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
                                         fontSize: 19,
                                         fontWeight: FontWeight.w800,
@@ -207,8 +212,9 @@ class HouseholdScreen extends ConsumerWidget {
                                     icon: const Icon(Icons.edit_outlined,
                                         size: 18),
                                     tooltip: 'Ortaklığı Düzenle',
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
+                                    padding: const EdgeInsets.all(6),
+                                    constraints: const BoxConstraints(
+                                        minWidth: 40, minHeight: 40),
                                     onPressed: () => _showEditPartnershipDialog(
                                         context, ref, house),
                                   ),
@@ -235,17 +241,20 @@ class HouseholdScreen extends ConsumerWidget {
                               const SizedBox(height: 3),
                               Row(
                                 children: [
-                                  Text(
-                                    'Kapasite: ${house.members.length} / ${Partnership.maxMembers} Ortak',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: isFull
-                                          ? AppColors.negative
-                                          : Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.color,
+                                  Flexible(
+                                    child: Text(
+                                      'Kapasite: ${house.members.length} / ${Partnership.maxMembers} Ortak',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: isFull
+                                            ? AppColors.negative
+                                            : Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.color,
+                                      ),
                                     ),
                                   ),
                                   if (isFull) ...[
@@ -280,7 +289,7 @@ class HouseholdScreen extends ConsumerWidget {
                     // Davet Kodu Kutusu
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
+                          horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
                             ? const Color(0xFF0F172A)
@@ -289,41 +298,47 @@ class HouseholdScreen extends ConsumerWidget {
                         border: Border.all(
                             color: Theme.of(context).colorScheme.outline),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'DAVET KODU',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.color,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              Text(
-                                house.inviteCode,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1,
-                                  fontFamily: 'monospace',
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ],
-                          ),
                           Row(
                             children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'DAVET KODU',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.color,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      house.inviteCode,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 1,
+                                        fontFamily: 'monospace',
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               IconButton(
                                 icon: const Icon(Icons.copy_rounded, size: 20),
                                 tooltip: 'Kodu Kopyala',
+                                style: IconButton.styleFrom(
+                                  minimumSize: const Size(44, 44),
+                                ),
                                 onPressed: () {
                                   Clipboard.setData(
                                       ClipboardData(text: house.inviteCode));
@@ -336,28 +351,29 @@ class HouseholdScreen extends ConsumerWidget {
                                   );
                                 },
                               ),
-                              ElevatedButton.icon(
-                                onPressed: isFull
-                                    ? null
-                                    : () {
-                                        ShareService.shareInviteCode(
-                                          householdName: house.name,
-                                          inviteCode: house.inviteCode,
-                                        );
-                                      },
-                                label: Text(
-                                    isFull ? 'Dolu' : 'Davet Kodunu Paylaş'),
-                                icon: const Icon(Icons.share_rounded, size: 16),
-                                style: ElevatedButton.styleFrom(
-                                  minimumSize: const Size(0, 40),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12),
-                                  textStyle: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700),
-                                ),
-                              ),
                             ],
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton.icon(
+                            onPressed: isFull
+                                ? null
+                                : () {
+                                    ShareService.shareInviteCode(
+                                      householdName: house.name,
+                                      inviteCode: house.inviteCode,
+                                    );
+                                  },
+                            label: Text(
+                                isFull ? 'Ortaklık Dolu' : 'Davet Kodunu Paylaş'),
+                            icon: const Icon(Icons.share_rounded, size: 18),
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                              textStyle: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700),
+                            ),
                           ),
                         ],
                       ),
@@ -463,11 +479,15 @@ class HouseholdScreen extends ConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                const Text(
-                                  '🎯 Ev Karar Çarkı',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w800),
+                                const Flexible(
+                                  child: Text(
+                                    '🎯 Ev Karar Çarkı',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800),
+                                  ),
                                 ),
                                 const SizedBox(width: 6),
                                 Container(
@@ -515,9 +535,12 @@ class HouseholdScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Ortaklar',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                const Expanded(
+                  child: Text(
+                    'Ortaklar',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                  ),
                 ),
                 TextButton.icon(
                   onPressed: isFull
@@ -570,11 +593,15 @@ class HouseholdScreen extends ConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  m.displayName,
-                                  style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700),
+                                Flexible(
+                                  child: Text(
+                                    m.displayName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700),
+                                  ),
                                 ),
                                 if (isCurrent) ...[
                                   const SizedBox(width: 6),
@@ -808,9 +835,12 @@ class HouseholdScreen extends ConsumerWidget {
             ],
           ),
         ),
+        actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 8,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
+            style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('İptal'),
           ),
           ElevatedButton(
@@ -837,6 +867,7 @@ class HouseholdScreen extends ConsumerWidget {
                 }
               }
             },
+            style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('Ekle'),
           ),
         ],
@@ -913,9 +944,12 @@ class HouseholdScreen extends ConsumerWidget {
               ],
             ),
           ),
+          actionsOverflowDirection: VerticalDirection.down,
+          actionsOverflowButtonSpacing: 8,
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
+              style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
               child: const Text('İptal'),
             ),
             ElevatedButton(
@@ -942,6 +976,7 @@ class HouseholdScreen extends ConsumerWidget {
                   }
                 }
               },
+              style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
               child: const Text('Oluştur'),
             ),
           ],
@@ -994,9 +1029,12 @@ class HouseholdScreen extends ConsumerWidget {
             ],
           ),
         ),
+        actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 8,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
+            style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('İptal'),
           ),
           ElevatedButton(
@@ -1033,6 +1071,7 @@ class HouseholdScreen extends ConsumerWidget {
                 }
               }
             },
+            style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('Katıl'),
           ),
         ],
@@ -1174,9 +1213,12 @@ class HouseholdScreen extends ConsumerWidget {
               ],
             ),
           ),
+          actionsOverflowDirection: VerticalDirection.down,
+          actionsOverflowButtonSpacing: 8,
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
+              style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
               child: const Text('İptal'),
             ),
             ElevatedButton(
@@ -1200,6 +1242,7 @@ class HouseholdScreen extends ConsumerWidget {
                   }
                 }
               },
+              style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
               child: const Text('Kaydet'),
             ),
           ],
@@ -1221,11 +1264,16 @@ class HouseholdScreen extends ConsumerWidget {
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Ortaklıktan Ayrıl'),
-          content: const Text(
-              'Bu ortaklıkta tek üyesiniz. Ayrılmak ortaklığı kapatacaktır. Devam edilsin mi?'),
+          content: const SingleChildScrollView(
+            child: Text(
+                'Bu ortaklıkta tek üyesiniz. Ayrılmak ortaklığı kapatacaktır. Devam edilsin mi?'),
+          ),
+          actionsOverflowDirection: VerticalDirection.down,
+          actionsOverflowButtonSpacing: 8,
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
+              style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
               child: const Text('Vazgeç'),
             ),
             ElevatedButton(
@@ -1235,8 +1283,9 @@ class HouseholdScreen extends ConsumerWidget {
                     .read(householdProvider.notifier)
                     .deleteCurrentPartnership();
               },
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppColors.negative),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.negative,
+                  minimumSize: const Size(0, 48)),
               child: const Text('Kapat ve Ayrıl'),
             ),
           ],
@@ -1252,15 +1301,25 @@ class HouseholdScreen extends ConsumerWidget {
           children: [
             Icon(Icons.how_to_vote_rounded, color: AppColors.personalDebt),
             SizedBox(width: 8),
-            Text('Ayrılma Talebi'),
+            Expanded(
+              child: Text(
+                'Ayrılma Talebi',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
-        content: Text(
-          '${house.name} ortaklığından ayrılabilmeniz için diğer tüm ortakların (${house.members.length - 1} kişi) oy birliği ile onay vermesi gerekir.\n\nOnay süreci başlatılsın mı?',
+        content: SingleChildScrollView(
+          child: Text(
+            '${house.name} ortaklığından ayrılabilmeniz için diğer tüm ortakların (${house.members.length - 1} kişi) oy birliği ile onay vermesi gerekir.\n\nOnay süreci başlatılsın mı?',
+          ),
         ),
+        actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 8,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('Vazgeç'),
           ),
           ElevatedButton(
@@ -1293,6 +1352,7 @@ class HouseholdScreen extends ConsumerWidget {
                 );
               }
             },
+            style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('Talebi Başlat'),
           ),
         ],
@@ -1313,11 +1373,16 @@ class HouseholdScreen extends ConsumerWidget {
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Ortaklığı Sil'),
-          content: Text(
-              '"${house.name}" ortaklığı ve bağlı tüm kayıtlar silinecek. Emin misiniz?'),
+          content: SingleChildScrollView(
+            child: Text(
+                '"${house.name}" ortaklığı ve bağlı tüm kayıtlar silinecek. Emin misiniz?'),
+          ),
+          actionsOverflowDirection: VerticalDirection.down,
+          actionsOverflowButtonSpacing: 8,
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
+              style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
               child: const Text('Vazgeç'),
             ),
             ElevatedButton(
@@ -1327,8 +1392,9 @@ class HouseholdScreen extends ConsumerWidget {
                     .read(householdProvider.notifier)
                     .deleteCurrentPartnership();
               },
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppColors.negative),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.negative,
+                  minimumSize: const Size(0, 48)),
               child: const Text('Ortaklığı Sil'),
             ),
           ],
@@ -1344,15 +1410,25 @@ class HouseholdScreen extends ConsumerWidget {
           children: [
             Icon(Icons.warning_amber_rounded, color: AppColors.negative),
             SizedBox(width: 8),
-            Text('Ortaklığı Kapatma'),
+            Expanded(
+              child: Text(
+                'Ortaklığı Kapatma',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
-        content: Text(
-          '"${house.name}" ortaklığını tamamen kapatmak ve silmek için tüm ortakların (${house.members.length} kişi) 100% oy birliği gerekir.\n\nKapatma onay talebi başlatılsın mı?',
+        content: SingleChildScrollView(
+          child: Text(
+            '"${house.name}" ortaklığını tamamen kapatmak ve silmek için tüm ortakların (${house.members.length} kişi) 100% oy birliği gerekir.\n\nKapatma onay talebi başlatılsın mı?',
+          ),
         ),
+        actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 8,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('Vazgeç'),
           ),
           ElevatedButton(
@@ -1385,8 +1461,9 @@ class HouseholdScreen extends ConsumerWidget {
                 );
               }
             },
-            style:
-                ElevatedButton.styleFrom(backgroundColor: AppColors.negative),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.negative,
+                minimumSize: const Size(0, 48)),
             child: const Text('Kapatma Talebi Başlat'),
           ),
         ],
@@ -1435,6 +1512,11 @@ class HouseholdScreen extends ConsumerWidget {
             onPressed: () => _showCreatePartnershipDialog(context, ref),
             icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
             label: const Text('Yeni Ortaklık Kur'),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(54),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
+            ),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
@@ -1494,8 +1576,11 @@ class HouseholdScreen extends ConsumerWidget {
                   children: [
                     Icon(Icons.palette_outlined, size: 18, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
-                    const Text('Tema Modu',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const Expanded(
+                      child: Text('Tema Modu',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -1521,8 +1606,11 @@ class HouseholdScreen extends ConsumerWidget {
                   children: [
                     Icon(Icons.color_lens_outlined, size: 18, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
-                    Text('Vurgu Rengi (${activeAccent.displayName})',
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    Expanded(
+                      child: Text('Vurgu Rengi (${activeAccent.displayName})',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -1571,8 +1659,11 @@ class HouseholdScreen extends ConsumerWidget {
                   children: [
                     Icon(Icons.font_download_outlined, size: 18, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
-                    const Text('Tipografi (Google Fonts)',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const Expanded(
+                      child: Text('Tipografi (Google Fonts)',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -1598,8 +1689,11 @@ class HouseholdScreen extends ConsumerWidget {
                   children: [
                     Icon(Icons.grid_4x4_rounded, size: 18, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
-                    const Text('Arka Plan Deseni (Grid / Efekt)',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const Expanded(
+                      child: Text('Arka Plan Deseni (Grid / Efekt)',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -1652,8 +1746,11 @@ class HouseholdScreen extends ConsumerWidget {
                   children: [
                     Icon(Icons.dialpad_outlined, size: 18, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
-                    const Text('Numpad Düzeni',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const Expanded(
+                      child: Text('Numpad Düzeni',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -1679,8 +1776,11 @@ class HouseholdScreen extends ConsumerWidget {
                   children: [
                     Icon(Icons.attach_money_outlined, size: 18, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
-                    const Text('Para Birimi Sembolü',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const Expanded(
+                      child: Text('Para Birimi Sembolü',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -1792,8 +1892,11 @@ class HouseholdScreen extends ConsumerWidget {
                   children: [
                     Icon(Icons.vibration_outlined, size: 18, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
-                    const Text('Haptik Geri Bildirim Şiddeti',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const Expanded(
+                      child: Text('Haptik Geri Bildirim Şiddeti',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -2149,7 +2252,12 @@ class HouseholdScreen extends ConsumerWidget {
           children: [
             Icon(Icons.person_pin_rounded, color: AppColors.primary),
             SizedBox(width: 8),
-            Text('Profilimi Düzenle'),
+            Expanded(
+              child: Text(
+                'Profilimi Düzenle',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         content: SingleChildScrollView(
@@ -2181,9 +2289,12 @@ class HouseholdScreen extends ConsumerWidget {
             ],
           ),
         ),
+        actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 8,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
+            style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('İptal'),
           ),
           ElevatedButton(
@@ -2212,6 +2323,7 @@ class HouseholdScreen extends ConsumerWidget {
                 );
               }
             },
+            style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('Kaydet'),
           ),
         ],
@@ -2253,9 +2365,12 @@ class HouseholdScreen extends ConsumerWidget {
             ],
           ),
         ),
+        actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 8,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
+            style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('Vazgeç'),
           ),
           ElevatedButton(
@@ -2263,7 +2378,9 @@ class HouseholdScreen extends ConsumerWidget {
               Navigator.pop(dialogCtx);
               _showFinalDeletePrompt(context, ref);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.negative),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.negative,
+                minimumSize: const Size(0, 48)),
             child: const Text('Silmeye Devam Et'),
           ),
         ],
@@ -2316,9 +2433,12 @@ class HouseholdScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            actionsOverflowDirection: VerticalDirection.down,
+            actionsOverflowButtonSpacing: 8,
             actions: [
               TextButton(
                 onPressed: isDeleting ? null : () => Navigator.pop(dialogCtx),
+                style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
                 child: const Text('Vazgeç'),
               ),
               ElevatedButton(
@@ -2364,7 +2484,8 @@ class HouseholdScreen extends ConsumerWidget {
                         }
                       },
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.negative),
+                    backgroundColor: AppColors.negative,
+                    minimumSize: const Size(0, 48)),
                 child: isDeleting
                     ? const SizedBox(
                         width: 16,
@@ -2388,10 +2509,15 @@ class HouseholdScreen extends ConsumerWidget {
       context: context,
       builder: (dialogCtx) => AlertDialog(
         title: const Text('Çıkış Yap'),
-        content: const Text('Oturumunuzu kapatmak istediğinize emin misiniz?'),
+        content: const SingleChildScrollView(
+          child: Text('Oturumunuzu kapatmak istediğinize emin misiniz?'),
+        ),
+        actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 8,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
+            style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('İptal'),
           ),
           ElevatedButton(
@@ -2404,8 +2530,9 @@ class HouseholdScreen extends ConsumerWidget {
                 );
               }
             },
-            style:
-                ElevatedButton.styleFrom(backgroundColor: AppColors.negative),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.negative,
+                minimumSize: const Size(0, 48)),
             child: const Text('Çıkış'),
           ),
         ],

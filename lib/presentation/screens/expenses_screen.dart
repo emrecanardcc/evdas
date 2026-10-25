@@ -384,11 +384,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               const SizedBox(height: 8),
               Wrap(
                 spacing: 6,
+                runSpacing: 6,
                 children: [
                   if (item.isPendingSync)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.amber.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
@@ -400,12 +401,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                           Icon(Icons.cloud_off_rounded,
                               size: 13, color: Colors.amber.shade900),
                           const SizedBox(width: 4),
-                          Text(
-                            '⏳ Çevrimdışı (Bağlanınca Eşitlenecek)',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.amber.shade900,
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 220),
+                            child: Text(
+                              '⏳ Çevrimdışı (Bağlanınca Eşitlenecek)',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.amber.shade900,
+                              ),
                             ),
                           ),
                         ],
@@ -414,25 +420,30 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   if (item.isDeletionPending)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.negative.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                             color: AppColors.negative.withValues(alpha: 0.4)),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.how_to_vote_rounded,
+                          const Icon(Icons.how_to_vote_rounded,
                               size: 13, color: AppColors.negative),
-                          SizedBox(width: 4),
-                          Text(
-                            '🗳️ Ortak Silme Onayı Bekliyor',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.negative,
+                          const SizedBox(width: 4),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 220),
+                            child: const Text(
+                              '🗳️ Ortak Silme Onayı Bekliyor',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.negative,
+                              ),
                             ),
                           ),
                         ],
@@ -457,12 +468,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
+          actionsOverflowDirection: VerticalDirection.down,
+          actionsOverflowButtonSpacing: 8,
           title: const Text('Harcamayı Sil'),
-          content: Text(
-              '"${item.title}" (${CurrencyFormatter.formatClean(item.amount)}) silinecek. Emin misiniz?'),
+          content: SingleChildScrollView(
+            child: Text(
+                '"${item.title}" (${CurrencyFormatter.formatClean(item.amount)}) silinecek. Emin misiniz?'),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
+              style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
               child: const Text('Vazgeç'),
             ),
             ElevatedButton(
@@ -476,8 +492,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   ),
                 );
               },
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppColors.negative),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.negative,
+                minimumSize: const Size(0, 48),
+              ),
               child: const Text('Sil'),
             ),
           ],
@@ -490,19 +508,29 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 8,
         title: const Row(
           children: [
             Icon(Icons.how_to_vote_rounded, color: AppColors.primary),
             SizedBox(width: 8),
-            Text('Ortak Kararla Silme'),
+            Expanded(
+              child: Text(
+                'Ortak Kararla Silme',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
-        content: Text(
-          '"${item.title}" (${CurrencyFormatter.formatClean(item.amount)}) masrafını silmek için evdekilerin onayı gerekir.\n\nSilme onay talebi oluşturulsun mu?',
+        content: SingleChildScrollView(
+          child: Text(
+            '"${item.title}" (${CurrencyFormatter.formatClean(item.amount)}) masrafını silmek için evdekilerin onayı gerekir.\n\nSilme onay talebi oluşturulsun mu?',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('Vazgeç'),
           ),
           ElevatedButton(
@@ -552,6 +580,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 ),
               );
             },
+            style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('Onay Talebi Oluştur'),
           ),
         ],

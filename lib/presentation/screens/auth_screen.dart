@@ -196,9 +196,12 @@ class _AuthScreenState extends State<AuthScreen>
               ],
             ),
           ),
+          actionsOverflowDirection: VerticalDirection.down,
+          actionsOverflowButtonSpacing: 8,
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
+              style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
               child: const Text('İptal'),
             ),
             ElevatedButton(
@@ -235,6 +238,7 @@ class _AuthScreenState extends State<AuthScreen>
                         }
                       }
                     },
+              style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
               child: isSubmitting
                   ? const SizedBox(
                       width: 18,
@@ -475,52 +479,60 @@ class _AuthScreenState extends State<AuthScreen>
   }
 
   Widget _buildLoginForm() {
-    return Column(
-      children: [
-        TextField(
-          controller: _loginEmailController,
-          keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            labelText: 'E-posta',
-            prefixIcon: const Icon(Icons.email_outlined),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _loginPasswordController,
-          obscureText: true,
-          decoration: InputDecoration(
-            labelText: 'Şifre',
-            prefixIcon: const Icon(Icons.lock_outline),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: _showForgotPasswordDialog,
-            child: const Text(
-              'Şifremi Unuttum?',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+    return SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
+      child: Column(
+        children: [
+          TextField(
+            controller: _loginEmailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecoration(
+              labelText: 'E-posta',
+              prefixIcon: const Icon(Icons.email_outlined),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _handleLogin,
-          child: _isLoading
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2.5,
-                  ),
-                )
-              : const Text('Giriş Yap'),
-        ),
-      ],
+          const SizedBox(height: 12),
+          TextField(
+            controller: _loginPasswordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: 'Şifre',
+              prefixIcon: const Icon(Icons.lock_outline),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: _showForgotPasswordDialog,
+              child: const Text(
+                'Şifremi Unuttum?',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: _isLoading ? null : _handleLogin,
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : const Text('Giriş Yap'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -624,6 +636,11 @@ class _AuthScreenState extends State<AuthScreen>
           const SizedBox(height: 12),
           ElevatedButton(
             onPressed: _isLoading ? null : _handleRegister,
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
             child: _isLoading
                 ? const SizedBox(
                     width: 22,

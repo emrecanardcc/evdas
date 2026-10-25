@@ -248,6 +248,7 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
           ),
         ),
         actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 8,
         actions: [
           TextButton.icon(
             onPressed: () {
@@ -265,9 +266,11 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
             },
             icon: const Icon(Icons.share_rounded, size: 18),
             label: const Text('Ortaklarla Paylaş'),
+            style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('Tamamdır!'),
           ),
         ],
@@ -304,76 +307,81 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
             const SizedBox(height: 16),
 
             // 2. ÇARK ALANI VE İBRE
-            SizedBox(
-              height: 290,
-              width: 290,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Dönen Çark
-                  Transform.rotate(
-                    angle: _currentAngle,
-                    child: CustomPaint(
-                      size: const Size(270, 270),
-                      painter: _WheelPainter(
-                        members: participating,
-                        colors: _wheelColors,
-                      ),
-                    ),
-                  ),
-
-                  // Merkez Göbek
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardTheme.color,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.casino_rounded,
-                        color: house?.displayColor ?? AppColors.primary,
-                        size: 26,
-                      ),
-                    ),
-                  ),
-
-                  // Üstteki İşaretçi / İbre (Pointer)
-                  Positioned(
-                    top: 0,
-                    child: Container(
-                      width: 24,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.red.withValues(alpha: 0.4),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final wheelSize = math.min(270.0, constraints.maxWidth - 20.0);
+                return SizedBox(
+                  height: wheelSize + 20,
+                  width: wheelSize + 20,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Dönen Çark
+                      Transform.rotate(
+                        angle: _currentAngle,
+                        child: CustomPaint(
+                          size: Size(wheelSize, wheelSize),
+                          painter: _WheelPainter(
+                            members: participating,
+                            colors: _wheelColors,
                           ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.white,
-                          size: 24,
                         ),
                       ),
-                    ),
+
+                      // Merkez Göbek
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardTheme.color,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.casino_rounded,
+                            color: house?.displayColor ?? AppColors.primary,
+                            size: 26,
+                          ),
+                        ),
+                      ),
+
+                      // Üstteki İşaretçi / İbre (Pointer)
+                      Positioned(
+                        top: 0,
+                        child: Container(
+                          width: 24,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.red.withValues(alpha: 0.4),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.arrow_drop_down,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
 
             const SizedBox(height: 16),
@@ -395,12 +403,16 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
                 children: [
                   const Icon(Icons.sync_rounded, size: 24),
                   const SizedBox(width: 8),
-                  Text(
-                    _isSpinning
-                        ? 'Çark Dönüyor...'
-                        : 'Çarkı Çevir! (${participating.length} Kişi)',
-                    style: const TextStyle(
-                        fontSize: 17, fontWeight: FontWeight.w700),
+                  Flexible(
+                    child: Text(
+                      _isSpinning
+                          ? 'Çark Dönüyor...'
+                          : 'Çarkı Çevir! (${participating.length} Kişi)',
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w700),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -418,11 +430,15 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Çarka Katılan Ortaklar',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w800),
+                        const Expanded(
+                          child: Text(
+                            'Çarka Katılan Ortaklar',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w800),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Text(
                           '${participating.length}/${members.length} seçildi',
                           style: TextStyle(
@@ -514,9 +530,12 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
                 Icon(Icons.assignment_rounded,
                     size: 18, color: AppColors.primary),
                 SizedBox(width: 6),
-                Text(
-                  'Kura Konusu / Görev',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                Expanded(
+                  child: Text(
+                    'Kura Konusu / Görev',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
