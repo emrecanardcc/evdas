@@ -89,3 +89,15 @@ enum HapticLevel {
   const HapticLevel(this.label);
   String get displayName => label;
 }
+
+enum BackgroundPatternType {
+  none('Düz (Desensiz)', Icons.crop_square_rounded),
+  grid('Kareli Grid', Icons.grid_4x4_rounded),
+  dots('Modern Noktalar', Icons.grain_rounded),
+  mesh('Hafif Çizgiler', Icons.texture_rounded);
+
+  final String label;
+  final IconData icon;
+  const BackgroundPatternType(this.label, this.icon);
+  String get displayName => label;
+}

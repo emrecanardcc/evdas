@@ -4,6 +4,7 @@ import 'package:evdas_mobile/core/theme/customization_models.dart';
 import 'package:evdas_mobile/core/utils/currency_formatter.dart';
 import 'package:evdas_mobile/data/models/expense.dart';
 import 'package:evdas_mobile/presentation/widgets/animated_rolling_number.dart';
+import 'package:evdas_mobile/presentation/widgets/pattern_background.dart';
 
 void main() {
   group('Customization Models & CurrencyFormatter Tests', () {
@@ -73,6 +74,11 @@ void main() {
       expect(CurrencyPlacement.after.displayName, 'Sonda (100 ₺)');
       expect(DecimalRule.clean.displayName, 'Akıllı (Varsa kuruş, yoksa tam)');
       expect(HapticLevel.strong.displayName, 'Güçlü');
+      expect(BackgroundPatternType.none.displayName, 'Düz (Desensiz)');
+      expect(BackgroundPatternType.grid.displayName, 'Kareli Grid');
+      expect(BackgroundPatternType.dots.displayName, 'Modern Noktalar');
+      expect(BackgroundPatternType.mesh.displayName, 'Hafif Çizgiler');
+      expect(BackgroundPatternType.values.length, 4);
     });
 
     testWidgets('AnimatedRollingNumber gizli bakiye modunda sembol yerleşimine uymalıdır', (tester) async {
@@ -97,6 +103,46 @@ void main() {
         ),
       );
       expect(find.text(r'$ ••••'), findsOneWidget);
+    });
+
+    testWidgets('PatternBackground widget overrides and renders pattern without error', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: PatternBackground(
+              patternOverride: BackgroundPatternType.grid,
+              child: Text('Grid Screen Content'),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Grid Screen Content'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(PatternBackground),
+          matching: find.byType(CustomPaint),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: PatternBackground(
+              patternOverride: BackgroundPatternType.none,
+              child: Text('Plain Screen Content'),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Plain Screen Content'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(PatternBackground),
+          matching: find.byType(CustomPaint),
+        ),
+        findsNothing,
+      );
     });
   });
 }

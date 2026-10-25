@@ -56,22 +56,21 @@ class ApprovalCenterModal extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
-                  children: [
-                    Icon(Icons.how_to_vote_rounded, color: AppColors.primary),
-                    SizedBox(width: 8),
-                    Text(
-                      'Grup Kararları & Onay Merkezi',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                    ),
-                  ],
+                const Icon(Icons.how_to_vote_rounded, color: AppColors.primary),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Grup Kararları & Onay Merkezi',
+                    style:
+                        TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded),
                   onPressed: () => Navigator.pop(context),
+                  tooltip: 'Kapat',
                 ),
               ],
             ),
@@ -309,6 +308,7 @@ class ApprovalCenterModal extends ConsumerWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.negative,
                         side: const BorderSide(color: AppColors.negative),
+                        minimumSize: const Size(0, 44),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
@@ -330,6 +330,7 @@ class ApprovalCenterModal extends ConsumerWidget {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.positive,
+                        minimumSize: const Size(0, 44),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
@@ -419,6 +420,7 @@ class ApprovalCenterModal extends ConsumerWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.negative,
                         side: const BorderSide(color: AppColors.negative),
+                        minimumSize: const Size(0, 44),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
@@ -435,6 +437,7 @@ class ApprovalCenterModal extends ConsumerWidget {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.settlement,
+                        minimumSize: const Size(0, 44),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),

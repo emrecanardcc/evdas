@@ -318,6 +318,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
         .toList();
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: PopupMenuButton<String>(
           tooltip: 'Ortaklık Değiştir',
@@ -425,12 +426,17 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        currentMember.displayName,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 72),
+                        child: Text(
+                          currentMember.displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ],
@@ -1138,19 +1144,26 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
               ),
             ),
           ),
-          TextButton(
+          OutlinedButton(
             onPressed: () {
+              HapticService.light();
               setState(() {
                 _iAmCreditor = !_iAmCreditor;
               });
             },
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.personalDebt,
+              side: BorderSide(
+                color: AppColors.personalDebt.withValues(alpha: 0.5),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              minimumSize: const Size(0, 44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('Yön Değiştir ⇄',
-                style: TextStyle(fontWeight: FontWeight.w700)),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
           ),
         ],
       ),

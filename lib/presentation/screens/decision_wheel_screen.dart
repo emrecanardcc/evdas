@@ -8,6 +8,7 @@ import '../../core/services/sound_service.dart';
 import '../../data/models/household_member.dart';
 import '../providers/app_providers.dart';
 import '../widgets/confetti_overlay.dart';
+import '../widgets/pattern_background.dart';
 
 class DecisionWheelScreen extends ConsumerStatefulWidget {
   const DecisionWheelScreen({super.key});
@@ -195,55 +196,58 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
             ],
           ),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    winner.displayName,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      winner.displayName,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Sıra sende, görevin:',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    taskName,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Sıra sende, görevin:',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 6),
+                    Text(
+                      taskName,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              '🎯 Evdaş Karar Çarkı konuştu, itiraz kabul edilmez!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).textTheme.bodyMedium?.color,
+              const SizedBox(height: 14),
+              Text(
+                '🎯 Evdaş Karar Çarkı konuştu, itiraz kabul edilmez!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+        actionsOverflowDirection: VerticalDirection.down,
         actions: [
           TextButton.icon(
             onPressed: () {
@@ -282,11 +286,13 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
 
     final participating = _getParticipatingMembers();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ev Karar Çarkı',
-            style: TextStyle(fontWeight: FontWeight.w700)),
-      ),
+    return PatternBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('Ev Karar Çarkı',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+        ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         physics: const BouncingScrollPhysics(),
@@ -492,8 +498,9 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTaskSelector() {
     return Card(

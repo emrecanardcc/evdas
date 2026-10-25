@@ -21,6 +21,7 @@ class ReportsScreen extends ConsumerWidget {
     final isPrivacy = ref.watch(privacyModeProvider);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Gider Raporları & Analiz',
             style: TextStyle(fontWeight: FontWeight.w700)),
@@ -72,30 +73,33 @@ class ReportsScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
             // 1. ZAMAN ARALIĞI SEÇİCİ
-            Row(
-              children: ReportTimeRange.values.map((range) {
-                final isSelected = range == currentRange;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: ChoiceChip(
-                    selected: isSelected,
-                    label: Text(range.displayName),
-                    selectedColor: AppColors.primary,
-                    labelStyle: TextStyle(
-                      fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected
-                          ? Colors.white
-                          : Theme.of(context).textTheme.bodyMedium?.color,
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: ReportTimeRange.values.map((range) {
+                  final isSelected = range == currentRange;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: ChoiceChip(
+                      selected: isSelected,
+                      label: Text(range.displayName),
+                      selectedColor: AppColors.primary,
+                      labelStyle: TextStyle(
+                        fontSize: 13,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white
+                            : Theme.of(context).textTheme.bodyMedium?.color,
+                      ),
+                      onSelected: (_) {
+                        ref
+                            .read(reportTimeRangeProvider.notifier)
+                            .setRange(range);
+                      },
                     ),
-                    onSelected: (_) {
-                      ref
-                          .read(reportTimeRangeProvider.notifier)
-                          .setRange(range);
-                    },
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             ),
 
             const SizedBox(height: 16),
@@ -164,11 +168,15 @@ class ReportsScreen extends ConsumerWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                mem.member.displayName,
-                                style: const TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.w700),
+                              Expanded(
+                                child: Text(
+                                  mem.member.displayName,
+                                  style: const TextStyle(
+                                      fontSize: 14, fontWeight: FontWeight.w700),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
+                              const SizedBox(width: 8),
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -359,29 +367,32 @@ class ReportsScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Dönem Net Harcaması',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Dönem Net Harcaması',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  AnimatedRollingNumber(
-                    value: report.grandTotal,
-                    isMasked: isPrivacy,
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
+                    const SizedBox(height: 4),
+                    AnimatedRollingNumber(
+                      value: report.grandTotal,
+                      isMasked: isPrivacy,
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(

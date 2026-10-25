@@ -38,6 +38,7 @@ class SettlementScreen extends ConsumerWidget {
         p.status == PaymentStatus.pending && p.fromMemberId == currentMember?.id);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Hesaplaşma & Ödeşme',
             style: TextStyle(fontWeight: FontWeight.w700)),
@@ -280,11 +281,16 @@ class SettlementScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '${req.fromMemberName} ➔ Sen',
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w700),
+                        Expanded(
+                          child: Text(
+                            '${req.fromMemberName} ➔ Sen',
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w700),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Text(
                           CurrencyFormatter.formatClean(req.amount, checkPrivacy: true),
                           style: const TextStyle(
@@ -323,6 +329,7 @@ class SettlementScreen extends ConsumerWidget {
                           },
                           style: TextButton.styleFrom(
                             foregroundColor: AppColors.negative,
+                            minimumSize: const Size(0, 44),
                           ),
                           child: const Text('Reddet (Gelmedi)'),
                         ),
@@ -347,7 +354,7 @@ class SettlementScreen extends ConsumerWidget {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.positive,
-                            minimumSize: const Size(0, 36),
+                            minimumSize: const Size(0, 44),
                             padding: const EdgeInsets.symmetric(horizontal: 14),
                           ),
                           child: const Text('Hesaba Geçti (Onayla)'),
@@ -517,24 +524,33 @@ class SettlementScreen extends ConsumerWidget {
                 Expanded(
                   child: Row(
                     children: [
-                      Text(
-                        item.fromMemberName,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700),
+                      Flexible(
+                        child: Text(
+                          item.fromMemberName,
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w700),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        padding: EdgeInsets.symmetric(horizontal: 6),
                         child: Icon(Icons.arrow_forward_rounded,
-                            size: 18, color: AppColors.primary),
+                            size: 16, color: AppColors.primary),
                       ),
-                      Text(
-                        item.toMemberName,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700),
+                      Flexible(
+                        child: Text(
+                          item.toMemberName,
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w700),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 AnimatedRollingNumber(
                   value: item.amount,
                   isMasked: isPrivacy,
@@ -606,9 +622,9 @@ class SettlementScreen extends ConsumerWidget {
                   ? 'Ödeme Yap / Bildir (Kısmi/Tam)'
                   : '${item.fromMemberName} Adına Ödeme Gir'),
               style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(42),
+                minimumSize: const Size.fromHeight(48),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ],
@@ -629,39 +645,41 @@ class SettlementScreen extends ConsumerWidget {
       context: context,
       builder: (dialogCtx) => AlertDialog(
         title: Text('${item.toMemberName}\'ye Ödeme Bildir'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Toplam Borç: ${CurrencyFormatter.formatClean(item.amount)}',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: amountController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Ödenecek Tutar (₺)',
-                hintText: 'Örn: 500 veya 1034.75',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Toplam Borç: ${CurrencyFormatter.formatClean(item.amount)}',
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: noteController,
-              decoration: const InputDecoration(
-                labelText: 'Not (İsteğe bağlı)',
-                hintText: 'Örn: Banka havalesi / FAST yapıldı',
+              const SizedBox(height: 12),
+              TextField(
+                controller: amountController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Ödenecek Tutar (₺)',
+                  hintText: 'Örn: 500 veya 1034.75',
+                ),
+                autofocus: true,
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Ödeme bildirildiğinde karşı tarafın onayına sunulur. Yalnızca her iki taraf kabul ettiğinde borçtan düşülür.',
-              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-            ),
-          ],
+              const SizedBox(height: 10),
+              TextField(
+                controller: noteController,
+                decoration: const InputDecoration(
+                  labelText: 'Not (İsteğe bağlı)',
+                  hintText: 'Örn: Banka havalesi / FAST yapıldı',
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Ödeme bildirildiğinde karşı tarafın onayına sunulur. Yalnızca her iki taraf kabul ettiğinde borçtan düşülür.',
+                style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(

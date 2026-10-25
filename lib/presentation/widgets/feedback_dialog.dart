@@ -85,9 +85,12 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
         children: [
           Icon(Icons.feedback_rounded, color: AppColors.primary, size: 22),
           SizedBox(width: 8),
-          Text(
-            'Geri Bildirim & Destek',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          Expanded(
+            child: Text(
+              'Geri Bildirim & Destek',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

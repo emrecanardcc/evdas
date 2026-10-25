@@ -153,7 +153,7 @@ class CustomNumpad extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           onTap: onTap,
           child: Container(
-            height: 38,
+            height: 44,
             alignment: Alignment.center,
             child: Text(
               label,

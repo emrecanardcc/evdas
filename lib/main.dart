@@ -17,8 +17,11 @@ void main() async {
   // Türkçe tarih formatlamasını başlat
   await initializeDateFormatting('tr_TR', null);
 
-  // Canlı Supabase altyapısını başlat
-  await SupabaseService.initialize();
+  // Canlı Supabase altyapısını başlat (Soğuk açılış ve zayıf ağlarda ANR önleme amaçlı 3 sn zaman aşımı)
+  await SupabaseService.initialize().timeout(
+    const Duration(seconds: 3),
+    onTimeout: () => debugPrint('Supabase başlatma zaman aşımı - Çevrimdışı modda devam ediliyor'),
+  );
 
   // Yerel veritabanı / SharedPreferences başlat
   final expenseRepo = await ExpenseRepository.init();

@@ -59,64 +59,66 @@ class InstantSavedDialog {
                   ),
                 ],
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 68,
-                    height: 68,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Icon(Icons.check_rounded, color: color, size: 40),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '⚡ Masraf Kaydedildi!',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: color,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    CurrencyFormatter.formatClean(amount),
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    isPersonal
-                        ? '$title\n($debtorName ➔ $paidByName)'
-                        : '$title ($paidByName)',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(dialogCtx).textTheme.bodyMedium?.color,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(dialogCtx, rootNavigator: true).maybePop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: color,
-                      minimumSize: const Size.fromHeight(44),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 68,
+                      height: 68,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Icon(Icons.check_rounded, color: color, size: 40),
                       ),
                     ),
-                    child: const Text('Tamam'),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    Text(
+                      '⚡ Masraf Kaydedildi!',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: color,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      CurrencyFormatter.formatClean(amount),
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isPersonal
+                          ? '$title\n($debtorName ➔ $paidByName)'
+                          : '$title ($paidByName)',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(dialogCtx).textTheme.bodyMedium?.color,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(dialogCtx, rootNavigator: true).maybePop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: color,
+                        minimumSize: const Size.fromHeight(48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Tamam'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -37,6 +37,7 @@ class HouseholdScreen extends ConsumerWidget {
     final pendingCount = ref.watch(pendingApprovalsCountProvider);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -784,26 +785,28 @@ class HouseholdScreen extends ConsumerWidget {
       context: context,
       builder: (dialogCtx) => AlertDialog(
         title: const Text('Yeni Ortak Ekle (Maks. 6)'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'İsim Soyisim',
-                hintText: 'Örn: Ahmet Yılmaz',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'İsim Soyisim',
+                  hintText: 'Örn: Ahmet Yılmaz',
+                ),
+                autofocus: true,
               ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: ibanController,
-              decoration: const InputDecoration(
-                labelText: 'IBAN (İsteğe bağlı)',
-                hintText: 'TR...',
+              const SizedBox(height: 12),
+              TextField(
+                controller: ibanController,
+                decoration: const InputDecoration(
+                  labelText: 'IBAN (İsteğe bağlı)',
+                  hintText: 'TR...',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -959,35 +962,37 @@ class HouseholdScreen extends ConsumerWidget {
       context: context,
       builder: (dialogCtx) => AlertDialog(
         title: const Text('Kod ile Ortaklığa Katıl'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: codeController,
-              textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(
-                labelText: 'Davet Kodu',
-                hintText: 'Örn: ORTAK-7K9M-2X4V',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: codeController,
+                textCapitalization: TextCapitalization.characters,
+                decoration: const InputDecoration(
+                  labelText: 'Davet Kodu',
+                  hintText: 'Örn: ORTAK-7K9M-2X4V',
+                ),
+                autofocus: true,
               ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Gruptaki İsminiz',
-                hintText: 'Örn: Adınız Soyadınız',
+              const SizedBox(height: 12),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Gruptaki İsminiz',
+                  hintText: 'Örn: Adınız Soyadınız',
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: ibanController,
-              decoration: const InputDecoration(
-                labelText: 'IBAN (İsteğe bağlı)',
-                hintText: 'TR...',
+              const SizedBox(height: 12),
+              TextField(
+                controller: ibanController,
+                decoration: const InputDecoration(
+                  labelText: 'IBAN (İsteğe bağlı)',
+                  hintText: 'TR...',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -1462,6 +1467,7 @@ class HouseholdScreen extends ConsumerWidget {
     final isPrivacy = ref.watch(privacyModeProvider);
     final hapticLvl = ref.watch(hapticLevelProvider);
     final soundEnabled = ref.watch(soundEnabledProvider);
+    final activePattern = ref.watch(backgroundPatternProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1581,6 +1587,39 @@ class HouseholdScreen extends ConsumerWidget {
                       onSelected: (_) {
                         HapticService.selection();
                         ref.read(fontFamilyProvider.notifier).setFont(f);
+                      },
+                    );
+                  }).toList(),
+                ),
+                const Divider(height: 24),
+
+                // Arka Plan Deseni (Grid / Dots / Mesh / Düz)
+                Row(
+                  children: [
+                    Icon(Icons.grid_4x4_rounded, size: 18, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    const Text('Arka Plan Deseni (Grid / Efekt)',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: BackgroundPatternType.values.map((p) {
+                    final isSel = p == activePattern;
+                    return ChoiceChip(
+                      selected: isSel,
+                      showCheckmark: false,
+                      avatar: Icon(
+                        p.icon,
+                        size: 16,
+                        color: isSel ? Colors.white : theme.colorScheme.primary,
+                      ),
+                      label: Text(p.displayName),
+                      onSelected: (_) {
+                        HapticService.selection();
+                        ref.read(backgroundPatternProvider.notifier).setPattern(p);
                       },
                     );
                   }).toList(),
@@ -2113,32 +2152,34 @@ class HouseholdScreen extends ConsumerWidget {
             Text('Profilimi Düzenle'),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Diğer ev arkadaşlarınız sizi bu isimle görecektir. İsteğe bağlı olarak ortak ödeşmelerde kullanılacak IBAN bilginizi ekleyebilirsiniz.',
-              style: TextStyle(fontSize: 12),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'İsim Soyisim',
-                hintText: 'Adınız Soyadınız',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Diğer ev arkadaşlarınız sizi bu isimle görecektir. İsteğe bağlı olarak ortak ödeşmelerde kullanılacak IBAN bilginizi ekleyebilirsiniz.',
+                style: TextStyle(fontSize: 12),
               ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: ibanController,
-              decoration: const InputDecoration(
-                labelText: 'IBAN (İsteğe bağlı)',
-                hintText: 'TR...',
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'İsim Soyisim',
+                  hintText: 'Adınız Soyadınız',
+                ),
+                autofocus: true,
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: ibanController,
+                decoration: const InputDecoration(
+                  labelText: 'IBAN (İsteğe bağlı)',
+                  hintText: 'TR...',
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -2252,26 +2293,28 @@ class HouseholdScreen extends ConsumerWidget {
                 color: AppColors.negative,
               ),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Hesabınızı ve tüm verilerinizi derhal kalıcı olarak silmek için lütfen aşağıdaki kutuya "SİL" yazın:',
-                  style: TextStyle(fontSize: 13),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: textController,
-                  autofocus: true,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: const InputDecoration(
-                    hintText: 'SİL',
-                    border: OutlineInputBorder(),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Hesabınızı ve tüm verilerinizi derhal kalıcı olarak silmek için lütfen aşağıdaki kutuya "SİL" yazın:',
+                    style: TextStyle(fontSize: 13),
                   ),
-                  onChanged: (_) => setDialogState(() {}),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: textController,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: const InputDecoration(
+                      hintText: 'SİL',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(

@@ -267,3 +267,31 @@ class SoundEnabledNotifier extends Notifier<bool> {
 
 final soundEnabledProvider =
     NotifierProvider<SoundEnabledNotifier, bool>(SoundEnabledNotifier.new);
+
+// 9. ARKA PLAN DESENİ (Düz / Grid / Noktalı / Mesh)
+class BackgroundPatternNotifier extends Notifier<BackgroundPatternType> {
+  static const _key = 'evdas_background_pattern_v2';
+
+  @override
+  BackgroundPatternType build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final raw = prefs.getString(_key);
+    if (raw != null) {
+      return BackgroundPatternType.values.firstWhere(
+        (p) => p.name == raw,
+        orElse: () => BackgroundPatternType.none,
+      );
+    }
+    return BackgroundPatternType.none;
+  }
+
+  Future<void> setPattern(BackgroundPatternType pattern) async {
+    state = pattern;
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setString(_key, pattern.name);
+  }
+}
+
+final backgroundPatternProvider =
+    NotifierProvider<BackgroundPatternNotifier, BackgroundPatternType>(
+        BackgroundPatternNotifier.new);
