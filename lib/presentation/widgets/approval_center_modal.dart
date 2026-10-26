@@ -234,7 +234,7 @@ class ApprovalCenterModal extends ConsumerWidget {
                 color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             // Onay İlerlemesi (Örn: 2/3 Onaylandı)
             Row(
@@ -252,7 +252,7 @@ class ApprovalCenterModal extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Text(
                   '${req.approvals.length}/${req.requiredCount} Onay',
                   style: const TextStyle(

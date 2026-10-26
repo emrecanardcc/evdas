@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseService {
@@ -7,22 +6,19 @@ class SupabaseService {
     defaultValue: 'https://jsqzzikbwilltyfopfyk.supabase.co',
   );
 
-  static const String _envAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
-
-  // GitHub gizli anahtar tarayıcılarının yanlış alarm vermesini önlemek için güvenli çalışma zamanı çözümü
-  static String get _defaultAnonKey {
-    const b64 =
-        'ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnBjM01pT2lKemRYQmhZbUZ6WlNJc0luSmxaaUk2SW1wemNYcDZhV3RpZDJsc2JIUjVabTl3Wm5scklpd2ljbTlzWlNJNkltRnViMjRpTENKcFlYUWlPakUzT1RJMU1UQTFOaklzSW1WNGNDSTZNakV3T0RBNE5qVTJNbjAudC1sRXFZUC14Z1Iwa2p4cWkwVzUwUV9CZ0NUOHg1ZFE0VEhkaEtzV3Rvaw==';
-    return utf8.decode(base64.decode(b64));
-  }
-
-  static String get supabaseAnonKey =>
-      _envAnonKey.isNotEmpty ? _envAnonKey : _defaultAnonKey;
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: '',
+  );
 
   static bool _isInitialized = false;
 
   static Future<void> initialize() async {
     if (_isInitialized) return;
+    if (supabaseAnonKey.isEmpty) {
+      // Ortam değişkeni (.env / --dart-define) verilmediğinde güvenli çevrimdışı modda çalış
+      return;
+    }
     try {
       await Supabase.initialize(
         url: supabaseUrl,

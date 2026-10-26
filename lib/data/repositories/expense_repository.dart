@@ -123,47 +123,50 @@ class ExpenseRepository {
           }
         }
 
-        // 3. Ortaklıklara ait harcamaları, ödemeleri ve onay taleplerini çek
-        for (final p in cloudPartnerships) {
-          final expRes = await client
+        // 3. Ortaklıklara ait harcamaları, ödemeleri ve onay taleplerini paralel çek (Parallel Network I/O)
+        await Future.wait(cloudPartnerships.map((p) async {
+          final expFuture = client
               .from('expenses')
               .select('*')
               .eq('partnership_id', p.id)
               .order('expense_date', ascending: false)
               .limit(100);
 
-          final expenses = (expRes as List)
-              .map((e) => Expense.fromJson(e as Map<String, dynamic>))
-              .toList();
-          await saveExpensesForPartnership(p.id, expenses);
-
-          final payRes = await client
+          final payFuture = client
               .from('payment_requests')
               .select('*')
               .eq('partnership_id', p.id)
               .order('created_at', ascending: false)
               .limit(50);
 
-          final payments = (payRes as List)
+          final appFuture = client
+              .from('approval_requests')
+              .select('*')
+              .eq('partnership_id', p.id)
+              .order('created_at', ascending: false)
+              .limit(50);
+
+          final results = await Future.wait([
+            expFuture,
+            payFuture,
+            appFuture.then((res) => res, onError: (_) => []),
+          ]);
+
+          final expenses = (results[0] as List)
+              .map((e) => Expense.fromJson(e as Map<String, dynamic>))
+              .toList();
+          await saveExpensesForPartnership(p.id, expenses);
+
+          final payments = (results[1] as List)
               .map((pr) => PaymentRequest.fromJson(pr as Map<String, dynamic>))
               .toList();
           await savePaymentRequestsForPartnership(p.id, payments);
 
-          // Onay taleplerini çek
-          try {
-            final appRes = await client
-                .from('approval_requests')
-                .select('*')
-                .eq('partnership_id', p.id)
-                .order('created_at', ascending: false)
-                .limit(50);
-
-            final approvals = (appRes as List)
-                .map((ar) => ApprovalRequest.fromJson(ar as Map<String, dynamic>))
-                .toList();
-            await saveApprovalRequestsForPartnership(p.id, approvals);
-          } catch (_) {}
-        }
+          final approvals = (results[2] as List)
+              .map((ar) => ApprovalRequest.fromJson(ar as Map<String, dynamic>))
+              .toList();
+          await saveApprovalRequestsForPartnership(p.id, approvals);
+        }));
       }
     } catch (_) {
       // Çevrimdışı fallback: Hata durumunda yerel L1 önbellek korunur
@@ -192,6 +195,7 @@ class ExpenseRepository {
 
     int syncedCount = 0;
     final List<Expense> remaining = [];
+    final Map<String, Set<String>> syncedIdsByHousehold = {};
 
     for (final exp in queue) {
       try {
@@ -227,17 +231,30 @@ class ExpenseRepository {
         }
 
         syncedCount++;
-
-        // Yerel kayıttaki isPendingSync bayrağını kaldır
-        final currentExpenses =
-            List<Expense>.from(getExpensesForPartnership(exp.householdId));
-        final idx = currentExpenses.indexWhere((e) => e.id == exp.id);
-        if (idx != -1) {
-          currentExpenses[idx] = currentExpenses[idx].copyWith(isPendingSync: false);
-          await saveExpensesForPartnership(exp.householdId, currentExpenses);
-        }
+        syncedIdsByHousehold
+            .putIfAbsent(exp.householdId, () => <String>{})
+            .add(exp.id);
       } catch (_) {
         remaining.add(exp);
+      }
+    }
+
+    // Toplu disk güncellemesi (Her kayıt için tek tek disk I/O yerine hane başına 1 kez yazılır)
+    for (final entry in syncedIdsByHousehold.entries) {
+      final hId = entry.key;
+      final syncedIds = entry.value;
+      final currentExpenses = List<Expense>.from(getExpensesForPartnership(hId));
+      bool changed = false;
+      for (int i = 0; i < currentExpenses.length; i++) {
+        if (syncedIds.contains(currentExpenses[i].id) &&
+            currentExpenses[i].isPendingSync) {
+          currentExpenses[i] =
+              currentExpenses[i].copyWith(isPendingSync: false);
+          changed = true;
+        }
+      }
+      if (changed) {
+        await saveExpensesForPartnership(hId, currentExpenses);
       }
     }
 
@@ -528,16 +545,25 @@ class ExpenseRepository {
     final updatedHouse = house.copyWith(members: updatedMembers);
     await saveHousehold(updatedHouse);
 
-    // Buluta asenkron güncelleme
+    // Buluta asenkron güncelleme - IDOR Koruması: partnership_id ve user_id ile sınırlandırıldı
     final client = SupabaseService.client;
     final user = SupabaseService.currentUser;
     if (client != null) {
       unawaited(() async {
         try {
-          await client.from('partnership_members').update({
-            'display_name': displayName,
-            'iban': iban,
-          }).eq('id', memberId);
+          var query = client
+              .from('partnership_members')
+              .update({
+                'display_name': displayName,
+                'iban': iban,
+              })
+              .eq('id', memberId)
+              .eq('partnership_id', house.id);
+
+          if (user != null) {
+            query = query.eq('user_id', user.id);
+          }
+          await query;
 
           if (user != null) {
             await client.from('profiles').update({
@@ -692,15 +718,20 @@ class ExpenseRepository {
 
   Future<void> deleteExpense(String expenseId) async {
     final current = List<Expense>.from(getExpenses());
+    final active = getActiveHousehold();
     current.removeWhere((e) => e.id == expenseId);
     await saveExpenses(current);
 
-    // Buluttan asenkron silme
+    // Buluttan asenkron silme - IDOR Koruması: partnership_id ile kapsamlandırıldı
     final client = SupabaseService.client;
-    if (client != null) {
+    if (client != null && active != null) {
       unawaited(() async {
         try {
-          await client.from('expenses').delete().eq('id', expenseId);
+          await client
+              .from('expenses')
+              .delete()
+              .eq('id', expenseId)
+              .eq('partnership_id', active.id);
         } catch (_) {}
       }());
     }
@@ -807,15 +838,19 @@ class ExpenseRepository {
       );
       await savePaymentRequestsForPartnership(house.id, current);
 
-      // Buluta asenkron güncelleme
+      // Buluta asenkron güncelleme - IDOR Koruması: partnership_id ile kapsamlandırıldı
       final client = SupabaseService.client;
       if (client != null) {
         unawaited(() async {
           try {
-            await client.from('payment_requests').update({
-              'status': 'confirmed',
-              'reviewed_at': DateTime.now().toIso8601String(),
-            }).eq('id', paymentId);
+            await client
+                .from('payment_requests')
+                .update({
+                  'status': 'confirmed',
+                  'reviewed_at': DateTime.now().toIso8601String(),
+                })
+                .eq('id', paymentId)
+                .eq('partnership_id', house.id);
           } catch (_) {}
         }());
       }
@@ -835,15 +870,19 @@ class ExpenseRepository {
       );
       await savePaymentRequestsForPartnership(house.id, current);
 
-      // Buluta asenkron güncelleme
+      // Buluta asenkron güncelleme - IDOR Koruması: partnership_id ile kapsamlandırıldı
       final client = SupabaseService.client;
       if (client != null) {
         unawaited(() async {
           try {
-            await client.from('payment_requests').update({
-              'status': 'rejected',
-              'reviewed_at': DateTime.now().toIso8601String(),
-            }).eq('id', paymentId);
+            await client
+                .from('payment_requests')
+                .update({
+                  'status': 'rejected',
+                  'reviewed_at': DateTime.now().toIso8601String(),
+                })
+                .eq('id', paymentId)
+                .eq('partnership_id', house.id);
           } catch (_) {}
         }());
       }
@@ -1006,16 +1045,20 @@ class ExpenseRepository {
       }
     }
 
-    // Buluta asenkron güncelleme
+    // Buluta asenkron güncelleme - IDOR Koruması: partnership_id ile kapsamlandırıldı
     final client = SupabaseService.client;
     if (client != null) {
       unawaited(() async {
         try {
-          await client.from('approval_requests').update({
-            'approvals': approvals,
-            'rejections': rejections,
-            'status': newStatus.name,
-          }).eq('id', requestId);
+          await client
+              .from('approval_requests')
+              .update({
+                'approvals': approvals,
+                'rejections': rejections,
+                'status': newStatus.name,
+              })
+              .eq('id', requestId)
+              .eq('partnership_id', house.id);
         } catch (_) {}
       }());
     }
@@ -1092,12 +1135,16 @@ class ExpenseRepository {
       await setActivePartnership(updated);
     }
 
-    // Buluttan asenkron üye silme
+    // Buluttan asenkron üye silme - IDOR Koruması: partnership_id ile sınırlandırıldı
     final client = SupabaseService.client;
     if (client != null) {
       unawaited(() async {
         try {
-          await client.from('partnership_members').delete().eq('id', memberId);
+          await client
+              .from('partnership_members')
+              .delete()
+              .eq('id', memberId)
+              .eq('partnership_id', partnershipId);
         } catch (_) {}
       }());
     }
@@ -1125,12 +1172,17 @@ class ExpenseRepository {
       }
     }
 
-    // Buluttan asenkron silme
+    // Buluttan asenkron silme - IDOR Koruması: Yalnızca kurucu silebilir
     final client = SupabaseService.client;
+    final user = SupabaseService.currentUser;
     if (client != null) {
       unawaited(() async {
         try {
-          await client.from('partnerships').delete().eq('id', partnershipId);
+          var query = client.from('partnerships').delete().eq('id', partnershipId);
+          if (user != null) {
+            query = query.eq('created_by', user.id);
+          }
+          await query;
         } catch (_) {}
       }());
     }
@@ -1139,10 +1191,11 @@ class ExpenseRepository {
   Future<void> settleAllDebts(List<SettlementItem> settlements) async {
     final current = List<Expense>.from(getExpenses());
     final house = getActiveHousehold();
-    if (house == null) return;
+    if (house == null || settlements.isEmpty) return;
 
-    for (final item in settlements) {
-      final settlementExpense = Expense(
+    final now = DateTime.now();
+    final newSettlements = settlements.map((item) {
+      return Expense(
         id: _uuid.v4(),
         householdId: house.id,
         title: 'Ödeşme: ${item.fromMemberName} ➔ ${item.toMemberName}',
@@ -1151,12 +1204,12 @@ class ExpenseRepository {
         category: ExpenseCategory.diger,
         paidByMemberId: item.fromMemberId,
         debtorMemberId: item.toMemberId,
-        expenseDate: DateTime.now(),
+        expenseDate: now,
         notes: 'Hesap kapatıldı ve ödendi olarak işaretlendi.',
       );
-      current.insert(0, settlementExpense);
-    }
+    }).toList();
 
+    current.insertAll(0, newSettlements);
     await saveExpenses(current);
   }
 

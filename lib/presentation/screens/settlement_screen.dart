@@ -102,7 +102,7 @@ class SettlementScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             if (debtResult.settlements.isEmpty)
               Card(
@@ -197,7 +197,7 @@ class SettlementScreen extends ConsumerWidget {
                   color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               ...debtResult.directPersonalDebts.map((e) {
                 final creditor = house?.members
                     .firstWhere((m) => m.id == e.paidByMemberId,
@@ -271,7 +271,7 @@ class SettlementScreen extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           ...requests.map((req) {
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
@@ -314,7 +314,7 @@ class SettlementScreen extends ConsumerWidget {
                             color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                       ),
                     ],
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Wrap(
                       alignment: WrapAlignment.end,
                       spacing: 8,
@@ -391,7 +391,7 @@ class SettlementScreen extends ConsumerWidget {
         children: [
           const Icon(Icons.hourglass_top_rounded,
               color: Color(0xFFD97706), size: 20),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,7 +465,7 @@ class SettlementScreen extends ConsumerWidget {
                 backgroundColor: textColor.withValues(alpha: 0.2),
                 child: Icon(statusIcon, color: textColor, size: 20),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Text(
                 '$userName İçin Durum',
                 style: TextStyle(
@@ -671,7 +671,7 @@ class SettlementScreen extends ConsumerWidget {
                 ),
                 autofocus: true,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               TextField(
                 controller: noteController,
                 decoration: const InputDecoration(
@@ -728,7 +728,10 @@ class SettlementScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      amountController.dispose();
+      noteController.dispose();
+    });
   }
 
   Widget _buildSettlementDayCard(BuildContext context, int settlementDay) {

@@ -7,6 +7,7 @@ import 'dart:math';
 class CryptoUtils {
   // Karışıklığı önlemek için benzer harfler (0, O, 1, I) çıkarılmıştır
   static const String _safeAlphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  static final Set<int> _safeAlphabetCodeUnits = _safeAlphabet.codeUnits.toSet();
   static final Random _secureRandom = Random.secure();
 
   /// Kriptolojik olarak güvenli 8 haneli kod ve 2 haneli sağlama (checksum) üretir.
@@ -41,16 +42,16 @@ class CryptoUtils {
     final clean = code.trim().toUpperCase();
     final parts = clean.split('-');
 
-    // En az 4 parça olmalı: [PREFIX, PART1, PART2, CHECKSUM]
+    // En az 4 parça olmalı: [..., PART1, PART2, CHECKSUM]
     if (parts.length < 4) return false;
 
-    final body = parts[1] + parts[2];
-    final expectedChecksum = parts[3];
+    final body = parts[parts.length - 3] + parts[parts.length - 2];
+    final expectedChecksum = parts.last;
 
     if (body.length != 8) return false;
 
-    for (int i = 0; i < body.length; i++) {
-      if (!_safeAlphabet.contains(body[i])) return false;
+    for (int i = 0; i < 8; i++) {
+      if (!_safeAlphabetCodeUnits.contains(body.codeUnitAt(i))) return false;
     }
 
     return _calculateChecksum(body) == expectedChecksum;

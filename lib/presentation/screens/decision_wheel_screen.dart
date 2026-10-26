@@ -42,6 +42,7 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
   double _previousAngle = 0.0;
   bool _isSpinning = false;
   int _lastTickSlice = -1;
+  double _spinningSliceAngle = 0.0;
 
   final List<Color> _wheelColors = const [
     Color(0xFFF97316), // Coral
@@ -66,12 +67,11 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
         _currentAngle = _animation.value;
       });
 
-      // Dilim geçişlerinde haptic tick sesi/titreşimi
-      final participating = _getParticipatingMembers();
-      if (participating.isNotEmpty) {
-        final sliceAngle = (2 * math.pi) / participating.length;
-        final normalizedAngle = (_currentAngle % (2 * math.pi));
-        final currentSlice = (normalizedAngle / sliceAngle).floor();
+      // Dilim geçişlerinde haptic tick sesi/titreşimi (O(1) hesaplama, sıfır Riverpod/Liste tahsisi)
+      if (_spinningSliceAngle > 0) {
+        const double twoPi = 2 * math.pi;
+        final normalizedAngle = (_currentAngle % twoPi + twoPi) % twoPi;
+        final currentSlice = (normalizedAngle / _spinningSliceAngle).floor();
         if (currentSlice != _lastTickSlice) {
           _lastTickSlice = currentSlice;
           HapticService.selection();
@@ -127,24 +127,22 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
     _isSpinning = true;
 
     final random = math.Random();
-    // Rastgele kazanan belirle
+    const double twoPi = 2 * math.pi;
     final winnerIndex = random.nextInt(members.length);
-    final sliceAngle = (2 * math.pi) / members.length;
+    final sliceAngle = twoPi / members.length;
+    _spinningSliceAngle = sliceAngle;
 
     // İşaretçi saat 12 yönünde (üstte) durduğu için:
     // Üstteki açı 3 * pi / 2 (270 derece)
     // Slicelar 0 açısından başlar.
-    // İlgili dilimin ortasının tam üstteki ibreye gelmesi için gereken hedef açı:
+    // Kapalı Modüler Formül: O(1) sıfır while döngüsü
     final targetSliceCenter = (winnerIndex * sliceAngle) + (sliceAngle / 2);
-    final pointerAngle = 3 * math.pi / 2;
-    var stopAngle = pointerAngle - targetSliceCenter;
-    while (stopAngle < 0) {
-      stopAngle += 2 * math.pi;
-    }
+    const double pointerAngle = 3 * math.pi / 2;
+    final stopAngle = ((pointerAngle - targetSliceCenter) % twoPi + twoPi) % twoPi;
 
     // 5 ile 8 tam tur ekle (hızlı ve heyecanlı dönüş)
-    final fullRotations = (5 + random.nextInt(4)) * 2 * math.pi;
-    final startAngle = _currentAngle % (2 * math.pi);
+    final fullRotations = (5 + random.nextInt(4)) * twoPi;
+    final startAngle = (_currentAngle % twoPi + twoPi) % twoPi;
     final totalTarget = _currentAngle + (fullRotations + stopAngle - startAngle);
 
     _previousAngle = _currentAngle;
@@ -156,18 +154,13 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
   }
 
   HouseholdMember _calculateWinner() {
+    const double twoPi = 2 * math.pi;
     final members = _getParticipatingMembers();
-    final sliceAngle = (2 * math.pi) / members.length;
-    final pointerAngle = 3 * math.pi / 2;
+    final sliceAngle = twoPi / members.length;
+    const double pointerAngle = 3 * math.pi / 2;
 
-    var normalized = (pointerAngle - (_currentAngle % (2 * math.pi)));
-    while (normalized < 0) {
-      normalized += 2 * math.pi;
-    }
-    while (normalized >= 2 * math.pi) {
-      normalized -= 2 * math.pi;
-    }
-
+    // Kapalı modüler aritmetik: O(1) sıfır while döngüsü
+    final normalized = ((pointerAngle - _currentAngle) % twoPi + twoPi) % twoPi;
     final index = (normalized / sliceAngle).floor() % members.length;
     return members[index];
   }
@@ -449,7 +442,7 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 6,
@@ -539,7 +532,7 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -600,6 +593,7 @@ class _WheelPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     final sweepAngle = (2 * math.pi) / members.length;
+    final wheelRect = Rect.fromCircle(center: center, radius: radius);
 
     final paint = Paint()..style = PaintingStyle.fill;
     final borderPaint = Paint()
@@ -612,7 +606,7 @@ class _WheelPainter extends CustomPainter {
       final startAngle = i * sweepAngle;
 
       canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
+        wheelRect,
         startAngle,
         sweepAngle,
         true,
@@ -620,7 +614,7 @@ class _WheelPainter extends CustomPainter {
       );
 
       canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
+        wheelRect,
         startAngle,
         sweepAngle,
         true,

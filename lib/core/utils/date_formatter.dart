@@ -1,9 +1,16 @@
 import 'package:intl/intl.dart';
 
 class DateFormatter {
-  static DateFormat get _dayMonthFormat => DateFormat('d MMMM', 'tr_TR');
-  static DateFormat get _fullFormat => DateFormat('d MMMM yyyy', 'tr_TR');
-  static DateFormat get _timeFormat => DateFormat('HH:mm', 'tr_TR');
+  static DateFormat? _cachedDayMonth;
+  static DateFormat? _cachedFull;
+  static DateFormat? _cachedTime;
+
+  static DateFormat get _dayMonthFormat =>
+      _cachedDayMonth ??= DateFormat('d MMMM', 'tr_TR');
+  static DateFormat get _fullFormat =>
+      _cachedFull ??= DateFormat('d MMMM yyyy', 'tr_TR');
+  static DateFormat get _timeFormat =>
+      _cachedTime ??= DateFormat('HH:mm', 'tr_TR');
 
   static String formatSmart(DateTime date) {
     try {

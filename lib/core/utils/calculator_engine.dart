@@ -1,6 +1,10 @@
 class CalculatorEngine {
   CalculatorEngine._();
 
+  static final RegExp _addSubRegex =
+      RegExp(r'(\d+(?:\.\d+)?)([\+\-])(\d+(?:\.\d+)?)%');
+  static final RegExp _standaloneRegex = RegExp(r'(\d+(?:\.\d+)?)%');
+
   /// Verilen matematiksel ifadeyi (+, -, ×, *, ÷, /, %) güvenle hesaplar
   static double evaluate(String expression) {
     if (expression.trim().isEmpty) return 0.0;
@@ -11,20 +15,23 @@ class CalculatorEngine {
         .replaceAll('÷', '/')
         .replaceAll(',', '.');
 
-    // Sondaki tamamlanmamış işleçleri, tek başına % ve noktaları temizle (örn: "150+" -> "150", "150+%" -> "150", "150." -> "150")
-    while (clean.isNotEmpty) {
-      final last = clean[clean.length - 1];
+    // Sondaki tamamlanmamış işleçleri, tek başına % ve noktaları temizle (O(1) ara string oluşturmadan tek kesim)
+    int end = clean.length;
+    while (end > 0) {
+      final last = clean[end - 1];
       if (_isBinaryOperator(last) || last == '.') {
-        clean = clean.substring(0, clean.length - 1);
-      } else if (last == '%' && (clean.length == 1 || _isOperator(clean[clean.length - 2]))) {
-        // Önünde geçerli sayı olmayan % işleci
-        clean = clean.substring(0, clean.length - 1);
+        end--;
+      } else if (last == '%' && (end == 1 || _isOperator(clean[end - 2]))) {
+        end--;
       } else {
         break;
       }
     }
 
-    if (clean.isEmpty) return 0.0;
+    if (end == 0) return 0.0;
+    if (end < clean.length) {
+      clean = clean.substring(0, end);
+    }
 
     try {
       // Yüzde (%) işlemlerini çöz
@@ -77,7 +84,7 @@ class CalculatorEngine {
         j += 2;
       }
 
-      return double.parse(result.toStringAsFixed(2));
+      return (result * 100).round() / 100.0;
     } catch (_) {
       final direct = double.tryParse(clean);
       return direct ?? 0.0;
@@ -94,8 +101,7 @@ class CalculatorEngine {
 
   static String _resolvePercentages(String input) {
     // 1. Önce "sayı (+ veya -) yüzde%" örn: "200+10%" -> "200+20"
-    final addSubRegex = RegExp(r'(\d+(?:\.\d+)?)([\+\-])(\d+(?:\.\d+)?)%');
-    String resolved = input.replaceAllMapped(addSubRegex, (match) {
+    String resolved = input.replaceAllMapped(_addSubRegex, (match) {
       final base = double.tryParse(match.group(1)!) ?? 0.0;
       final op = match.group(2)!;
       final pct = double.tryParse(match.group(3)!) ?? 0.0;
@@ -104,8 +110,7 @@ class CalculatorEngine {
     });
 
     // 2. Çarpma/bölme veya yalın yüzde: "200*10%" -> "200*0.1"
-    final standaloneRegex = RegExp(r'(\d+(?:\.\d+)?)%');
-    resolved = resolved.replaceAllMapped(standaloneRegex, (match) {
+    resolved = resolved.replaceAllMapped(_standaloneRegex, (match) {
       final pctValue = double.tryParse(match.group(1)!) ?? 0.0;
       final factor = pctValue / 100.0;
       return factor.toString();

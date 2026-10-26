@@ -134,31 +134,34 @@ class ReportingEngine {
     ReportTimeRange timeRange = ReportTimeRange.thisMonth,
   }) {
     final now = DateTime.now();
+    final nowYear = now.year;
+    final nowMonth = now.month;
+    final lastMonthYear = nowMonth == 1 ? nowYear - 1 : nowYear;
+    final lastMonth = nowMonth == 1 ? 12 : nowMonth - 1;
 
-    // Zaman aralığına göre filtrele
-    final filteredExpenses = expenses.where((e) {
-      if (timeRange == ReportTimeRange.allTime) return true;
-
-      if (timeRange == ReportTimeRange.thisMonth) {
-        return e.expenseDate.year == now.year && e.expenseDate.month == now.month;
-      }
-
-      if (timeRange == ReportTimeRange.lastMonth) {
-        final lastMonthDate = DateTime(now.year, now.month - 1);
-        return e.expenseDate.year == lastMonthDate.year &&
-            e.expenseDate.month == lastMonthDate.month;
-      }
-
-      return true;
-    }).toList();
-
+    // ⚡ TEK GEÇİŞTE (O(N)) FİLTRELEME VE TOPLAMA (Sıfır Ara Liste & Sıfır Gereksiz DateTime Tahsisi)
     double totalJoint = 0;
     double totalPersonal = 0;
     final catAmounts = <ExpenseCategory, double>{};
     final catCounts = <ExpenseCategory, int>{};
     final memberAmounts = <String, double>{for (final m in members) m.id: 0.0};
+    final pairwiseDebts = <(String, String), double>{};
+    final pairwiseCounts = <(String, String), int>{};
+    int filteredTransactionCount = 0;
 
-    for (final exp in filteredExpenses) {
+    for (final exp in expenses) {
+      if (timeRange == ReportTimeRange.thisMonth) {
+        if (exp.expenseDate.year != nowYear || exp.expenseDate.month != nowMonth) {
+          continue;
+        }
+      } else if (timeRange == ReportTimeRange.lastMonth) {
+        if (exp.expenseDate.year != lastMonthYear || exp.expenseDate.month != lastMonth) {
+          continue;
+        }
+      }
+
+      filteredTransactionCount++;
+
       if (exp.type == ExpenseType.joint) {
         totalJoint += exp.amount;
         catAmounts[exp.category] = (catAmounts[exp.category] ?? 0.0) + exp.amount;
@@ -167,6 +170,11 @@ class ReportingEngine {
             (memberAmounts[exp.paidByMemberId] ?? 0.0) + exp.amount;
       } else if (exp.type == ExpenseType.personalDebt) {
         totalPersonal += exp.amount;
+        if (exp.debtorMemberId != null) {
+          final pair = (exp.paidByMemberId, exp.debtorMemberId!);
+          pairwiseDebts[pair] = (pairwiseDebts[pair] ?? 0.0) + exp.amount;
+          pairwiseCounts[pair] = (pairwiseCounts[pair] ?? 0) + 1;
+        }
       }
     }
 
@@ -203,24 +211,11 @@ class ReportingEngine {
     }
     memberSpends.sort((a, b) => b.amount.compareTo(a.amount));
 
-    // Şahsi Borçlar Kırılımı (Kimin kime ne kadar borcu var)
+    // Şahsi Borçlar Kırılımı (Kimin kime ne kadar borcu var - Sıfır String Bölme Hatası)
     final memberMap = {for (final m in members) m.id: m};
-    final pairwiseDebts = <String, double>{};
-    final pairwiseCounts = <String, int>{};
-
-    for (final exp in filteredExpenses) {
-      if (exp.type == ExpenseType.personalDebt && exp.debtorMemberId != null) {
-        final pairKey = '${exp.paidByMemberId}_${exp.debtorMemberId}';
-        pairwiseDebts[pairKey] = (pairwiseDebts[pairKey] ?? 0.0) + exp.amount;
-        pairwiseCounts[pairKey] = (pairwiseCounts[pairKey] ?? 0) + 1;
-      }
-    }
-
     final personalDebtsBreakdown = <PersonalDebtBreakdown>[];
-    pairwiseDebts.forEach((pairKey, amount) {
-      final parts = pairKey.split('_');
-      final creditorId = parts[0];
-      final debtorId = parts[1];
+    pairwiseDebts.forEach((pair, amount) {
+      final (creditorId, debtorId) = pair;
       final creditorName = memberMap[creditorId]?.displayName ?? 'Alacaklı';
       final debtorName = memberMap[debtorId]?.displayName ?? 'Borçlu';
 
@@ -231,7 +226,7 @@ class ReportingEngine {
           debtorId: debtorId,
           debtorName: debtorName,
           amount: amount,
-          count: pairwiseCounts[pairKey] ?? 1,
+          count: pairwiseCounts[pair] ?? 1,
         ),
       );
     });
@@ -246,7 +241,7 @@ class ReportingEngine {
       categorySpends: categorySpends,
       memberSpends: memberSpends,
       personalDebtsBreakdown: personalDebtsBreakdown,
-      totalTransactionCount: filteredExpenses.length,
+      totalTransactionCount: filteredTransactionCount,
     );
   }
 }

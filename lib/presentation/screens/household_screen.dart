@@ -101,7 +101,7 @@ class HouseholdScreen extends ConsumerWidget {
                     child: Row(
                       children: [
                         Icon(p.type.icon, size: 18, color: p.type.color),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             p.name,
@@ -125,7 +125,7 @@ class HouseholdScreen extends ConsumerWidget {
                     children: [
                       Icon(Icons.add_circle_outline,
                           size: 18, color: AppColors.primary),
-                      SizedBox(width: 10),
+                      SizedBox(width: 8),
                       Text('Yeni Ortaklık Kur',
                           style: TextStyle(fontWeight: FontWeight.w600)),
                     ],
@@ -137,7 +137,7 @@ class HouseholdScreen extends ConsumerWidget {
                     children: [
                       Icon(Icons.vpn_key_outlined,
                           size: 18, color: AppColors.primary),
-                      SizedBox(width: 10),
+                      SizedBox(width: 8),
                       Text('Kod ile Katıl',
                           style: TextStyle(fontWeight: FontWeight.w600)),
                     ],
@@ -353,7 +353,7 @@ class HouseholdScreen extends ConsumerWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
                           ElevatedButton.icon(
                             onPressed: isFull
                                 ? null
@@ -395,7 +395,7 @@ class HouseholdScreen extends ConsumerWidget {
                         children: [
                           const Icon(Icons.calendar_month_rounded,
                               size: 20, color: AppColors.primary),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -872,7 +872,10 @@ class HouseholdScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      nameController.dispose();
+      ibanController.dispose();
+    });
   }
 
   void _showCreatePartnershipDialog(BuildContext context, WidgetRef ref) {
@@ -933,7 +936,7 @@ class HouseholdScreen extends ConsumerWidget {
                     hintText: 'Örn: Adınız Soyadınız',
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 TextField(
                   controller: ibanController,
                   decoration: const InputDecoration(
@@ -982,7 +985,11 @@ class HouseholdScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ).then((_) {
+      nameController.dispose();
+      creatorNameController.dispose();
+      ibanController.dispose();
+    });
   }
 
   void _showJoinDialog(BuildContext context, WidgetRef ref) {
@@ -1076,7 +1083,11 @@ class HouseholdScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      codeController.dispose();
+      nameController.dispose();
+      ibanController.dispose();
+    });
   }
 
   void _showEditPartnershipDialog(
@@ -1248,7 +1259,9 @@ class HouseholdScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ).then((_) {
+      nameController.dispose();
+    });
   }
 
   void _requestLeavePartnership(
@@ -1613,10 +1626,10 @@ class HouseholdScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: AccentColorOption.values.map((opt) {
                     final isSel = opt == activeAccent;
                     return GestureDetector(
@@ -2328,7 +2341,10 @@ class HouseholdScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      nameController.dispose();
+      ibanController.dispose();
+    });
   }
 
   void _confirmDeleteAccount(BuildContext context, WidgetRef ref) {
@@ -2501,7 +2517,9 @@ class HouseholdScreen extends ConsumerWidget {
           );
         },
       ),
-    );
+    ).then((_) {
+      textController.dispose();
+    });
   }
 
   void _confirmSignOut(BuildContext context) {

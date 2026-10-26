@@ -145,14 +145,13 @@ class Expense {
     return ExpenseType.joint;
   }
 
+  static final Map<String, ExpenseCategory> _categoryMap = {
+    for (final c in ExpenseCategory.values) c.name.toLowerCase(): c,
+  };
+
   static ExpenseCategory _parseCategory(String? val) {
     if (val == null) return ExpenseCategory.diger;
-    for (final cat in ExpenseCategory.values) {
-      if (cat.name.toLowerCase() == val.toLowerCase()) {
-        return cat;
-      }
-    }
-    return ExpenseCategory.diger;
+    return _categoryMap[val.toLowerCase()] ?? ExpenseCategory.diger;
   }
 
   Expense copyWith({

@@ -52,6 +52,7 @@ class DebtEngine {
     final directPersonalDebts = <Expense>[];
 
     double totalJoint = 0.0;
+    double totalUnweightedJoint = 0.0;
 
     // 1. Masrafları ve Şahsi Borçları İşle
     for (final exp in expenses) {
@@ -78,18 +79,10 @@ class DebtEngine {
               }
             });
           } else {
-            final equalShare =
-                members.isNotEmpty ? (exp.amount / members.length) : 0.0;
-            for (final m in members) {
-              jointOwed[m.id] = (jointOwed[m.id] ?? 0.0) + equalShare;
-            }
+            totalUnweightedJoint += exp.amount;
           }
         } else {
-          final equalShare =
-              members.isNotEmpty ? (exp.amount / members.length) : 0.0;
-          for (final m in members) {
-            jointOwed[m.id] = (jointOwed[m.id] ?? 0.0) + equalShare;
-          }
+          totalUnweightedJoint += exp.amount;
         }
       } else if (exp.type == ExpenseType.personalDebt) {
         directPersonalDebts.add(exp);
@@ -114,11 +107,13 @@ class DebtEngine {
 
     final perPersonShare =
         members.isNotEmpty ? (totalJoint / members.length) : 0.0;
+    final unweightedPerPersonShare =
+        members.isNotEmpty ? (totalUnweightedJoint / members.length) : 0.0;
 
-    // Ortak harcama dengesini net bakiyeye ekle
+    // Ortak harcama dengesini net bakiyeye ekle (Tek geçişte O(M))
     for (final member in members) {
       final spent = jointSpent[member.id] ?? 0.0;
-      final owed = jointOwed[member.id] ?? 0.0;
+      final owed = (jointOwed[member.id] ?? 0.0) + unweightedPerPersonShare;
       final jointDiff = spent - owed;
       netBalance[member.id] = (netBalance[member.id] ?? 0.0) + jointDiff;
     }
@@ -167,10 +162,10 @@ class DebtEngine {
     final debtors = <_MemberBalance>[];
 
     netBalances.forEach((id, balance) {
-      final rounded = double.parse(balance.toStringAsFixed(2));
-      if (rounded > 0.01) {
+      final rounded = (balance * 100).round() / 100.0;
+      if (rounded >= 0.01) {
         creditors.add(_MemberBalance(id, rounded));
-      } else if (rounded < -0.01) {
+      } else if (rounded <= -0.01) {
         debtors.add(_MemberBalance(id, -rounded));
       }
     });
@@ -190,7 +185,7 @@ class DebtEngine {
           ? creditor.amount
           : debtor.amount;
 
-      if (transferAmount > 0.01) {
+      if (transferAmount >= 0.01) {
         final fromName = members[debtor.id]?.displayName ?? 'Ortak';
         final toName = members[creditor.id]?.displayName ?? 'Ortak';
 
@@ -200,16 +195,18 @@ class DebtEngine {
             fromMemberName: fromName,
             toMemberId: creditor.id,
             toMemberName: toName,
-            amount: double.parse(transferAmount.toStringAsFixed(2)),
+            amount: (transferAmount * 100).round() / 100.0,
           ),
         );
       }
 
-      creditor.amount -= transferAmount;
-      debtor.amount -= transferAmount;
+      creditor.amount =
+          ((creditor.amount - transferAmount) * 100).round() / 100.0;
+      debtor.amount =
+          ((debtor.amount - transferAmount) * 100).round() / 100.0;
 
-      if (creditor.amount <= 0.01) cIdx++;
-      if (debtor.amount <= 0.01) dIdx++;
+      if (creditor.amount < 0.01) cIdx++;
+      if (debtor.amount < 0.01) dIdx++;
     }
 
     return result;

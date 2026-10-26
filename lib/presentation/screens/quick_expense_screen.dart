@@ -463,11 +463,11 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                         otherMembers.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       _buildPersonalDebtDirection(otherMembers),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       _buildDebtorChips(otherMembers),
                     ],
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
 
                     // 2. TUTAR ALANI (HESAP MAKİNESİ VE GİZLİLİK DESTEKLİ)
                     isPrivacy
@@ -1224,7 +1224,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
               icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
               label: const Text('Yeni Ortaklık Kur'),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: () => _showJoinDialog(context),
               icon: const Icon(Icons.vpn_key_outlined, size: 20),
@@ -1302,7 +1302,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                     hintText: 'Örn: Adınız Soyadınız',
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 TextField(
                   controller: ibanController,
                   decoration: const InputDecoration(
@@ -1347,7 +1347,11 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
           ],
         ),
       ),
-    );
+    ).then((_) {
+      nameController.dispose();
+      creatorNameController.dispose();
+      ibanController.dispose();
+    });
   }
 
   void _showJoinDialog(BuildContext context) {
@@ -1436,6 +1440,10 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      codeController.dispose();
+      nameController.dispose();
+      ibanController.dispose();
+    });
   }
 }

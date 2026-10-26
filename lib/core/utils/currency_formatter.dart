@@ -46,6 +46,17 @@ class CurrencyFormatter {
     return formatted;
   }
 
+  static final NumberFormat _wholeFormatter = NumberFormat.currency(
+    locale: 'tr_TR',
+    symbol: '',
+    decimalDigits: 0,
+  );
+  static final NumberFormat _decimalFormatter = NumberFormat.currency(
+    locale: 'tr_TR',
+    symbol: '',
+    decimalDigits: 2,
+  );
+
   /// Ondalık 00 ise düz göster: 1240.0 -> "1.240 ₺", 1034.75 -> "1.034,75 ₺"
   static String formatClean(double amount, {bool checkPrivacy = false}) {
     if (checkPrivacy && isPrivacyMasked) {
@@ -53,12 +64,7 @@ class CurrencyFormatter {
     }
 
     if (activeDecimalRule == DecimalRule.none) {
-      final wholeFormat = NumberFormat.currency(
-        locale: 'tr_TR',
-        symbol: '',
-        decimalDigits: 0,
-      );
-      final numStr = wholeFormat.format(amount.round()).trim();
+      final numStr = _wholeFormatter.format(amount.round()).trim();
       return _applyPlacement(numStr);
     }
 
@@ -68,21 +74,11 @@ class CurrencyFormatter {
 
     // Default: clean (kuruş varsa göster)
     if (amount % 1 == 0) {
-      final wholeFormatter = NumberFormat.currency(
-        locale: 'tr_TR',
-        symbol: '',
-        decimalDigits: 0,
-      );
-      final numStr = wholeFormatter.format(amount).trim();
+      final numStr = _wholeFormatter.format(amount).trim();
       return _applyPlacement(numStr);
     }
 
-    final doubleFormatter = NumberFormat.currency(
-      locale: 'tr_TR',
-      symbol: '',
-      decimalDigits: 2,
-    );
-    final numStr = doubleFormatter.format(amount).trim();
+    final numStr = _decimalFormatter.format(amount).trim();
     return _applyPlacement(numStr);
   }
 

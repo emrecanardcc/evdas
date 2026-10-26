@@ -154,12 +154,13 @@ class Partnership {
     };
   }
 
+  static final Map<String, PartnershipType> _typeMap = {
+    for (final t in PartnershipType.values) t.name.toLowerCase(): t,
+  };
+
   static PartnershipType _parseType(String? val) {
     if (val == null) return PartnershipType.home;
-    for (final t in PartnershipType.values) {
-      if (t.name.toLowerCase() == val.toLowerCase()) return t;
-    }
-    return PartnershipType.home;
+    return _typeMap[val.toLowerCase()] ?? PartnershipType.home;
   }
 
   Partnership copyWith({

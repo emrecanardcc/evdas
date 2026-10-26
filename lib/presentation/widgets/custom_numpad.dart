@@ -58,20 +58,20 @@ class CustomNumpad extends StatelessWidget {
             child: Row(
               children: [
                 _buildOperatorButton('+', operatorBg, operatorColor, () => _handleOperator('+')),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 _buildOperatorButton('-', operatorBg, operatorColor, () => _handleOperator('-')),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 _buildOperatorButton('×', operatorBg, operatorColor, () => _handleOperator('×')),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 _buildOperatorButton('÷', operatorBg, operatorColor, () => _handleOperator('÷')),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 _buildOperatorButton('%', operatorBg, operatorColor, () => _handleOperator('%')),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 _buildOperatorButton('=', operatorColor, Colors.white, _handleEquals, isPrimary: true),
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
         ],
 
         // 1-2-3 / 7-8-9 SATIRLARI

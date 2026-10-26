@@ -130,7 +130,7 @@ class ReportsScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             if (report.categorySpends.isEmpty)
               Card(
@@ -157,7 +157,7 @@ class ReportsScreen extends ConsumerWidget {
               'Ortakların Harcama Payı',
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             Card(
               child: Padding(
@@ -255,7 +255,7 @@ class ReportsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -356,7 +356,7 @@ class ReportsScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(14)),
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
           ],
         ),
       ),

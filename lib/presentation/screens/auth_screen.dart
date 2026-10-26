@@ -250,7 +250,9 @@ class _AuthScreenState extends State<AuthScreen>
           ],
         ),
       ),
-    );
+    ).then((_) {
+      resetEmailController.dispose();
+    });
   }
 
   void _showTermsDialog() {
@@ -551,7 +553,7 @@ class _AuthScreenState extends State<AuthScreen>
               isDense: true,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           TextField(
             controller: _registerEmailController,
             keyboardType: TextInputType.emailAddress,
@@ -563,7 +565,7 @@ class _AuthScreenState extends State<AuthScreen>
               isDense: true,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           TextField(
             controller: _registerPasswordController,
             obscureText: true,
@@ -575,7 +577,7 @@ class _AuthScreenState extends State<AuthScreen>
               isDense: true,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           TextField(
             controller: _registerIbanController,
             decoration: InputDecoration(
