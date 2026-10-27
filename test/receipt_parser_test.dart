@@ -105,5 +105,143 @@ KREDI KARTI
       expect(result.hasValidData, isTrue);
       expect(result.amount, equals(1450.75));
     });
+
+    test('Migros fişindeki tüm satır kalemlerini doğru isim, tutar ve kategorilerle ayrıştırmalıdır', () {
+      const receiptText = '''
+MİGROS T.A.Ş.
+KADIKÖY ŞUBESİ
+TARİH: 26.10.2026
+SÜT 1L: 38.50 TL
+YUMURTA 15Lİ: 75.00 TL
+EKMEK: 12.50 TL
+DETERJAN: 98.00 TL
+TOPLAM: 224.00 TL
+KDV DAHİL
+FİŞ NO: 0142
+''';
+
+      final result = ReceiptParser.parse(receiptText);
+      expect(result.hasLineItems, isTrue);
+      expect(result.lineItems.length, equals(4));
+
+      final sut = result.lineItems.firstWhere((i) => i.title.contains('SÜT'));
+      expect(sut.price, equals(38.50));
+      expect(sut.quantity, equals(1));
+      expect(sut.totalPrice, equals(38.50));
+      expect(sut.category, equals(ExpenseCategory.market));
+
+      final yumurta = result.lineItems.firstWhere((i) => i.title.contains('YUMURTA'));
+      expect(yumurta.price, equals(75.00));
+      expect(yumurta.totalPrice, equals(75.00));
+
+      final ekmek = result.lineItems.firstWhere((i) => i.title.contains('EKMEK'));
+      expect(ekmek.price, equals(12.50));
+
+      final deterjan = result.lineItems.firstWhere((i) => i.title.contains('DETERJAN'));
+      expect(deterjan.price, equals(98.00));
+      expect(deterjan.category, equals(ExpenseCategory.market));
+
+      expect(result.totalLineItemsAmount, equals(224.00));
+      expect(result.selectedCount, equals(4));
+      expect(result.selectedLineItemsAmount, equals(224.00));
+    });
+
+    test('Kafe fişindeki miktar (quantity 2x) ve birim fiyatları doğru ayrıştırmalıdır', () {
+      const cafeText = '''
+ESPRESSO LAB COFFEE
+MODA SAHİL
+TARİH: 25.10.2026 14:35
+2x FLAT WHITE: 180.00 TL
+1x SAN SEBASTIAN: 160.00 TL
+KREDI KARTI TOPLAM: 340.00 TL
+TEŞEKKÜR EDERİZ
+''';
+
+      final result = ReceiptParser.parse(cafeText);
+      expect(result.hasLineItems, isTrue);
+      expect(result.lineItems.length, equals(2));
+
+      final flatWhite = result.lineItems.firstWhere((i) => i.title.contains('FLAT WHITE'));
+      expect(flatWhite.quantity, equals(2));
+      expect(flatWhite.price, equals(90.00)); // 180 / 2
+      expect(flatWhite.totalPrice, equals(180.00));
+      expect(flatWhite.category, equals(ExpenseCategory.mutfak));
+
+      final cake = result.lineItems.firstWhere((i) => i.title.contains('SAN SEBASTIAN'));
+      expect(cake.quantity, equals(1));
+      expect(cake.price, equals(160.00));
+      expect(cake.totalPrice, equals(160.00));
+      expect(cake.category, equals(ExpenseCategory.mutfak));
+
+      expect(result.totalLineItemsAmount, equals(340.00));
+    });
+
+    test('ReceiptLineItem serialization ve copyWith metotları doğru çalışmalıdır', () {
+      const item = ReceiptLineItem(
+        id: 'item-101',
+        title: 'Organik Yumurta',
+        price: 85.50,
+        quantity: 2,
+        category: ExpenseCategory.market,
+        isSelected: true,
+      );
+
+      expect(item.totalPrice, equals(171.00));
+
+      final json = item.toJson();
+      expect(json['id'], equals('item-101'));
+      expect(json['title'], equals('Organik Yumurta'));
+      expect(json['price'], equals(85.50));
+      expect(json['quantity'], equals(2));
+      expect(json['category'], equals('market'));
+      expect(json['isSelected'], isTrue);
+
+      final deserialized = ReceiptLineItem.fromJson(json);
+      expect(deserialized.id, equals(item.id));
+      expect(deserialized.totalPrice, equals(171.00));
+
+      final deselected = item.copyWith(isSelected: false);
+      expect(deselected.isSelected, isFalse);
+      expect(deselected.price, equals(85.50));
+    });
+
+    test('ParsedReceipt seçili kalem hesaplamaları ve filtreleri deterministik olmalıdır', () {
+      final items = [
+        const ReceiptLineItem(id: '1', title: 'Süt', price: 40.0, isSelected: true),
+        const ReceiptLineItem(id: '2', title: 'Kahve', price: 120.0, isSelected: true),
+        const ReceiptLineItem(id: '3', title: 'Dergi', price: 50.0, isSelected: false),
+      ];
+
+      final receipt = ParsedReceipt(
+        amount: 210.0,
+        merchantName: 'Bakkal',
+        lineItems: items,
+      );
+
+      expect(receipt.hasLineItems, isTrue);
+      expect(receipt.totalLineItemsAmount, equals(210.0));
+      expect(receipt.selectedCount, equals(2));
+      expect(receipt.selectedLineItemsAmount, equals(160.0));
+      expect(receipt.detectedItems, containsAll(['Süt', 'Kahve', 'Dergi']));
+    });
+
+    test('Satır kalemi filtreleri fiş başlığı, dipnotu ve KDV satırlarını elemelidir', () {
+      const noisyReceipt = '''
+MİGROS T.A.Ş.
+KADIKÖY RIHTIM CAD. NO:12
+TARİH: 26.10.2026 SAAT: 15:30
+FİŞ NO: 0841
+KASİYER: CAN
+SÜT 1L: 38.50 TL
+%10 KDV: 3.50 TL
+TOPLAM: 38.50 TL
+TEŞEKKÜR EDERİZ YİNE BEKLERİZ
+''';
+
+      final result = ReceiptParser.parse(noisyReceipt);
+      expect(result.lineItems.length, equals(1));
+      expect(result.lineItems.first.title, contains('SÜT'));
+      expect(result.lineItems.first.price, equals(38.50));
+    });
   });
 }

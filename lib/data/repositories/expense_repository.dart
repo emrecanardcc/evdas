@@ -697,6 +697,82 @@ class ExpenseRepository {
     }
   }
 
+  /// Çoklu harcama kalemlerini atomik olarak yerel depoya ve buluta kaydeder
+  Future<void> addExpenses(List<Expense> expensesList) async {
+    if (expensesList.isEmpty) return;
+    final client = SupabaseService.client;
+    final isOnline = client != null && SupabaseService.isAuthenticated;
+
+    final List<Expense> processedExpenses = [];
+    for (final exp in expensesList) {
+      if (!isOnline) {
+        final processed = exp.copyWith(isPendingSync: true);
+        await _addToOfflineQueue(processed);
+        processedExpenses.add(processed);
+      } else {
+        processedExpenses.add(exp);
+      }
+    }
+
+    final current = List<Expense>.from(getExpenses());
+    current.insertAll(0, processedExpenses);
+    await saveExpenses(current);
+
+    if (isOnline) {
+      unawaited(() async {
+        try {
+          final payloads = processedExpenses.map((finalExpense) {
+            final payload = <String, dynamic>{
+              'id': finalExpense.id,
+              'partnership_id': finalExpense.householdId,
+              'title': finalExpense.title,
+              'amount': finalExpense.amount,
+              'type': finalExpense.type == ExpenseType.personalDebt
+                  ? 'personal_debt'
+                  : finalExpense.type == ExpenseType.settlement
+                      ? 'settlement'
+                      : 'joint',
+              'category': finalExpense.category.name,
+              'paid_by_member_id': finalExpense.paidByMemberId,
+              'debtor_member_id': finalExpense.debtorMemberId,
+              'expense_date': finalExpense.expenseDate.toIso8601String(),
+              'notes': finalExpense.notes,
+            };
+            if (finalExpense.splitMemberWeights != null) {
+              payload['split_member_weights'] = finalExpense.splitMemberWeights;
+            }
+            return payload;
+          }).toList();
+
+          try {
+            await client.from('expenses').insert(payloads);
+          } catch (_) {
+            for (final p in payloads) {
+              p.remove('split_member_weights');
+            }
+            await client.from('expenses').insert(payloads);
+          }
+        } catch (_) {
+          for (final finalExpense in processedExpenses) {
+            await _addToOfflineQueue(finalExpense);
+          }
+          final updatedList = List<Expense>.from(getExpenses());
+          final processedIds = processedExpenses.map((e) => e.id).toSet();
+          bool changed = false;
+          for (int i = 0; i < updatedList.length; i++) {
+            if (processedIds.contains(updatedList[i].id)) {
+              updatedList[i] = updatedList[i].copyWith(isPendingSync: true);
+              changed = true;
+            }
+          }
+          if (changed) {
+            await saveExpenses(updatedList);
+          }
+        }
+      }());
+    }
+  }
+
   Future<void> _addToOfflineQueue(Expense expense) async {
     try {
       final raw = _prefs.getString(_keyOfflineExpensesQueue);

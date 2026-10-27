@@ -307,8 +307,54 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
 
   Future<void> _openReceiptScanner() async {
     HapticService.light();
-    final result = await ReceiptScannerDialog.show(context);
+    final house = ref.read(householdProvider);
+    final currentMember = ref.read(currentMemberProvider);
+    final result = await ReceiptScannerDialog.show(
+      context,
+      members: house?.members,
+      currentMemberId: currentMember?.id,
+    );
     if (result != null && result.hasValidData && mounted) {
+      if (result.lineItemsSavedDirectly && result.hasLineItems) {
+        final selectedItems =
+            result.lineItems.where((i) => i.isSelected).toList();
+        if (selectedItems.isNotEmpty && house != null) {
+          final payerId = result.selectedPayerId ??
+              currentMember?.id ??
+              house.members.first.id;
+          final newExpenses = selectedItems.map((item) {
+            final quantitySuffix =
+                item.quantity > 1 ? ' (${item.quantity} Adet)' : '';
+            return Expense(
+              id: const Uuid().v4(),
+              householdId: house.id,
+              title: '${item.title}$quantitySuffix',
+              amount: item.totalPrice,
+              type: ExpenseType.joint,
+              category: item.category,
+              paidByMemberId: payerId,
+              expenseDate: result.date ?? DateTime.now(),
+              notes: 'Fiş dökümü (${result.merchantName ?? "Market"})',
+            );
+          }).toList();
+
+          await ref.read(expensesProvider.notifier).addExpenses(newExpenses);
+          HapticService.success();
+          SoundService.playKaChing();
+
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  '${newExpenses.length} harcama kalemi ortaklığa başarıyla kaydedildi.'),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
       setState(() {
         _amountStr = result.amount!.toStringAsFixed(2).replaceAll('.00', '');
         if (result.merchantName != null && result.merchantName!.isNotEmpty) {

@@ -355,15 +355,59 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 11 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+### [DÖNGÜ 11] - Akıllı Fiş OCR Ayrıştırıcısında Çoklu Kalem Desteği (Multi-Item Receipt Parser & Itemized Split Engine) & Atomik Toplu Kayıt
+**Tarih:** 27 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 2: Arayüz Hissiyatı ve Akıllı Giriş Kolaylığı (Sensory UX)*
+2. *Pillar 3: Özellik Ekleme, Çoklu Kalem Ayrıştırma ve Zaman Tasarrufu (Smart Itemization)*
+3. *Pillar 4: Matematiksel Sağlama ve Deterministik Ayrıştırma (Zero-Bug Logic)*
+4. *Pillar 6: Evrensel Cihaz Uyumluluğu (280x480'den 4K'ya, 1.8x Metin Ölçeğinde Sıfır Taşma)*
+
+#### Yapılan Geliştirmeler:
+1. **Çoklu Satır Kalemi Modeli (`ReceiptLineItem` & `ParsedReceipt` in `receipt_parser.dart`):**
+   - Fiş dökümündeki her bir satırı başlık (`title`), miktar (`quantity`), birim fiyat (`price`), toplam tutar (`totalPrice`), kategori (`category`) ve seçim durumu (`isSelected`) ile modelleyen immütıbıl veri yapısı.
+   - `ParsedReceipt`: `lineItems`, `hasLineItems`, `totalLineItemsAmount`, `selectedLineItemsAmount`, `selectedCount`, `selectedPayerId` ve geriye dönük uyumlu `detectedItems` erişimcileri.
+2. **Akıllı Çoklu Kalem Ayrıştırma ve Otomatik Kategori Motoru (`receipt_parser.dart`):**
+   - Satır sonundaki fiyat desenlerini ve `2x`, `1 ADET` gibi miktar öneklerini yakalayan regex mimarisi.
+   - Satıcı başlıkları, tarihler, KDV detayları, fiş numaraları ve dipnotları eleyen akıllı gürültü filtresi.
+   - Her bir kalemin başlığına göre (temizlik/deterjan -> market, gıda/içecek -> mutfak/market, tüketim/elektrik -> fatura, vb.) otomatik kategori atayan kurallı motor.
+   - Kalemler toplamı ile genel fiş tutarı örtüştüğünde güven skorunu artıran matematiksel sağlama algoritması.
+3. **Atomik Toplu Kayıt Katmanı (`expense_repository.dart` & `app_providers.dart`):**
+   - `ExpenseRepository.addExpenses(List<Expense>)`: Çoklu kalemleri tek disk I/O operasyonuyla yerel önbelleğe ve diske yazar, çevrimdışı kuyruğu destekler ve bulut senkronizasyonunu asenkron tetikler.
+   - `ExpensesNotifier.addExpenses`: Riverpod reaktif bildirimini tek adımda tetikler.
+4. **Vektörel Çoklu Kalem Ayrıştırma ve Düzenleme Arayüzü (`receipt_scanner_dialog.dart`):**
+   - %100 vektörel ikonlar (`Icons.format_list_bulleted_rounded`, `Icons.playlist_add_check_rounded`, `Icons.close_rounded`, `Icons.arrow_drop_down_rounded`). Sıfır emoji.
+   - Tümünü Seç / Seçimi Kaldır hızlı çipi.
+   - Çoklu ortaklıklarda ödeyen üyeyi seçme imkanı (`ChoiceChip`).
+   - Her kalem için canlı seçim kutusu (>=48px thumb zone), miktar rozeti (`2x`), hızlı kategori değiştirme `PopupMenuButton`, birim/toplam fiyat gösterimi ve satır silme ikonu.
+   - Seçili kalemler özeti banner'ı.
+   - İki yönlü esnek aksiyon yapısı:
+     - "Seçili X Kalemi Ortaklığa Kaydet" (Tüm seçili kalemleri ortak masraf olarak toplu kaydeder, kasa sesi ve haptik tetikler).
+     - "Harcamaya Aktar ve Doldur" (Fişin tamamını tek toplam harcama olarak numpad'e aktarır).
+   - `Expanded` + `Flexible` + `TextOverflow.ellipsis` mimarisiyle 280px ultra-dar ekranda dahi sıfır piksel taşma (`zero RenderFlex overflow`).
+5. **Hızlı Harcama Ekranı Entegrasyonu (`quick_expense_screen.dart`):**
+   - Çoklu kalem kaydedildiğinde doğrudan geri dönüş ve kullanıcı bilgilendirme bildirimi.
+6. **Otomatik Testler & Regresyon Güvencesi:**
+   - `test/receipt_parser_test.dart` (Migros, Kafe, serialization, seçili tutar hesaplamaları, gürültü filtreleme dahil 5 yeni test eklendi).
+   - `test/receipt_scanner_widget_test.dart` (Çoklu kalem listesi, seçim değiştirme, silme ve toplu kaydetme widget testleri eklendi).
+   - `test/multi_item_receipt_integration_test.dart` (Repository addExpenses ve QuickExpenseScreen çoklu fiş entegrasyon testleri eklendi).
+   - `test/stress_multi_device_test.dart` (168 multi-device testi eksiksiz geçti).
+   - `test/layout_overflow_audit_test.dart` (9 layout overflow testi eksiksiz geçti).
+   - `test/emoji_audit_test.dart` (Sıfır emoji tam doğrulandı).
+   - Tüm proje test paketi: **294/294 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 12 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
 Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
 
-1. **Gelişmiş Çevrimdışı İşlem Kuyruğu ve Çakışmasız Eşitleme (Offline-First Resilience):**
-   - İnternet yokken eklenen/düzenlenen/silinen harcamaların yerel işlem kuyruğunda (`offline_queue`) sıralı tutulması, ağ geri geldiğinde otomatik arka plan senkronizasyonu ve bildirim rozeti.
-2. **Akıllı Fiş OCR Ayrıştırıcısında Çoklu Kalem Desteği (Multi-Item Receipt Parser):**
-   - Tek bir fiş içerisindeki birden çok kalemi ayrı kategorilere bölerek kaydetme seçeneği (Örn: Market fişindeki temizlik maddeleri vs gıda).
-3. **Bütçe Simülasyonu ve "Ne Olur Eğer?" Senaryo Motoru (What-If Expense Simulation):**
-   - Büyük bir harcama yapmadan önce bütçeye ve ay sonu hızına etkisini önizleme aracı.
+1. **Bütçe Simülasyonu ve "Ne Olur Eğer?" Senaryo Motoru (What-If Expense Simulation Engine):**
+   - Büyük bir harcama (örn: ₺15.000 yeni beyaz eşya, tatil veya kombi tamiri) yapılmadan önce ortak bütçeye, kişi başı borç dengesine ve ay sonu harcama temposuna (burn rate) etkisini anlık simüle eden vektörel önizleme aracı.
+2. **Gelişmiş Çevrimdışı İşlem Kuyruğu Senkronizasyonu ve Çakışma Çözümü (Advanced Offline Queue & Conflict-Free Resolution):**
+   - Zayıf veya kesintili ağlarda yerel işlem kuyruğunda bekleyen kayıtlar için otomatik yeniden deneme, bağlantı geri geldiğinde anlık senkronizasyon rozeti ve görsel durum göstergesi.
+3. **Akıllı Fiş Fotoğraf Yakalama & Cihaz Galerisi Entegrasyonu (Receipt Image OCR Pipeline):**
+   - Fotoğraf veya galeri görselinden doğrudan metin çıkararak fiş ayrıştırıcıya iletme desteği.
 
 ---
 

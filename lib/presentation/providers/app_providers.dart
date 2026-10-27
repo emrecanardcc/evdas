@@ -217,6 +217,12 @@ class ExpensesNotifier extends Notifier<List<Expense>> {
     state = repo.getExpenses();
   }
 
+  Future<void> addExpenses(List<Expense> expensesList) async {
+    final repo = ref.read(expenseRepositoryProvider);
+    await repo.addExpenses(expensesList);
+    state = repo.getExpenses();
+  }
+
   Future<void> deleteExpense(String id) async {
     final repo = ref.read(expenseRepositoryProvider);
     await repo.deleteExpense(id);
