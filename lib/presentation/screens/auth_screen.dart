@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/legal_texts.dart';
 import '../../core/services/supabase_service.dart';
+import '../../data/models/expense.dart';
+import '../../data/models/partnership.dart';
+import '../providers/app_providers.dart';
 import '../widgets/legal_document_modal.dart';
 import '../widgets/pattern_background.dart';
 import 'home_screen.dart';
 
-class AuthScreen extends StatefulWidget {
+class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen>
+class _AuthScreenState extends ConsumerState<AuthScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -64,6 +68,57 @@ class _AuthScreenState extends State<AuthScreen>
     });
 
     try {
+      // Test Hesabı (Geliştirici / Apple App Store / Google Play Denetçi Girişi)
+      if (email.toLowerCase() == 'test@evdas.app' && password == 'Evdas2026!') {
+        final repo = ref.read(expenseRepositoryProvider);
+        var house = repo.getActiveHousehold();
+        if (house == null) {
+          house = await repo.createPartnership(
+            name: 'Kadıköy Evi (Test)',
+            type: PartnershipType.home,
+            creatorName: 'Ahmet (Test)',
+          );
+          await repo.addMemberToHousehold('Mehmet Yılmaz');
+          await repo.addMemberToHousehold('Ayşe Demir');
+
+          // Canlı test için örnek harcama verileri ekle
+          await repo.addExpense(
+            Expense(
+              id: 'exp-demo-1',
+              householdId: house.id,
+              title: 'Haftalık Süpermarket Alışverişi',
+              amount: 1450.50,
+              type: ExpenseType.joint,
+              category: ExpenseCategory.market,
+              paidByMemberId: house.members.first.id,
+              expenseDate: DateTime.now().subtract(const Duration(days: 1)),
+            ),
+          );
+          await repo.addExpense(
+            Expense(
+              id: 'exp-demo-2',
+              householdId: house.id,
+              title: 'İnternet Faturası',
+              amount: 380.00,
+              type: ExpenseType.joint,
+              category: ExpenseCategory.fatura,
+              paidByMemberId: house.members.first.id,
+              expenseDate: DateTime.now().subtract(const Duration(days: 3)),
+            ),
+          );
+        }
+
+        ref.read(householdProvider.notifier).refresh();
+        ref.read(expensesProvider.notifier).refresh();
+
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        }
+        return;
+      }
+
       await SupabaseService.signIn(email: email, password: password);
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -532,6 +587,18 @@ class _AuthScreenState extends State<AuthScreen>
                     ),
                   )
                 : const Text('Giriş Yap'),
+          ),
+          const SizedBox(height: 12),
+          TextButton.icon(
+            onPressed: () {
+              _loginEmailController.text = 'test@evdas.app';
+              _loginPasswordController.text = 'Evdas2026!';
+            },
+            icon: const Icon(Icons.science_outlined, size: 16),
+            label: const Text(
+              'Test Hesabı Bilgilerini Doldur',
+              style: TextStyle(fontSize: 12),
+            ),
           ),
         ],
       ),

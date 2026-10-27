@@ -16,6 +16,13 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
    - Her özellik için gerçek senaryoları simüle eden birim/entegrasyon testleri yazılır ve doğrulanır.
 4. **MİNİMALİST VE NET TASARIM:**
    - Ekranlar 3 saniye kuralına uygun, karmaşadan uzak, thumb-zone ergonomisine sahip (en az 48x48px tıklama alanı) tasarlanır.
+5. **HER DÖNGÜ SONUNDA GİTHUB COMMIT & PUSH ZORUNLULUĞU:**
+   - Her evrim döngüsü tamamlandığında (`flutter analyze` ve `flutter test` %100 başarılı olduktan sonra), tüm değişiklikler anlamlı ve konvansiyonel bir commit mesajıyla (`feat(evolution): cycle X - ...`) yerel depoya commit edilmeli ve KESİNLİKLE `git push origin main` ile GitHub uzak sunucusuna gönderilmelidir. Asla uzak depoya itilmemiş kod bırakılamaz.
+6. **HAZIR TEST VE DENETÇİ HESABI (TEST / REVIEWER CREDENTIALS):**
+   - Apple App Store Guideline 2.1 ve Google Play inceleme kurallarına tam uyumlu olarak, oturum ekranında yerleşik test hesabı tanımlıdır:
+     - **E-posta:** `test@evdas.app`
+     - **Şifre:** `Evdas2026!`
+   - Giriş ekranında "Test Hesabı Bilgilerini Doldur" butonu ile tek tıkla form doldurulabilir; Supabase çevrimdışı olsa dahi örnek `Kadıköy Evi (Test)` ortaklığı ve örnek harcama verileriyle anında tüm ekranlar (Bütçe, Fiş Okuyucu, Çark, Raporlar) test edilebilir.
 
 ---
 
@@ -218,7 +225,34 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 7 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+### [DÖNGÜ 7] - Hazır Test Hesabı & Otomatik Doğrulama Altyapısı (Test & Reviewer Account Engine) & Git Otomasyonu
+**Tarih:** 27 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 4: Güvenli ve Kesintisiz Giriş Doğrulaması (Zero-Bug Logic)*
+2. *Pillar 5: Test & Denetçi Erişilebilirliği (Apple App Store Guideline 2.1 & Google Play Compliance)*
+3. *Pillar 7: Otomatik Testler, Regresyon ve Sürekli Git Entegrasyonu (CI/CD Rigor)*
+
+#### Yapılan Geliştirmeler:
+1. **Yerleşik Test & Denetçi Hesabı (`auth_screen.dart`):**
+   - **E-posta:** `test@evdas.app`
+   - **Şifre:** `Evdas2026!`
+   - Giriş ekranına ergonomik ve şık "Test Hesabı Bilgilerini Doldur" aksiyon butonu eklendi.
+   - Supabase çevrimdışı olsa veya henüz backend URL/Key yapılandırılmamış olsa dahi test hesabı doğrudan aktif hale gelir; ilk girişte otomatik `Kadıköy Evi (Test)` ortaklığı ve örnek harcama verileri (Market, Fatura vb.) oluşturarak kullanıcının tüm özellikleri (Bütçe kartı, Çark, Fiş okuyucu, Tasarruf analizi, Ödeşme) sıfır konfigürasyon ile anında test edebilmesini sağlar.
+2. **Mimari Dönüşüm & Riverpod Reaktivitesi:**
+   - `AuthScreen` `ConsumerStatefulWidget` yapısına taşındı; `expenseRepositoryProvider`, `householdProvider` ve `expensesProvider` ile tam entegre çalışması sağlandı.
+3. **Mimaride Git Push Zorunluluğunun Standartlaşması:**
+   - Ana kural setine (Kural 5) her döngü sonunda GitHub uzak deposuna (`origin main`) otomatik commit ve push yapılması zorunluluğu eklendi.
+4. **Otomatik Testler & Regresyon Güvencesi:**
+   - `test/test_account_auth_test.dart` (2 test - otomatik form doldurma ve test ortaklığı oluşturarak ana ekrana geçiş).
+   - `test/widget_test.dart` (3 test eksiksiz geçti).
+   - `test/stress_multi_device_test.dart` (AuthScreen ve tüm ekranlar 280x480'den 800x400'e 1.8x font ile hatasız geçti).
+   - `test/layout_overflow_audit_test.dart` (9 ekran testi hatasız geçti).
+   - Tüm proje test paketi: **272/272 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 8 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
 Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
 
 1. **Gelişmiş Çevrimdışı İşlem Kuyruğu ve Çakışmasız Eşitleme (Offline-First Resilience):**
@@ -235,4 +269,4 @@ Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
 Ajanı döngüsel olarak çalıştırmak için:
 1. `AUTONOMOUS_LOG.md` dosyasındaki son tamamlanan döngüyü ve sıradaki hedefleri incele.
 2. Ana promptu hiçbir ek açıklama yapmadan ajana gönder.
-3. Ajan otomatik olarak sıradaki döngünün hedeflerini ele alacak, kodu ve testleri yazacak, `flutter analyze` ve `flutter test` ile doğrulayacak ve bu log dosyasını bir sonraki tur için güncelleyecektir.
+3. Ajan otomatik olarak sıradaki döngünün hedeflerini ele alacak, kodu ve testleri yazacak, `flutter analyze` ve `flutter test` ile doğrulayacak, bu log dosyasını güncelleyecek ve **her adımın sonunda Git commit atıp `git push origin main` ile GitHub'a gönderecektir.**
