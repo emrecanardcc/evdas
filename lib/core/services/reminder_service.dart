@@ -412,6 +412,48 @@ class ReminderService {
           );
         }
       }
+
+      // 7b. Kategori Bazlı Bütçe Sınır Kontrolü
+      if (budget.categoryLimits.isNotEmpty) {
+        final categorySpends = <ExpenseCategory, double>{};
+        for (final e in expenses) {
+          if (e.type == ExpenseType.joint &&
+              e.expenseDate.year == currentTime.year &&
+              e.expenseDate.month == currentTime.month) {
+            categorySpends[e.category] =
+                (categorySpends[e.category] ?? 0.0) + e.amount;
+          }
+        }
+
+        for (final entry in budget.categoryLimits.entries) {
+          final cat = entry.key;
+          final catLimit = entry.value;
+          if (catLimit <= 0) continue;
+
+          final spent = categorySpends[cat] ?? 0.0;
+          final catRatio = spent / catLimit;
+
+          if (catRatio >= 1.0 && budget.alertAt100Percent) {
+            final id =
+                'cat-budget-exceeded-${house.id}-${cat.name}-${currentTime.year}-${currentTime.month}';
+            if (!dismissedIds.contains(id)) {
+              results.add(
+                ReminderItem(
+                  id: id,
+                  type: ReminderType.budgetAlert,
+                  title: '${cat.displayName} Bütçesi Aşıldı',
+                  message:
+                      '${cat.displayName} için belirlenen ${CurrencyFormatter.formatClean(catLimit)} tavanı aşıldı! Harcanan: ${CurrencyFormatter.formatClean(spent)}.',
+                  timestamp: currentTime,
+                  actionRoute: 'reports',
+                  actionLabel: 'Raporu Gör',
+                  isRead: readIds.contains(id),
+                ),
+              );
+            }
+          }
+        }
+      }
     }
 
     return results;

@@ -5,16 +5,25 @@ import '../../core/constants/app_colors.dart';
 import '../../core/services/budget_service.dart';
 import '../../core/services/haptic_service.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../data/models/expense.dart';
 import '../../data/models/household_budget.dart';
 
 /// Aylık Bütçe İlerleme ve Finansal Nabız Kartı
-class BudgetPulseCard extends ConsumerWidget {
+class BudgetPulseCard extends ConsumerStatefulWidget {
   const BudgetPulseCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BudgetPulseCard> createState() => _BudgetPulseCardState();
+}
+
+class _BudgetPulseCardState extends ConsumerState<BudgetPulseCard> {
+  bool _showCategoryBudgets = false;
+
+  @override
+  Widget build(BuildContext context) {
     final budget = ref.watch(budgetProvider);
     final currentSpent = ref.watch(currentMonthJointSpendProvider);
+    final categorySpends = ref.watch(currentMonthCategorySpendsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (budget == null) return const SizedBox.shrink();
@@ -271,6 +280,135 @@ class BudgetPulseCard extends ConsumerWidget {
                     ),
                   ),
                 ),
+
+                // Kategori Bütçe İlerlemeleri (Genişletilebilir Alan)
+                if (budget.categoryLimits.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () {
+                      HapticService.selection();
+                      setState(() {
+                        _showCategoryBudgets = !_showCategoryBudgets;
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.tune_rounded, size: 14),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      'Kategori Limitleri (${budget.categoryLimits.length})',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            _showCategoryBudgets
+                                ? Icons.expand_less_rounded
+                                : Icons.expand_more_rounded,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (_showCategoryBudgets) ...[
+                    const SizedBox(height: 6),
+                    ...budget.categoryLimits.entries.map((entry) {
+                      final cat = entry.key;
+                      final catLimit = entry.value;
+                      final spent = categorySpends[cat] ?? 0.0;
+                      final catRatio = catLimit > 0 ? (spent / catLimit) : 0.0;
+                      final catHealth = budget.getCategoryHealth(cat, spent);
+
+                      Color catColor = AppColors.positive;
+                      if (catHealth == BudgetHealth.warning) {
+                        catColor = const Color(0xFFD97706);
+                      } else if (catHealth == BudgetHealth.exceeded) {
+                        catColor = AppColors.negative;
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(cat.icon, size: 12, color: catColor),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          cat.displayName,
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(maxWidth: maxW * 0.55),
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      '${CurrencyFormatter.formatClean(spent)} / ${CurrencyFormatter.formatClean(catLimit)}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: catColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(3),
+                              child: LinearProgressIndicator(
+                                value: catRatio.clamp(0.0, 1.0),
+                                minHeight: 4,
+                                backgroundColor: isDark
+                                    ? Colors.white10
+                                    : const Color(0xFFF1F5F9),
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(catColor),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ],
               ],
             );
           },
@@ -286,6 +424,18 @@ class BudgetPulseCard extends ConsumerWidget {
   ) {
     final controller = TextEditingController(
       text: budget.monthlyLimit.toStringAsFixed(0),
+    );
+    final marketCtrl = TextEditingController(
+      text: (budget.categoryLimits[ExpenseCategory.market] ?? 8000.0)
+          .toStringAsFixed(0),
+    );
+    final faturaCtrl = TextEditingController(
+      text: (budget.categoryLimits[ExpenseCategory.fatura] ?? 4000.0)
+          .toStringAsFixed(0),
+    );
+    final kiraCtrl = TextEditingController(
+      text: (budget.categoryLimits[ExpenseCategory.kira] ?? 10000.0)
+          .toStringAsFixed(0),
     );
     bool alert80 = budget.alertAt80Percent;
     bool alert100 = budget.alertAt100Percent;
@@ -371,6 +521,63 @@ class BudgetPulseCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
 
+                    // Kategori Tavan Limitleri
+                    const Text(
+                      'Kategori Tavan Limitleri (İsteğe Bağlı)',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: marketCtrl,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                            ],
+                            decoration: const InputDecoration(
+                              labelText: 'Market (TL)',
+                              prefixIcon: Icon(Icons.shopping_cart_outlined, size: 16),
+                              isDense: true,
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: faturaCtrl,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                            ],
+                            decoration: const InputDecoration(
+                              labelText: 'Fatura (TL)',
+                              prefixIcon: Icon(Icons.bolt_outlined, size: 16),
+                              isDense: true,
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: kiraCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'Kira & Aidat (TL)',
+                        prefixIcon: Icon(Icons.home_outlined, size: 16),
+                        isDense: true,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
                     // Uyarı Ayarları
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
@@ -412,6 +619,34 @@ class BudgetPulseCard extends ConsumerWidget {
                               alert80: alert80,
                               alert100: alert100,
                             );
+
+                            final mVal = double.tryParse(
+                              marketCtrl.text.replaceAll('.', '').replaceAll(',', '.'),
+                            );
+                            if (mVal != null && mVal > 0) {
+                              await ref
+                                  .read(budgetProvider.notifier)
+                                  .updateCategoryLimit(ExpenseCategory.market, mVal);
+                            }
+
+                            final fVal = double.tryParse(
+                              faturaCtrl.text.replaceAll('.', '').replaceAll(',', '.'),
+                            );
+                            if (fVal != null && fVal > 0) {
+                              await ref
+                                  .read(budgetProvider.notifier)
+                                  .updateCategoryLimit(ExpenseCategory.fatura, fVal);
+                            }
+
+                            final kVal = double.tryParse(
+                              kiraCtrl.text.replaceAll('.', '').replaceAll(',', '.'),
+                            );
+                            if (kVal != null && kVal > 0) {
+                              await ref
+                                  .read(budgetProvider.notifier)
+                                  .updateCategoryLimit(ExpenseCategory.kira, kVal);
+                            }
+
                             HapticService.success();
                             if (context.mounted) {
                               Navigator.of(context).pop();

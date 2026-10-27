@@ -100,3 +100,20 @@ final currentMonthJointSpendProvider = Provider<double>((ref) {
   }
   return total;
 });
+
+/// Bu ayki kategori bazlı harcamaları hesaplayan reaktif provider
+final currentMonthCategorySpendsProvider =
+    Provider<Map<ExpenseCategory, double>>((ref) {
+  final expenses = ref.watch(expensesProvider);
+  final now = DateTime.now();
+
+  final map = <ExpenseCategory, double>{};
+  for (final e in expenses) {
+    if (e.type == ExpenseType.joint &&
+        e.expenseDate.year == now.year &&
+        e.expenseDate.month == now.month) {
+      map[e.category] = (map[e.category] ?? 0.0) + e.amount;
+    }
+  }
+  return map;
+});

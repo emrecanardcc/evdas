@@ -282,15 +282,48 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 9 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+### [DÖNGÜ 9] - Granüler Kategori Bütçeleri (Category Budgets) & Dinamik İlerleme Çubukları & Aşım Bildirimleri
+**Tarih:** 27 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 1: Finansal Disiplin ve Granüler Kontrol (Retention & Growth)*
+2. *Pillar 2: Vektörel İlerleme Çubukları ve Mikro Açılır/Kapanır UX (Sensory UX)*
+3. *Pillar 4: Kategori Bazlı Aşım ve Erken Uyarı Bildirimleri (Zero-Bug Logic)*
+4. *Pillar 6: Evrensel Cihaz Uyumluluğu (280x480'den 4K'ya, 1.8x Metin Ölçeğinde Sıfır Taşma)*
+
+#### Yapılan Geliştirmeler:
+1. **Granüler Kategori Tavan Modeli (`household_budget.dart`):**
+   - Genel ortak bütçeye ek olarak Market, Fatura, Kira gibi alt harcama kalemleri için özel tavan belirleme desteği (`categoryLimits: Map<ExpenseCategory, double>`).
+   - Matematiksel kategori sağlık analizi: `getCategoryHealth(cat, spent)`, oran `categoryRatio(cat, spent)` ve kalan pay `categoryRemaining(cat, spent)`.
+2. **Reaktif Kategori Harcama Sağlayıcısı (`budget_service.dart`):**
+   - Riverpod 3.x reaktif `currentMonthCategorySpendsProvider`: Ay içerisindeki ortak harcamaları kategori bazında anlık hesaplar.
+   - `updateCategoryLimit`: Seçili kategoriye ait bütçe tavanını kalıcı (SharedPreferences) günceller.
+3. **Kategori Aşım Uyarı Motoru (`reminder_service.dart`):**
+   - Belirlenen kategori limiti %100 oranında aşıldığında otomatik `ReminderType.budgetAlert` bildirimi (`cat-budget-exceeded-...`) üretilir.
+   - Tek tıkla doğrudan Raporlar ve Analiz ekranına yönlendirme.
+4. **Vektörel Kategori Bütçe Kartı & Ayar Modalı (`budget_pulse_card.dart`):**
+   - Hızlı açılır-kapanır (expand/collapse) kategori limitleri arayüzü; kategoriye özel renk kodlu mini ilerleme çubukları (`LinearProgressIndicator`).
+   - `Expanded` + `Flexible` + `FittedBox` mimarisiyle 280px ultra-dar ekranlarda 1.8x metin ölçeğinde dahi sıfır piksel taşma (`zero RenderFlex overflow`) garantilendi.
+   - Bütçe ayarları modalına Market, Fatura ve Kira için bağımsız tavan giriş alanları entegre edildi.
+5. **Otomatik Testler & Regresyon Güvencesi:**
+   - `test/category_budget_test.dart` (3 test - matematiksel hesaplamalar, kategori bildirim üretimi ve kalıcı güncelleme).
+   - `test/budget_pulse_card_test.dart` (3 widget testi - render, limit aşımı ve açılır kategori tavan detayları).
+   - `test/stress_multi_device_test.dart` (168 testin tamamı 280x480'den 800x400'e 1.8x font ile hatasız geçti).
+   - `test/layout_overflow_audit_test.dart` (9 ekran testi hatasız geçti).
+   - `test/emoji_audit_test.dart` (Sıfır emoji tam doğrulandı).
+   - Tüm proje test paketi: **277/277 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 10 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
 Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
 
 1. **Gelişmiş Çevrimdışı İşlem Kuyruğu ve Çakışmasız Eşitleme (Offline-First Resilience):**
    - İnternet yokken eklenen/düzenlenen/silinen harcamaların yerel işlem kuyruğunda (`offline_queue`) sıralı tutulması, ağ geri geldiğinde otomatik arka plan senkronizasyonu ve bildirim rozeti.
-2. **Kişiselleştirilmiş Kategori Bütçeleri ve Alt Limit Takibi (Granular Category Budgets):**
-   - Genel ortak bütçeye ek olarak Market, Fatura veya Eğlence için ayrı ayrı alt limitler belirleme ve kategori bazlı uyarılar.
-3. **Akıllı Fiş OCR Ayrıştırıcısında Çoklu Kalem Desteği (Multi-Item Receipt Parser):**
+2. **Akıllı Fiş OCR Ayrıştırıcısında Çoklu Kalem Desteği (Multi-Item Receipt Parser):**
    - Tek bir fiş içerisindeki birden çok kalemi ayrı kategorilere bölerek kaydetme seçeneği (Örn: Market fişindeki temizlik maddeleri vs gıda).
+3. **Ay Sonu Bütçe & Harcama Tahmin Motoru (Predictive Burn Rate Engine):**
+   - Geçen gün sayısı ve mevcut harcama temposuna göre ay sonu tahmini toplam harcamayı matematiksel modelle hesaplayıp proaktif tasarruf önerisi sunma.
 
 ---
 

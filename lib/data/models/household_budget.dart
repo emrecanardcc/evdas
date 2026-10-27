@@ -63,6 +63,30 @@ class HouseholdBudget {
     return currentSpent / monthlyLimit;
   }
 
+  /// Belirli bir kategori için sağlık durumunu döner
+  BudgetHealth getCategoryHealth(ExpenseCategory category, double categorySpent) {
+    final limit = categoryLimits[category];
+    if (limit == null || limit <= 0) return BudgetHealth.safe;
+    final r = categorySpent / limit;
+    if (r >= 1.0) return BudgetHealth.exceeded;
+    if (r >= 0.75) return BudgetHealth.warning;
+    return BudgetHealth.safe;
+  }
+
+  /// Belirli bir kategori için harcama oranı (0.0 - 1.0+)
+  double categoryRatio(ExpenseCategory category, double categorySpent) {
+    final limit = categoryLimits[category];
+    if (limit == null || limit <= 0) return 0.0;
+    return categorySpent / limit;
+  }
+
+  /// Belirli bir kategori için kalan bütçe tutarı
+  double categoryRemaining(ExpenseCategory category, double categorySpent) {
+    final limit = categoryLimits[category];
+    if (limit == null || limit <= 0) return 0.0;
+    return (limit - categorySpent).clamp(0.0, double.infinity);
+  }
+
   factory HouseholdBudget.fromJson(Map<String, dynamic> json) {
     final catMap = <ExpenseCategory, double>{};
     if (json['category_limits'] != null) {
