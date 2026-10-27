@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace EvdasManager
 {
@@ -49,13 +50,34 @@ namespace EvdasManager
 
         #region Drag and Drop Handling
 
+        private static T? FindAncestor<T>(DependencyObject? current) where T : DependencyObject
+        {
+            while (current != null)
+            {
+                if (current is T t) return t;
+                current = VisualTreeHelper.GetParent(current);
+            }
+            return null;
+        }
+
         private void ListBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             _dragStartPoint = e.GetPosition(null);
             if (sender is ListBox listBox)
             {
-                _dragSourceList = listBox;
-                _draggedItem = listBox.SelectedItem as ItemModel;
+                var element = e.OriginalSource as DependencyObject;
+                var itemContainer = FindAncestor<ListBoxItem>(element);
+                if (itemContainer != null && itemContainer.DataContext is ItemModel item)
+                {
+                    _dragSourceList = listBox;
+                    _draggedItem = item;
+                    listBox.SelectedItem = item;
+                }
+                else
+                {
+                    _dragSourceList = null;
+                    _draggedItem = null;
+                }
             }
         }
 
@@ -69,29 +91,59 @@ namespace EvdasManager
                 if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
                     Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
                 {
-                    DragDrop.DoDragDrop(_dragSourceList, _draggedItem, DragDropEffects.Move);
+                    var data = new DataObject("EvdasItem", _draggedItem);
+                    data.SetData("SourceList", _dragSourceList);
+                    DragDrop.DoDragDrop(_dragSourceList, data, DragDropEffects.Move);
                     _draggedItem = null;
                     _dragSourceList = null;
                 }
             }
         }
 
-        private void HandleDrop(ListBox targetList)
+        private void ListBox_DragOver(object sender, DragEventArgs e)
         {
-            if (_draggedItem != null && _dragSourceList != null && _dragSourceList != targetList)
+            if (e.Data.GetDataPresent("EvdasItem") || _draggedItem != null)
             {
-                RemoveItemFromList(_dragSourceList, _draggedItem);
-                AddItemToList(targetList, _draggedItem);
-                targetList.SelectedItem = _draggedItem;
-                TxtStatus.Text = $"Oge tasindi: [{_draggedItem.Tag}]";
+                e.Effects = DragDropEffects.Move;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+
+        private void HandleDrop(ListBox targetList, DragEventArgs e)
+        {
+            ItemModel? item = null;
+            ListBox? sourceList = null;
+
+            if (e.Data.GetDataPresent("EvdasItem"))
+            {
+                item = e.Data.GetData("EvdasItem") as ItemModel;
+            }
+            if (e.Data.GetDataPresent("SourceList"))
+            {
+                sourceList = e.Data.GetData("SourceList") as ListBox;
+            }
+
+            item ??= _draggedItem;
+            sourceList ??= _dragSourceList;
+
+            if (item != null && sourceList != null && sourceList != targetList)
+            {
+                RemoveItemFromList(sourceList, item);
+                AddItemToList(targetList, item);
+                targetList.SelectedItem = item;
+                TxtStatus.Text = $"Oge tasindi: [{item.Tag}]";
             }
         }
 
-        private void LstFikirHavuzu_Drop(object sender, DragEventArgs e) => HandleDrop(LstFikirHavuzu);
-        private void LstSecilenFikirler_Drop(object sender, DragEventArgs e) => HandleDrop(LstSecilenFikirler);
-        private void LstAktifUcretsiz_Drop(object sender, DragEventArgs e) => HandleDrop(LstAktifUcretsiz);
-        private void LstAktifPro_Drop(object sender, DragEventArgs e) => HandleDrop(LstAktifPro);
-        private void LstKaldirilacaklar_Drop(object sender, DragEventArgs e) => HandleDrop(LstKaldirilacaklar);
+        private void LstFikirHavuzu_Drop(object sender, DragEventArgs e) => HandleDrop(LstFikirHavuzu, e);
+        private void LstSecilenFikirler_Drop(object sender, DragEventArgs e) => HandleDrop(LstSecilenFikirler, e);
+        private void LstAktifUcretsiz_Drop(object sender, DragEventArgs e) => HandleDrop(LstAktifUcretsiz, e);
+        private void LstAktifPro_Drop(object sender, DragEventArgs e) => HandleDrop(LstAktifPro, e);
+        private void LstKaldirilacaklar_Drop(object sender, DragEventArgs e) => HandleDrop(LstKaldirilacaklar, e);
 
         private void RemoveItemFromList(ListBox list, ItemModel item)
         {

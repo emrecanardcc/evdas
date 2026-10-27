@@ -439,15 +439,43 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 13 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
-Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
+### [DÖNGÜ 13] - Şişkinlik Temizliği (Bloat Removal), Özelleştirilebilir Kategoriler, Ev Bazlı Ortak Lisans ve Kusursuz Masaüstü Sürükle-Bırak Motoru
+**Tarih:** 28 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 1: Bilişsel Yükü Sıfırlama ve Şişkinliklerin Kod Tabanından Ayıklanması (Bloat Removal)*
+2. *Pillar 2: Kullanıcı Tanımlı Özel Kategoriler ve Gerçek Hayat Frekansı (Custom Category Engine)*
+3. *Pillar 3: Ev Bazlı Ortak Lisans Modeli ve Otomatik Harcama Paylaşımı (Household Pro Monetization)*
+4. *Pillar 4: WPF Masaüstü Paneli Sürükle-Bırak ve Türkçe Ayrıştırıcı Düzeltmesi (WPF Drag-Drop Fix & Desktop Exe)*
 
-1. **Ev Bazlı Premium Harcama Otomasyonu (Household Subscription Split Trigger):**
-   - Ev lisansı aktive edildiğinde, hanedeki tüm aktif üyelere otomatik olarak eşit bölünmüş ₺300 harcama kaydı oluşturan entegrasyon.
-2. **Kişiselleştirilebilir Özel Kategori Yöneticisi (Custom Category Builder):**
-   - Ev arkadaşı grubunun kendi jargonuna uygun özel kategoriler (örneğin "Kedi Maması & Kumu", "PlayStation / Oyun Masrafı", "Kamp & Doğa") ekleyebileceği arayüz.
-3. **Gereksiz Kod Tabanı Ayıklaması (Bloat Cleanup Phase 2):**
-   - `ozellikler.md -> Kaldirilacaklar` listesindeki kullanılmayan karmaşık OCR ayrıştırıcı kodlarını ve bağımlılıklarını güvenle depodan kaldırma.
+#### Yapılan Geliştirmeler:
+1. **Şişkinliklerin (Bloat) Arayüzden Temizlenmesi:**
+   - `QuickExpenseScreen` AppBar'ından karmaşık fiş kamera/OCR butonu tamamen kaldırıldı; kullanıcılar artık gereksiz yapay zeka gösterişiyle karşılaşmıyor.
+   - Sayısal tuş takımındaki (+, -, x, /, %) hesap makinesi işleç şeridi gizlendi (`showCalculator: false`); ekran temiz, odaklı ve 2 saniyede harcama girmeye uygun hale getirildi.
+2. **Kişiselleştirilebilir Özel Kategori Mimarisi (`custom_category.dart`, `category_provider.dart`, `category_selector.dart`):**
+   - Kullanıcıların kendi evine özel harcama kategorileri (örneğin "Damacana Su", "Evcil Hayvan", "İçecek & Eğlence", "Balkon & Bahçe") oluşturabilmesi sağlandı.
+   - `CategorySelector`: Günlük standart kategorilerin hemen yanında özel kategori çipleri ve "+ Özel Kategori" ekleme modalı eklendi.
+   - İkon (vektörel Material Symbols) ve renk seçimi ile sıfır-emoji standardında kalıcı kategori kaydı (SharedPreferences) sağlandı.
+   - `Expense` modeline `customCategory` alanı entegre edildi; model ve serialization eksiksiz güncellendi.
+3. **Ev Bazlı Ortak Premium ve Otomatik Harcama Kurgusu:**
+   - Abonelik fiyatlaması bireysel değil, doğrudan ev odaklı yapılandırıldı: Aylık ₺300 (3 kişilik evde kişi başı ₺100) ve Yıllık ₺2.400 (kişi başı ₺67/ay).
+   - `PaywallModal`: Ortak ev lisansı avantajı ve kişi başı maliyet şeffaflığı netleştirildi; 600px ekranlarda sıfır taşma garantilendi.
+4. **WPF Masaüstü Paneli (`EvdasManager.exe`) Sürükle-Bırak & Parser İyileştirmesi:**
+   - `ListBox_PreviewMouseLeftButtonDown` olayında seçilmemiş öğeye tıklandığında `SelectedItem`'ın `null` gelmesi hatası `VisualTreeHelper.FindAncestor<ListBoxItem>` ile çözüldü.
+   - Standart WPF `DataObject` transfer mekanizması ve `DragOver` imleç desteği eklendi; kartlar beş sütun arasında (Fikir Havuzu, Seçilen Fikirler, Ücretsiz, Pro, Kaldırılacaklar) akıcı şekilde taşınabilir hale getirildi.
+   - `MarkdownSyncService.cs`: Türkçe karakterleri (`İ`, `Ş`, `Ğ`, `Ü`, `Ö`, `Ç`) ve boşluk/tire içeren etiketleri kayıpsız ayrıştıran regex ve normalizasyon motoru eklendi.
+   - Self-contained tek dosya exe olarak yeniden derlendi ve `C:\Users\ardce\Desktop\EvdasManager.exe` üzerine yerleştirildi.
+5. **Otomatik Testler & Regresyon Güvencesi:**
+   - Yeni `test/custom_category_test.dart` (5 test) yazıldı.
+   - `test/emoji_audit_test.dart` (0 emoji ihlali) doğrulandı.
+   - `test/subscription_and_paywall_test.dart` %100 başarılı.
+   - Tüm proje test paketi: **308/308 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 14 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+1. **Minimum Transfer Borç Sadeleştirme Motoru:** 10 farklı ikili borcu tek bir FAST/EFT transferine indirgeyen graf algoritmasının tam entegrasyonu.
+2. **Ev Kuralları ve Wi-Fi / Acil Durum Panosu:** Ev içi sabit bilgilerin (Wi-Fi şifresi, sayaç vanaları) paylaşıldığı minimalist bilgi kartı.
 
 ---
 

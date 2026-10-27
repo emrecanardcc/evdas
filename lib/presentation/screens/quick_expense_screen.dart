@@ -38,6 +38,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
 
   String? _debtorMemberId;
   bool _iAmCreditor = true;
+  String? _selectedCustomCategory;
 
   // Eşit Olmayan / Ağırlıklı Bölüşüm ve Muafiyet Durumu
   bool _isCustomSplit = false;
@@ -157,6 +158,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
     setState(() {
       _titleController.text = tag.title;
       _selectedCategory = tag.category;
+      _selectedCustomCategory = null;
     });
   }
 
@@ -231,6 +233,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
       amount: amount,
       type: _selectedType,
       category: isPersonal ? ExpenseCategory.diger : _selectedCategory,
+      customCategory: isPersonal ? null : _selectedCustomCategory,
       paidByMemberId: paidBy,
       debtorMemberId: debtor,
       expenseDate: DateTime.now(),
@@ -300,6 +303,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
       _titleController.clear();
       _selectedType = ExpenseType.joint;
       _selectedCategory = ExpenseCategory.market;
+      _selectedCustomCategory = null;
       _isCustomSplit = false;
       _isCustomSplitExpanded = false;
       _splitWeights.clear();
@@ -457,12 +461,6 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
           },
         ),
         actions: [
-          // AKILLI FİŞ VE BELGE OKUYUCU
-          IconButton(
-            icon: const Icon(Icons.document_scanner_rounded),
-            tooltip: 'Akıllı Fiş / Belge Oku',
-            onPressed: _openReceiptScanner,
-          ),
           // GİZLİ BAKİYE MODU BUTONU (Tek Tıkla •••• Maskeleme)
           IconButton(
             icon: Icon(
@@ -694,11 +692,22 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
 
                     const SizedBox(height: 8),
 
-                    // 3. KATEGORİ SEÇİCİ
+                    // 3. KATEGORİ SEÇİCİ (Özelleştirilebilir ve Gerçek Hayat Frekanslı)
                     if (_selectedType == ExpenseType.joint) ...[
                       CategorySelector(
                         selectedCategory: _selectedCategory,
-                        onSelect: (cat) => setState(() => _selectedCategory = cat),
+                        onSelect: (cat) => setState(() {
+                          _selectedCategory = cat;
+                          _selectedCustomCategory = null;
+                        }),
+                        selectedCustomCategory: _selectedCustomCategory,
+                        onSelectCustom: (customCat) => setState(() {
+                          _selectedCategory = ExpenseCategory.diger;
+                          _selectedCustomCategory = customCat.name;
+                          if (_titleController.text.isEmpty) {
+                            _titleController.text = customCat.name;
+                          }
+                        }),
                       ),
                       const SizedBox(height: 8),
 
@@ -709,7 +718,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                       ],
                     ],
 
-                    // 4. SAYISAL TUŞ TAKIMI (HESAP MAKİNESİ VE ATM DÜZENİ DESTEKLİ)
+                    // 4. SAYISAL TUŞ TAKIMI (Hızlı ve Odaklı Giriş, Sıfır Şişkinlik)
                     CustomNumpad(
                       onDigitPressed: _onDigit,
                       onDeletePressed: _onDelete,
@@ -717,7 +726,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                       onOperatorPressed: _onOperator,
                       onEqualsPressed: _onEquals,
                       layout: numpadLayout,
-                      showCalculator: true,
+                      showCalculator: false,
                     ),
 
                     const SizedBox(height: 12),

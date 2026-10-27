@@ -30,11 +30,11 @@ extension SubscriptionTierExtension on SubscriptionTier {
       case SubscriptionTier.free:
         return 'Ücretsiz';
       case SubscriptionTier.proMonthly:
-        return '₺39,99 / ay';
+        return '₺300,00 / ay (Kişi başı ₺100)';
       case SubscriptionTier.proYearly:
-        return '₺299,99 / yıl';
+        return '₺2.400,00 / yıl (Kişi başı ₺67/ay)';
       case SubscriptionTier.lifetime:
-        return '₺599,99';
+        return '₺4.999,99';
     }
   }
 }

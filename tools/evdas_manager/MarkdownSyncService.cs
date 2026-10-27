@@ -70,17 +70,18 @@ namespace EvdasManager
             foreach (string rawLine in lines)
             {
                 string line = rawLine.Trim();
-                if (line.StartsWith("## 1. Fikir Havuzu", StringComparison.OrdinalIgnoreCase))
+                string norm = NormalizeTurkish(line);
+                if (norm.StartsWith("## 1.", StringComparison.OrdinalIgnoreCase))
                 {
                     currentSection = 1;
                     continue;
                 }
-                if (line.StartsWith("## 2. Secilen Fikirler", StringComparison.OrdinalIgnoreCase))
+                if (norm.StartsWith("## 2.", StringComparison.OrdinalIgnoreCase))
                 {
                     currentSection = 2;
                     continue;
                 }
-                if (line.StartsWith("## 3.", StringComparison.OrdinalIgnoreCase))
+                if (norm.StartsWith("## 3.", StringComparison.OrdinalIgnoreCase))
                 {
                     currentSection = 0;
                     continue;
@@ -112,22 +113,23 @@ namespace EvdasManager
             foreach (string rawLine in lines)
             {
                 string line = rawLine.Trim();
-                if (line.StartsWith("## 2. Kaldirilacaklar", StringComparison.OrdinalIgnoreCase))
+                string norm = NormalizeTurkish(line);
+                if (norm.StartsWith("## 2.", StringComparison.OrdinalIgnoreCase))
                 {
                     currentSection = 2;
                     continue;
                 }
-                if (line.StartsWith("## 3. Aktif Ozellikler - Ucretsiz", StringComparison.OrdinalIgnoreCase))
+                if (norm.StartsWith("## 3.", StringComparison.OrdinalIgnoreCase))
                 {
                     currentSection = 3;
                     continue;
                 }
-                if (line.StartsWith("## 4. Aktif Ozellikler - Ev Premium", StringComparison.OrdinalIgnoreCase))
+                if (norm.StartsWith("## 4.", StringComparison.OrdinalIgnoreCase))
                 {
                     currentSection = 4;
                     continue;
                 }
-                if (line.StartsWith("## 5.", StringComparison.OrdinalIgnoreCase))
+                if (norm.StartsWith("## 5.", StringComparison.OrdinalIgnoreCase))
                 {
                     currentSection = 0;
                     continue;
@@ -146,10 +148,27 @@ namespace EvdasManager
             }
         }
 
+        private static string NormalizeTurkish(string text)
+        {
+            return text
+                .Replace('İ', 'I')
+                .Replace('ı', 'i')
+                .Replace('ş', 's')
+                .Replace('Ş', 'S')
+                .Replace('ğ', 'g')
+                .Replace('Ğ', 'G')
+                .Replace('ü', 'u')
+                .Replace('Ü', 'U')
+                .Replace('ö', 'o')
+                .Replace('Ö', 'O')
+                .Replace('ç', 'c')
+                .Replace('Ç', 'C');
+        }
+
         private static ItemModel? ParseItem(string line)
         {
-            // Format: - **[TAG]**: Aciklama  veya  - **TAG**: Aciklama
-            var match = Regex.Match(line, @"^-\s*\*\*\[?([A-Za-z0-9_]+)\]?\*\*:\s*(.*)$");
+            // Format 1: - **[TAG]**: Aciklama  veya  - **TAG**: Aciklama
+            var match = Regex.Match(line, @"^-\s*\*\*\[?([^\]\*\:]+)\]?\*\*:\s*(.*)$");
             if (match.Success)
             {
                 return new ItemModel
@@ -159,14 +178,25 @@ namespace EvdasManager
                 };
             }
 
-            // Basit format: - [TAG] Aciklama
-            var matchSimple = Regex.Match(line, @"^-\s*\[?([A-Za-z0-9_]+)\]?\s*:\s*(.*)$");
+            // Format 2: - [TAG]: Aciklama
+            var matchSimple = Regex.Match(line, @"^-\s*\[([^\]]+)\]:\s*(.*)$");
             if (matchSimple.Success)
             {
                 return new ItemModel
                 {
                     Tag = matchSimple.Groups[1].Value.Trim(),
                     Description = matchSimple.Groups[2].Value.Trim()
+                };
+            }
+
+            // Format 3: - TAG: Aciklama
+            var matchColon = Regex.Match(line, @"^-\s*([^:]+):\s*(.*)$");
+            if (matchColon.Success)
+            {
+                return new ItemModel
+                {
+                    Tag = matchColon.Groups[1].Value.Trim().Trim('[', ']', '*'),
+                    Description = matchColon.Groups[2].Value.Trim()
                 };
             }
 

@@ -220,6 +220,7 @@
                             <ListBox x:Name="LstFikirHavuzu" Grid.Row="1" Style="{StaticResource CustomListBox}" 
                                      PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
                                      MouseMove="ListBox_MouseMove"
+                                     DragOver="ListBox_DragOver"
                                      Drop="LstFikirHavuzu_Drop" AllowDrop="True">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
@@ -260,6 +261,7 @@
                             <ListBox x:Name="LstSecilenFikirler" Grid.Row="1" Style="{StaticResource CustomListBox}" 
                                      PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
                                      MouseMove="ListBox_MouseMove"
+                                     DragOver="ListBox_DragOver"
                                      Drop="LstSecilenFikirler_Drop" AllowDrop="True">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
@@ -305,6 +307,7 @@
                             <ListBox x:Name="LstAktifUcretsiz" Grid.Row="1" Style="{StaticResource CustomListBox}"
                                      PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
                                      MouseMove="ListBox_MouseMove"
+                                     DragOver="ListBox_DragOver"
                                      Drop="LstAktifUcretsiz_Drop" AllowDrop="True">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
@@ -340,6 +343,7 @@
                             <ListBox x:Name="LstAktifPro" Grid.Row="1" Style="{StaticResource CustomListBox}"
                                      PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
                                      MouseMove="ListBox_MouseMove"
+                                     DragOver="ListBox_DragOver"
                                      Drop="LstAktifPro_Drop" AllowDrop="True">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
@@ -375,6 +379,7 @@
                             <ListBox x:Name="LstKaldirilacaklar" Grid.Row="1" Style="{StaticResource CustomListBox}"
                                      PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
                                      MouseMove="ListBox_MouseMove"
+                                     DragOver="ListBox_DragOver"
                                      Drop="LstKaldirilacaklar_Drop" AllowDrop="True">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>

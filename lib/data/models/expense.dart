@@ -110,6 +110,7 @@ class Expense {
   final bool isPendingSync; // Çevrimdışı eklenmiş ve henüz buluta eşitlenmemiş
   final bool isDeletionPending; // Ortak kararla silinme oylaması sürecinde
   final Map<String, double>? splitMemberWeights; // Özel bölüşüm payları/ağırlıkları
+  final String? customCategory; // Kullanıcı tanımlı özel kategori adı
 
   Expense({
     required this.id,
@@ -118,6 +119,7 @@ class Expense {
     required this.amount,
     this.type = ExpenseType.joint,
     this.category = ExpenseCategory.diger,
+    this.customCategory,
     required this.paidByMemberId,
     this.debtorMemberId,
     DateTime? expenseDate,
@@ -137,6 +139,7 @@ class Expense {
       amount: (json['amount'] as num).toDouble(),
       type: _parseType(json['type'] as String?),
       category: _parseCategory(json['category'] as String?),
+      customCategory: json['custom_category'] as String?,
       paidByMemberId: json['paid_by_member_id'] as String,
       debtorMemberId: json['debtor_member_id'] as String?,
       expenseDate: json['expense_date'] != null
@@ -165,6 +168,7 @@ class Expense {
       'amount': amount,
       'type': type.name,
       'category': category.name,
+      'custom_category': customCategory,
       'paid_by_member_id': paidByMemberId,
       'debtor_member_id': debtorMemberId,
       'expense_date': expenseDate.toIso8601String(),
@@ -202,6 +206,7 @@ class Expense {
     double? amount,
     ExpenseType? type,
     ExpenseCategory? category,
+    String? customCategory,
     String? paidByMemberId,
     String? debtorMemberId,
     DateTime? expenseDate,
@@ -218,6 +223,7 @@ class Expense {
       amount: amount ?? this.amount,
       type: type ?? this.type,
       category: category ?? this.category,
+      customCategory: customCategory ?? this.customCategory,
       paidByMemberId: paidByMemberId ?? this.paidByMemberId,
       debtorMemberId: debtorMemberId ?? this.debtorMemberId,
       expenseDate: expenseDate ?? this.expenseDate,
