@@ -388,13 +388,13 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 5. **Hızlı Harcama Ekranı Entegrasyonu (`quick_expense_screen.dart`):**
    - Çoklu kalem kaydedildiğinde doğrudan geri dönüş ve kullanıcı bilgilendirme bildirimi.
 6. **Otomatik Testler & Regresyon Güvencesi:**
-   - `test/receipt_parser_test.dart` (Migros, Kafe, serialization, seçili tutar hesaplamaları, gürültü filtreleme dahil 5 yeni test eklendi).
-   - `test/receipt_scanner_widget_test.dart` (Çoklu kalem listesi, seçim değiştirme, silme ve toplu kaydetme widget testleri eklendi).
+   - `test/receipt_parser_test.dart` (Migros, Kafe, serialization, seçili tutar hesaplamaları, gürültü filtreleme, tamsayı tutar ayrıştırma, ÖKC sembol toleransı, nakit ezilme koruması, kuruş yuvarlama kaybı koruması dahil 18/18 test başarılı).
+   - `test/receipt_scanner_widget_test.dart` (Çoklu kalem listesi, kart üzeri dokunma seçimi, 48px thumb zone, silme, toplu kaydetme ve 280x480 1.8x font ölçeğinde sıfır taşma widget testleri eklendi).
    - `test/multi_item_receipt_integration_test.dart` (Repository addExpenses ve QuickExpenseScreen çoklu fiş entegrasyon testleri eklendi).
    - `test/stress_multi_device_test.dart` (168 multi-device testi eksiksiz geçti).
    - `test/layout_overflow_audit_test.dart` (9 layout overflow testi eksiksiz geçti).
    - `test/emoji_audit_test.dart` (Sıfır emoji tam doğrulandı).
-   - Tüm proje test paketi: **294/294 test %100 başarılı.**
+   - Tüm proje test paketi: **303/303 test %100 başarılı.**
    - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
 
 ---

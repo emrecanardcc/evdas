@@ -243,5 +243,140 @@ TEŞEKKÜR EDERİZ YİNE BEKLERİZ
       expect(result.lineItems.first.title, contains('SÜT'));
       expect(result.lineItems.first.price, equals(38.50));
     });
+
+    test('Tamsayı tutarları (15 TL, 10 TL, 85 TL) doğru ayrıştırmalıdır', () {
+      const receiptText = '''
+ODUN FIRINI & KAFE
+TARİH: 27.10.2026
+EKMEK: 15 TL
+SU: 10 TL
+KAHVE: 85 TL
+TOPLAM: 110 TL
+''';
+
+      final result = ReceiptParser.parse(receiptText);
+      expect(result.hasValidData, isTrue);
+      expect(result.amount, equals(110.0));
+      expect(result.lineItems.length, equals(3));
+      expect(result.lineItems[0].title, equals('EKMEK'));
+      expect(result.lineItems[0].price, equals(15.0));
+      expect(result.lineItems[1].title, equals('SU'));
+      expect(result.lineItems[1].price, equals(10.0));
+      expect(result.lineItems[2].title, equals('KAHVE'));
+      expect(result.lineItems[2].price, equals(85.0));
+    });
+
+    test('Türkçe ÖKC satır sonu sembollerini (*, %10, A, B, K) tolere etmelidir', () {
+      const okcReceipt = '''
+BİM BİRLEŞİK MAĞAZALAR
+TARİH: 27.10.2026
+SÜT 1L 38,50 *
+DETERJAN 98,00 %10
+EKMEK 12,50 A
+SODA 15,00 K
+TOPLAM: 164,00 TL
+''';
+
+      final result = ReceiptParser.parse(okcReceipt);
+      expect(result.lineItems.length, equals(4));
+      expect(result.lineItems.any((i) => i.title.contains('SÜT') && i.totalPrice == 38.50), isTrue);
+      expect(result.lineItems.any((i) => i.title.contains('DETERJAN') && i.totalPrice == 98.00), isTrue);
+      expect(result.lineItems.any((i) => i.title.contains('EKMEK') && i.totalPrice == 12.50), isTrue);
+      expect(result.lineItems.any((i) => i.title.contains('SODA') && i.totalPrice == 15.00), isTrue);
+      expect(result.totalLineItemsAmount, equals(164.00));
+    });
+
+    test('İndirim, para üstü ve banka kartı satırlarını harcama kalemi olarak eklememelidir', () {
+      const promoReceipt = '''
+CARREFOURSA
+TARİH: 27.10.2026
+ZEYTİN 200GR: 60.00 TL
+PEYNİR: 140.00 TL
+ARA TOPLAM: 200.00 TL
+İNDİRİM: -25.00 TL
+TOPLAM: 175.00 TL
+BANKA KARTI: 175.00 TL
+PARA ÜSTÜ: 0.00 TL
+''';
+
+      final result = ReceiptParser.parse(promoReceipt);
+      expect(result.lineItems.length, equals(2));
+      expect(result.lineItems.any((i) => i.title.contains('ZEYTİN')), isTrue);
+      expect(result.lineItems.any((i) => i.title.contains('PEYNİR')), isTrue);
+      expect(result.lineItems.any((i) => i.title.toLowerCase().contains('indirim')), isFalse);
+      expect(result.lineItems.any((i) => i.title.toLowerCase().contains('para üstü')), isFalse);
+      expect(result.lineItems.any((i) => i.title.toLowerCase().contains('banka kartı')), isFalse);
+      expect(result.amount, equals(175.00));
+    });
+
+    test('Nakit ödemede verilen banknot toplamı ezmemelidir (Toplam vs Nakit)', () {
+      const cashReceipt = '''
+BAKKAL AHMET
+TARİH: 27.10.2026
+SÜT: 35.00 TL
+YUMURTA: 65.00 TL
+TOPLAM: 100.00 TL
+NAKİT: 200.00 TL
+PARA ÜSTÜ: 100.00 TL
+''';
+
+      final result = ReceiptParser.parse(cashReceipt);
+      expect(result.amount, equals(100.00));
+      expect(result.lineItems.length, equals(2));
+      expect(result.totalLineItemsAmount, equals(100.00));
+    });
+
+    test('Mali değeri yoktur gibi başlıkları atlayıp gerçek işletme adını yakalamalıdır', () {
+      const fiscalHeaderReceipt = '''
+MALİ DEĞERİ YOKTUR
+BİLGİ FİŞİ
+ŞOK MARKETLER T.A.Ş.
+KADIKÖY ŞUBESİ
+ÇAY: 90.00 TL
+TOPLAM: 90.00 TL
+''';
+
+      final result = ReceiptParser.parse(fiscalHeaderReceipt);
+      expect(result.merchantName, contains('ŞOK MARKETLER'));
+      expect(result.merchantName, isNot(contains('MALİ DEĞERİ YOKTUR')));
+      expect(result.merchantName, isNot(contains('BİLGİ FİŞİ')));
+    });
+
+    test('Sondaki miktar eklerini (quantity suffix) doğru tespit etmelidir', () {
+      const suffixReceipt = '''
+KAHVE DÜNYASI
+TARİH: 27.10.2026
+EKMEK 2 ADET: 25.00 TL
+KAHVE 3 TANE: 180.00 TL
+TOPLAM: 205.00 TL
+''';
+
+      final result = ReceiptParser.parse(suffixReceipt);
+      expect(result.lineItems.length, equals(2));
+
+      final ekmek = result.lineItems.firstWhere((i) => i.title.contains('EKMEK'));
+      expect(ekmek.quantity, equals(2));
+      expect(ekmek.title, equals('EKMEK'));
+      expect(ekmek.totalPrice, equals(25.00));
+
+      final kahve = result.lineItems.firstWhere((i) => i.title.contains('KAHVE'));
+      expect(kahve.quantity, equals(3));
+      expect(kahve.title, equals('KAHVE'));
+      expect(kahve.totalPrice, equals(180.00));
+    });
+
+    test('Bölünemeyen tutarlarda (3x 100 TL) kuruş yuvarlama kaybı olmamalıdır', () {
+      const roundingReceipt = '''
+TATLICIZADE
+3x DONDURMA: 100.00 TL
+TOPLAM: 100.00 TL
+''';
+
+      final result = ReceiptParser.parse(roundingReceipt);
+      expect(result.lineItems.length, equals(1));
+      final item = result.lineItems.first;
+      expect(item.quantity, equals(3));
+      expect(item.totalPrice, equals(100.00));
+    });
   });
 }

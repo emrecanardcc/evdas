@@ -8,6 +8,7 @@ class ReceiptLineItem {
   final int quantity;
   final ExpenseCategory category;
   final bool isSelected;
+  final double? lineTotal;
 
   const ReceiptLineItem({
     required this.id,
@@ -16,9 +17,10 @@ class ReceiptLineItem {
     this.quantity = 1,
     this.category = ExpenseCategory.market,
     this.isSelected = true,
+    this.lineTotal,
   });
 
-  double get totalPrice => price * quantity;
+  double get totalPrice => lineTotal ?? (price * quantity);
 
   ReceiptLineItem copyWith({
     String? id,
@@ -27,6 +29,7 @@ class ReceiptLineItem {
     int? quantity,
     ExpenseCategory? category,
     bool? isSelected,
+    double? lineTotal,
   }) {
     return ReceiptLineItem(
       id: id ?? this.id,
@@ -35,6 +38,7 @@ class ReceiptLineItem {
       quantity: quantity ?? this.quantity,
       category: category ?? this.category,
       isSelected: isSelected ?? this.isSelected,
+      lineTotal: lineTotal ?? this.lineTotal,
     );
   }
 
@@ -45,6 +49,7 @@ class ReceiptLineItem {
         'quantity': quantity,
         'category': category.name,
         'isSelected': isSelected,
+        if (lineTotal != null) 'lineTotal': lineTotal,
       };
 
   factory ReceiptLineItem.fromJson(Map<String, dynamic> json) =>
@@ -58,6 +63,7 @@ class ReceiptLineItem {
           orElse: () => ExpenseCategory.market,
         ),
         isSelected: json['isSelected'] as bool? ?? true,
+        lineTotal: (json['lineTotal'] as num?)?.toDouble(),
       );
 }
 
@@ -129,40 +135,55 @@ class ParsedReceipt {
 class ReceiptParser {
   ReceiptParser._();
 
-  // Toplam Tutar için regex desenleri (Örn: "TOPLAM *124,50", "TUTAR: 85.00 TL", "KREDI KARTI 450,00", "1.450,75 TL")
-  static final List<RegExp> _totalPatterns = [
-    RegExp(
-      r'(?:TOPLAM|TOP|TUTAR|ÖDENEN|ODENEN|KREDI\s*KARTI|NAK[İI]T|GENEL\s*TOPLAM)\s*[:=\*]?\s*(?:TL|₺)?\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})?|[0-9]+(?:[.,][0-9]{1,2})?)',
-      caseSensitive: false,
-    ),
-    RegExp(
-      r'([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{2})|[0-9]+[.,][0-9]{2})\s*(?:TL|₺|TRY)',
-      caseSensitive: false,
-    ),
-    RegExp(
-      r'(?:KDV\s*DAH[İI]L)\s*[:=\*]?\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})?|[0-9]+(?:[.,][0-9]{1,2})?)',
-      caseSensitive: false,
-    ),
-  ];
+  // Seviye 1: Birincil Toplam Tutar deseni (Örn: "TOPLAM *124,50", "GENEL TOPLAM: 85.00 TL", "ÖDENECEK: 481,00 TL")
+  static final RegExp _primaryTotalPattern = RegExp(
+    r'(?:^|[^\wçğıöşü])(?:GENEL\s*TOPLAM|TOPLAM|ÖDENECEK\s*TUTAR|ÖDENECEK|ODENECEK|KDV\s*DAH[İI]L\s*TOPLAM)\s*[:=\*]?\s*(?:TL|₺|TRY)?\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})?|[0-9]+(?:[.,][0-9]{1,2})?)',
+    caseSensitive: false,
+  );
+
+  // Seviye 2: Ödeme Yöntemi Toplam Tutar deseni (Örn: "ÖDENEN: 224 TL", "KREDİ KARTI: 340 TL", "KDV DAHİL: 150 TL")
+  static final RegExp _secondaryPaymentPattern = RegExp(
+    r'(?:^|[^\wçğıöşü])(?:ÖDENEN|ODENEN|KREDI\s*KARTI|KREDİ\s*KARTI|KDV\s*DAH[İI]L)\s*[:=\*]?\s*(?:TL|₺|TRY)?\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})?|[0-9]+(?:[.,][0-9]{1,2})?)',
+    caseSensitive: false,
+  );
+
+  // Seviye 3: Nakit veya genel tutar satırı deseni (Örn: "NAKİT: 150 TL", "TUTAR: 80 TL")
+  static final RegExp _tertiaryCashPattern = RegExp(
+    r'(?:^|[^\wçğıöşü])(?:NAK[İI]T|TUTAR)\s*[:=\*]?\s*(?:TL|₺|TRY)?\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})?|[0-9]+(?:[.,][0-9]{1,2})?)',
+    caseSensitive: false,
+  );
 
   // Tarih desenleri (Örn: 24.10.2026, 24/10/2026, 2026-10-24)
   static final RegExp _datePattern = RegExp(
     r'\b([0-3]?[0-9])[./-]([0-1]?[0-9])[./-](20[2-3][0-9])\b',
   );
 
-  // Satır kalemi tutar yakalama deseni (Satır sonunda veya : * sonrasında tutar)
-  static final RegExp _linePricePattern = RegExp(
-    r'[:=\*]?\s*(?:TL|₺|TRY)?\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})|[0-9]+(?:[.,][0-9]{1,2}))\s*(?:TL|₺|TRY)?\s*$',
+  // Satır kalemi ondalıklı tutar deseni (Örn: "SÜT: 38.50 TL", "DETERJAN 98,00 *", "EKMEK 12,50 %01", "PEYNİR 65,50")
+  static final RegExp _linePriceDecimalPattern = RegExp(
+    r'[:=\*]?\s*(?:TL|₺|TRY)?\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})|[0-9]+[.,][0-9]{1,2})\s*(?:TL|₺|TRY)?\s*(?:[\*]|%[0-9]{1,2}|[A-Za-z])?\s*$',
     caseSensitive: false,
   );
 
-  // Satır kalemi miktar (quantity) deseni (Örn: "2x FLAT WHITE", "3 ADET EKMEK", "1 AD.")
-  static final RegExp _quantityPattern = RegExp(
-    r'^\s*([0-9]{1,2})\s*(?:x|X|\*|adet|ad\.)\s+',
+  // Satır kalemi tamsayı tutar deseni (Örn: "EKMEK: 15 TL", "SU 10 TL", "KAHVE: 85", "SİMİT * 20", "EKMEK 15 *")
+  static final RegExp _linePriceIntegerPattern = RegExp(
+    r'(?:[:=\*]\s*(?:TL|₺|TRY)?\s*([0-9]{1,6})\s*(?:TL|₺|TRY)?|(?:\s+|^)([0-9]{1,6})\s*(?:TL|₺|TRY)|(?:\s+|^)([0-9]{1,6})\s*[\*]|(?:\s+|^)([0-9]{1,6})\s*%[0-9]{1,2})\s*$',
     caseSensitive: false,
   );
 
-  // Satır kalemlerinden elenecek meta ve toplam satırları
+  // Satır kalemi miktar (quantity) desenleri
+  // 1. Başlangıç miktar deseni (Örn: "2x FLAT WHITE", "3 ADET EKMEK", "1 AD.", "2 TANE")
+  static final RegExp _prefixQuantityPattern = RegExp(
+    r'^\s*([0-9]{1,2})\s*(?:x|X|\*|adet|ad\.?|tane)\s+',
+    caseSensitive: false,
+  );
+
+  // 2. Bitiş miktar deseni (Örn: "FLAT WHITE 2x", "EKMEK 3 ADET", "KAHVE 2 AD.")
+  static final RegExp _suffixQuantityPattern = RegExp(
+    r'\s+([0-9]{1,2})\s*(?:x|X|\*|adet|ad\.?|tane)\s*$',
+    caseSensitive: false,
+  );
+
+  // Satır kalemlerinden elenecek meta, vergi, adres, para üstü ve toplam satırları
   static final List<String> _skipLineKeywords = [
     'toplam',
     'kredi karti',
@@ -178,10 +199,12 @@ class ReceiptParser {
     'kdv haric',
     'kdv hariç',
     'kdv toplam',
-    'kdv:',
+    'kdv',
     'vergi',
     'tarih:',
     'tarih :',
+    'saat:',
+    'saat :',
     'fatura tarihi',
     'son ödeme',
     'son odeme',
@@ -209,6 +232,45 @@ class ReceiptParser {
     'a.ş.',
     'ltd.',
     'şti.',
+    // Adres ve İletişim Satırları Filtresi
+    'cad.',
+    'caddesi',
+    'sok.',
+    'sokak',
+    'mah.',
+    'mahallesi',
+    'bulvar',
+    'blv.',
+    'no:',
+    'kapı no',
+    'kapi no',
+    'apt.',
+    'kat:',
+    'daire:',
+    'tel:',
+    'telefon',
+    'gsm',
+    'fax',
+    'web:',
+    // Gürültü ve İade/İndirim Filtreleri
+    'indirim',
+    'ındırım',
+    'iskonto',
+    'ıskonto',
+    'promosyon',
+    'kupon',
+    'iade',
+    'para üstü',
+    'para ustu',
+    'banka kartı',
+    'banka karti',
+    'matrah',
+    'yuvarlama',
+    'ara toplam',
+    'temassız',
+    'temassiz',
+    'bonus',
+    'puan',
   ];
 
   // Kategori Anahtar Kelimeleri Haritası
@@ -260,54 +322,67 @@ class ReceiptParser {
     ExpenseCategory? suggestedCategory;
     double confidence = 0.0;
 
-    // 1. İşletme Adı Tespiti (Fişin ilk 3 satırındaki en anlamlı başlık)
-    for (int i = 0; i < lines.length && i < 4; i++) {
+    // 1. İşletme Adı Tespiti (Fişin ilk 5 satırındaki en anlamlı başlık; mali bilgi başlıklarını atlar)
+    for (int i = 0; i < lines.length && i < 5; i++) {
       final line = lines[i];
-      if (line.length >= 3 && !_isDateOrNumeric(line)) {
+      if (_isValidMerchantCandidate(line)) {
         merchant = _cleanMerchantName(line);
         confidence += 0.25;
         break;
       }
     }
 
-    // 2. Tutar Tespiti
-    // Öncelik: "TOPLAM" anahtar kelimeli satırlar
-    final lowerText = rawText.toLowerCase();
-
-    for (final pattern in _totalPatterns) {
-      final matches = pattern.allMatches(rawText);
-      for (final m in matches) {
-        final valStr = m.group(1);
+    // 2. Tutar Tespiti (Satır bazlı önceliklendirme)
+    // Seviye 1: Açık genel toplam satırları ("TOPLAM", "GENEL TOPLAM", "ÖDENECEK TUTAR" - "ARA TOPLAM" hariç!)
+    for (final line in lines) {
+      final lower = line.toLowerCase();
+      if (lower.contains('ara toplam') || lower.contains('kdv toplam') || lower.contains('nakit')) {
+        continue;
+      }
+      final match = _primaryTotalPattern.firstMatch(line);
+      if (match != null) {
+        final valStr = match.group(1);
         if (valStr != null) {
-          final parsedVal = _normalizeAmount(valStr);
-          if (parsedVal != null && parsedVal > 0) {
-            // Fişlerde genelde en yüksek mantıklı tutar toplam tutardır
-            if (detectedAmount == null || parsedVal > detectedAmount) {
-              detectedAmount = parsedVal;
+          final val = _normalizeAmount(valStr);
+          if (val != null && val > 0) {
+            detectedAmount = val;
+          }
+        }
+      }
+    }
+
+    // Seviye 2: Eğer açık TOPLAM yoksa, ödeme satırları ("ÖDENEN", "KREDİ KARTI", "KDV DAHİL")
+    if (detectedAmount == null) {
+      for (final line in lines) {
+        final lower = line.toLowerCase();
+        if (lower.contains('ara toplam') || lower.contains('nakit')) continue;
+        final match = _secondaryPaymentPattern.firstMatch(line);
+        if (match != null) {
+          final valStr = match.group(1);
+          if (valStr != null) {
+            final val = _normalizeAmount(valStr);
+            if (val != null && val > 0) {
+              detectedAmount = val;
             }
           }
         }
       }
     }
 
-    // Eğer regex bulamazsa, metindeki en büyük para formatlı sayıyı yakala
+    // Seviye 3: Eğer hala yoksa, nakit veya tutar satırı
     if (detectedAmount == null) {
-      final fallbackRegex = RegExp(
-          r'\b([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{2})|[0-9]+[.,][0-9]{2})\b');
-      final matches = fallbackRegex.allMatches(rawText);
-      double maxFound = 0.0;
-      for (final m in matches) {
-        final val = _normalizeAmount(m.group(1)!);
-        if (val != null && val > maxFound && val < 500000) {
-          maxFound = val;
+      for (final line in lines) {
+        final match = _tertiaryCashPattern.firstMatch(line);
+        if (match != null) {
+          final valStr = match.group(1);
+          if (valStr != null) {
+            final val = _normalizeAmount(valStr);
+            if (val != null && val > 0) {
+              detectedAmount = val;
+            }
+          }
         }
       }
-      if (maxFound > 0) {
-        detectedAmount = maxFound;
-        confidence += 0.2;
-      }
-    } else {
-      confidence += 0.45;
     }
 
     // 3. Tarih Tespiti
@@ -327,6 +402,7 @@ class ReceiptParser {
     }
 
     // 4. Kategori Eşleştirmesi (Kelime frekans analizi)
+    final lowerText = rawText.toLowerCase();
     int maxMatches = 0;
     for (final entry in _categoryKeywords.entries) {
       int currentMatches = 0;
@@ -355,10 +431,21 @@ class ReceiptParser {
     for (final line in lines) {
       if (_shouldSkipLine(line, merchant)) continue;
 
-      final priceMatch = _linePricePattern.firstMatch(line);
+      Match? priceMatch = _linePriceDecimalPattern.firstMatch(line);
+      String? priceStr;
       if (priceMatch != null) {
-        final priceStr = priceMatch.group(1);
-        if (priceStr == null) continue;
+        priceStr = priceMatch.group(1);
+      } else {
+        priceMatch = _linePriceIntegerPattern.firstMatch(line);
+        if (priceMatch != null) {
+          priceStr = priceMatch.group(1) ??
+              priceMatch.group(2) ??
+              priceMatch.group(3) ??
+              priceMatch.group(4);
+        }
+      }
+
+      if (priceMatch != null && priceStr != null) {
         final rawPrice = _normalizeAmount(priceStr);
         if (rawPrice == null || rawPrice <= 0 || rawPrice > 100000) continue;
 
@@ -369,14 +456,23 @@ class ReceiptParser {
 
         if (rawTitle.isEmpty || rawTitle.length < 2) continue;
 
-        // Miktar (quantity) tespiti (Örn: "2x FLAT WHITE" veya "3 ADET EKMEK")
+        // Miktar (quantity) tespiti: Önce baştaki ("2x FLAT WHITE"), sonra sondaki ("EKMEK 2 ADET")
         int quantity = 1;
-        final qMatch = _quantityPattern.firstMatch(rawTitle);
-        if (qMatch != null) {
-          final qVal = int.tryParse(qMatch.group(1) ?? '1');
+        final qMatchPrefix = _prefixQuantityPattern.firstMatch(rawTitle);
+        if (qMatchPrefix != null) {
+          final qVal = int.tryParse(qMatchPrefix.group(1) ?? '1');
           if (qVal != null && qVal > 0 && qVal < 100) {
             quantity = qVal;
-            rawTitle = rawTitle.substring(qMatch.end).trim();
+            rawTitle = rawTitle.substring(qMatchPrefix.end).trim();
+          }
+        } else {
+          final qMatchSuffix = _suffixQuantityPattern.firstMatch(rawTitle);
+          if (qMatchSuffix != null) {
+            final qVal = int.tryParse(qMatchSuffix.group(1) ?? '1');
+            if (qVal != null && qVal > 0 && qVal < 100) {
+              quantity = qVal;
+              rawTitle = rawTitle.substring(0, qMatchSuffix.start).trim();
+            }
           }
         }
 
@@ -396,21 +492,48 @@ class ReceiptParser {
             quantity: quantity,
             category: itemCat,
             isSelected: true,
+            lineTotal: rawPrice,
           ),
         );
       }
     }
 
-    // Matematiksel Sağlama Bonusu: Kalemlerin toplamı ile genel toplam örtüşüyorsa güveni artır
+    // Matematiksel Sağlama ve Toplam Uzlaştırma
     if (lineItems.isNotEmpty) {
       final lineItemsSum =
           lineItems.fold(0.0, (sum, i) => sum + i.totalPrice);
-      if (detectedAmount != null &&
-          (lineItemsSum - detectedAmount).abs() <= 1.0) {
-        confidence += 0.10;
+      if (detectedAmount != null) {
+        if ((lineItemsSum - detectedAmount).abs() <= 1.0) {
+          confidence += 0.15;
+        } else {
+          confidence += 0.05;
+        }
       } else {
-        confidence += 0.05;
+        // Eğer açık bir "TOPLAM" satırı yoksa ama kalemler tespit edildiyse,
+        // kalemlerin toplamı doğal fiş toplamıdır!
+        detectedAmount = lineItemsSum;
+        confidence += 0.35;
       }
+    } else if (detectedAmount == null) {
+      // Kalem yoksa ve regex bulamadıysa, metindeki en büyük mantıklı para formatını yakala
+      final fallbackRegex = RegExp(
+          r'\b([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{2})|[0-9]+[.,][0-9]{2})\b');
+      final matches = fallbackRegex.allMatches(rawText);
+      double maxFound = 0.0;
+      for (final m in matches) {
+        final val = _normalizeAmount(m.group(1)!);
+        if (val != null && val > maxFound && val < 500000) {
+          maxFound = val;
+        }
+      }
+      if (maxFound > 0) {
+        detectedAmount = maxFound;
+        confidence += 0.20;
+      }
+    }
+
+    if (detectedAmount != null && confidence < 0.45) {
+      confidence += 0.45;
     }
 
     return ParsedReceipt(
@@ -590,7 +713,12 @@ class ReceiptParser {
   }
 
   static double? _normalizeAmount(String raw) {
-    var clean = raw.replaceAll(' ', '').replaceAll('TL', '').replaceAll('₺', '');
+    var clean = raw
+        .replaceAll(' ', '')
+        .replaceAll('TL', '')
+        .replaceAll('₺', '')
+        .replaceAll('TRY', '')
+        .replaceAll('try', '');
     if (clean.contains(',') && clean.contains('.')) {
       // 1.250,50 -> 1250.50
       if (clean.indexOf('.') < clean.indexOf(',')) {
@@ -609,6 +737,37 @@ class ReceiptParser {
   static bool _isDateOrNumeric(String s) {
     final clean = s.replaceAll(RegExp(r'[\s./:-]'), '');
     return double.tryParse(clean) != null || _datePattern.hasMatch(s);
+  }
+
+  static bool _isValidMerchantCandidate(String line) {
+    final lower = line.toLowerCase().trim();
+    if (lower.length < 3) return false;
+    if (_isDateOrNumeric(line)) return false;
+    final nonMerchants = [
+      'mali degeri yoktur',
+      'mali değeri yoktur',
+      'bilgi fişi',
+      'bilgi fisi',
+      'e-arşiv',
+      'e-arsiv',
+      'e-fatura',
+      'hoşgeldiniz',
+      'hosgeldiniz',
+      'yeni nesil',
+      'vergi no',
+      'mersis',
+      'tckn',
+      'vkn',
+      'fatura no',
+      'fis no',
+      'fiş no',
+      'tarih',
+      'saat',
+    ];
+    for (final nm in nonMerchants) {
+      if (lower.contains(nm)) return false;
+    }
+    return true;
   }
 
   static String _cleanMerchantName(String s) {

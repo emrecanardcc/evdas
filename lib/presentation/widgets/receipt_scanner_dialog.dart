@@ -346,33 +346,32 @@ TEŞEKKÜR EDERİZ
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      runSpacing: 6,
                       children: [
-                        Expanded(
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.verified_rounded,
                                   size: 16, color: AppColors.positive),
                               const SizedBox(width: 6),
-                              Flexible(
-                                child: Text(
-                                  'Ayrıştırılan Finansal Veri',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    color: isDark
-                                        ? AppColors.positive
-                                        : Colors.green.shade900,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
+                              Text(
+                                'Ayrıştırılan Finansal Veri',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: isDark
+                                      ? AppColors.positive
+                                      : Colors.green.shade900,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
@@ -407,71 +406,98 @@ TEŞEKKÜR EDERİZ
                                     color: theme.textTheme.bodyMedium?.color),
                               ),
                               const SizedBox(height: 2),
-                              Text(
-                                CurrencyFormatter.formatClean(
-                                    _parsed!.amount!),
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.primary,
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  CurrencyFormatter.formatClean(
+                                      _parsed!.amount!),
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.primary,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: _parsed!.suggestedCategory!.color
-                                .withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(_parsed!.suggestedCategory!.icon,
-                                  size: 16,
-                                  color: _parsed!.suggestedCategory!.color),
-                              const SizedBox(width: 6),
-                              Text(
-                                _parsed!.suggestedCategory!.displayName,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800,
-                                  color: _parsed!.suggestedCategory!.color,
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _parsed!.suggestedCategory!.color
+                                  .withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(_parsed!.suggestedCategory!.icon,
+                                    size: 16,
+                                    color: _parsed!.suggestedCategory!.color),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    _parsed!.suggestedCategory!.displayName,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: _parsed!.suggestedCategory!.color,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 10),
-                    Row(
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      runSpacing: 4,
                       children: [
-                        Icon(Icons.storefront_rounded,
-                            size: 15, color: theme.textTheme.bodyMedium?.color),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            _parsed!.merchantName ?? 'Mağaza',
-                            style: const TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w700),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.storefront_rounded,
+                                  size: 15,
+                                  color: theme.textTheme.bodyMedium?.color),
+                              const SizedBox(width: 6),
+                              Text(
+                                _parsed!.merchantName ?? 'Mağaza',
+                                style: const TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.w700),
+                              ),
+                            ],
                           ),
                         ),
                         if (_parsed!.date != null) ...[
-                          Icon(Icons.calendar_month_rounded,
-                              size: 15,
-                              color: theme.textTheme.bodyMedium?.color),
-                          const SizedBox(width: 6),
-                          Text(
-                            DateFormatter.formatSmart(_parsed!.date!),
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: theme.textTheme.bodyMedium?.color),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.calendar_month_rounded,
+                                    size: 15,
+                                    color: theme.textTheme.bodyMedium?.color),
+                                const SizedBox(width: 6),
+                                Text(
+                                  DateFormatter.formatSmart(_parsed!.date!),
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: theme.textTheme.bodyMedium?.color),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ],
@@ -490,9 +516,12 @@ TEŞEKKÜR EDERİZ
                     Navigator.of(context).pop(_parsed);
                   },
                   icon: const Icon(Icons.arrow_forward_rounded, size: 20),
-                  label: const Text(
-                    'Harcamaya Aktar ve Doldur',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                  label: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'Harcamaya Aktar ve Doldur',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -523,28 +552,27 @@ TEŞEKKÜR EDERİZ
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Kalemler Başlığı & Tümünü Seç/Kaldır
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        runSpacing: 6,
                         children: [
-                          Expanded(
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.format_list_bulleted_rounded,
                                     size: 18, color: AppColors.primary),
                                 const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    'Ayrıştırılan Kalemler (${_parsed!.lineItems.length})',
-                                    style: const TextStyle(
-                                        fontSize: 14, fontWeight: FontWeight.w800),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                Text(
+                                  'Ayrıştırılan Kalemler (${_parsed!.lineItems.length})',
+                                  style: const TextStyle(
+                                      fontSize: 14, fontWeight: FontWeight.w800),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 8),
                           InkWell(
                             onTap: _toggleSelectAll,
                             borderRadius: BorderRadius.circular(6),
@@ -611,8 +639,6 @@ TEŞEKKÜR EDERİZ
                         final item = _parsed!.lineItems[index];
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
                             color: isDark
                                 ? (item.isSelected
@@ -630,155 +656,192 @@ TEŞEKKÜR EDERİZ
                                       : Colors.grey.withValues(alpha: 0.2)),
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              // Seçim Kutusu (48x48 ergonomi)
-                              SizedBox(
-                                width: 36,
-                                height: 36,
-                                child: Checkbox(
-                                  value: item.isSelected,
-                                  onChanged: (_) =>
-                                      _toggleItemSelection(index),
-                                  activeColor: AppColors.primary,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(5)),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
+                          child: InkWell(
+                            onTap: () => _toggleItemSelection(index),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 6),
+                              child: Row(
+                                children: [
+                                  // Seçim Kutusu (>=48x48 ergonomi)
+                                  SizedBox(
+                                    width: 48,
+                                    height: 48,
+                                    child: Center(
+                                      child: Checkbox(
+                                        value: item.isSelected,
+                                        onChanged: (_) =>
+                                            _toggleItemSelection(index),
+                                        activeColor: AppColors.primary,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(5)),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
 
-                              // Kalem Adı & Miktar
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
+                                  // Kalem Adı & Miktar
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        if (item.quantity > 1) ...[
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 5, vertical: 1),
-                                            margin: const EdgeInsets.only(
-                                                right: 5),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.primary
-                                                  .withValues(alpha: 0.15),
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
+                                        Row(
+                                          children: [
+                                            if (item.quantity > 1) ...[
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 5,
+                                                        vertical: 1),
+                                                margin: const EdgeInsets.only(
+                                                    right: 5),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.primary
+                                                      .withValues(alpha: 0.15),
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  '${item.quantity}x',
+                                                  style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: AppColors.primary,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                            Expanded(
+                                              child: Text(
+                                                item.title,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: item.isSelected
+                                                      ? null
+                                                      : theme.textTheme.bodyMedium
+                                                          ?.color,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 3),
+                                        // Kategori Değiştirici Popup Menüsü
+                                        PopupMenuButton<ExpenseCategory>(
+                                          initialValue: item.category,
+                                          onSelected: (cat) =>
+                                              _changeItemCategory(index, cat),
+                                          tooltip: 'Kategori Değiştir',
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(item.category.icon,
+                                                  size: 13,
+                                                  color: item.category.color),
+                                              const SizedBox(width: 4),
+                                              Flexible(
+                                                child: Text(
+                                                  item.category.displayName,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: item.category.color,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 2),
+                                              Icon(Icons.arrow_drop_down_rounded,
+                                                  size: 14,
+                                                  color: item.category.color),
+                                            ],
+                                          ),
+                                          itemBuilder: (context) {
+                                            return ExpenseCategory.values
+                                                .map((c) {
+                                              return PopupMenuItem<
+                                                  ExpenseCategory>(
+                                                value: c,
+                                                child: Row(
+                                                  children: [
+                                                    Icon(c.icon,
+                                                        size: 16,
+                                                        color: c.color),
+                                                    const SizedBox(width: 8),
+                                                    Text(c.displayName,
+                                                        style: const TextStyle(
+                                                            fontSize: 13)),
+                                                  ],
+                                                ),
+                                              );
+                                            }).toList();
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 6),
+                                  // Fiyat (FittedBox ile ölçeklenir, asla taşmaz)
+                                  Flexible(
+                                    fit: FlexFit.loose,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.centerRight,
+                                          child: Text(
+                                            CurrencyFormatter.formatClean(
+                                                item.totalPrice),
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w800,
+                                              color: item.isSelected
+                                                  ? AppColors.primary
+                                                  : theme.textTheme.bodyMedium
+                                                      ?.color,
+                                            ),
+                                          ),
+                                        ),
+                                        if (item.quantity > 1) ...[
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerRight,
                                             child: Text(
-                                              '${item.quantity}x',
-                                              style: const TextStyle(
+                                              '${CurrencyFormatter.formatClean(item.price)}/ad',
+                                              style: TextStyle(
                                                 fontSize: 10,
-                                                fontWeight: FontWeight.w800,
-                                                color: AppColors.primary,
+                                                color: theme
+                                                    .textTheme.bodyMedium?.color,
                                               ),
                                             ),
                                           ),
                                         ],
-                                        Expanded(
-                                          child: Text(
-                                            item.title,
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w700,
-                                              color: item.isSelected
-                                                  ? null
-                                                  : theme.textTheme.bodyMedium
-                                                      ?.color,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
                                       ],
                                     ),
-                                    const SizedBox(height: 3),
-                                    // Kategori Değiştirici Popup Menüsü
-                                    PopupMenuButton<ExpenseCategory>(
-                                      initialValue: item.category,
-                                      onSelected: (cat) =>
-                                          _changeItemCategory(index, cat),
-                                      tooltip: 'Kategori Değiştir',
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(item.category.icon,
-                                              size: 13,
-                                              color: item.category.color),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            item.category.displayName,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                              color: item.category.color,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 2),
-                                          Icon(Icons.arrow_drop_down_rounded,
-                                              size: 14,
-                                              color: item.category.color),
-                                        ],
-                                      ),
-                                      itemBuilder: (context) {
-                                        return ExpenseCategory.values.map((c) {
-                                          return PopupMenuItem<ExpenseCategory>(
-                                            value: c,
-                                            child: Row(
-                                              children: [
-                                                Icon(c.icon,
-                                                    size: 16, color: c.color),
-                                                const SizedBox(width: 8),
-                                                Text(c.displayName,
-                                                    style: const TextStyle(
-                                                        fontSize: 13)),
-                                              ],
-                                            ),
-                                          );
-                                        }).toList();
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // Fiyat ve Sil Butonu
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    CurrencyFormatter.formatClean(
-                                        item.totalPrice),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
-                                      color: item.isSelected
-                                          ? AppColors.primary
-                                          : theme.textTheme.bodyMedium?.color,
-                                    ),
                                   ),
-                                  if (item.quantity > 1) ...[
-                                    Text(
-                                      '${CurrencyFormatter.formatClean(item.price)}/ad',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: theme.textTheme.bodyMedium?.color,
-                                      ),
-                                    ),
-                                  ],
+                                  const SizedBox(width: 4),
+                                  IconButton(
+                                    icon: const Icon(Icons.close_rounded,
+                                        size: 18),
+                                    onPressed: () => _removeItem(index),
+                                    tooltip: 'Kalemi Kaldır',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(
+                                        minWidth: 48, minHeight: 48),
+                                  ),
                                 ],
                               ),
-                              const SizedBox(width: 4),
-                              IconButton(
-                                icon: const Icon(Icons.close_rounded, size: 16),
-                                onPressed: () => _removeItem(index),
-                                tooltip: 'Kalemi Kaldır',
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(
-                                    minWidth: 32, minHeight: 32),
-                              ),
-                            ],
+                            ),
                           ),
                         );
                       }),
@@ -804,13 +867,19 @@ TEŞEKKÜR EDERİZ
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              CurrencyFormatter.formatClean(
-                                  _parsed!.selectedLineItemsAmount),
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.primary,
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  CurrencyFormatter.formatClean(
+                                      _parsed!.selectedLineItemsAmount),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -830,10 +899,13 @@ TEŞEKKÜR EDERİZ
                         : null,
                     icon: const Icon(Icons.playlist_add_check_rounded,
                         size: 20),
-                    label: Text(
-                      'Seçili ${_parsed!.selectedCount} Kalemi Ortaklığa Kaydet',
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w800),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Seçili ${_parsed!.selectedCount} Kalemi Ortaklığa Kaydet',
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w800),
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,

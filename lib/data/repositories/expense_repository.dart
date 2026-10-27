@@ -704,14 +704,13 @@ class ExpenseRepository {
     final isOnline = client != null && SupabaseService.isAuthenticated;
 
     final List<Expense> processedExpenses = [];
-    for (final exp in expensesList) {
-      if (!isOnline) {
-        final processed = exp.copyWith(isPendingSync: true);
-        await _addToOfflineQueue(processed);
-        processedExpenses.add(processed);
-      } else {
-        processedExpenses.add(exp);
-      }
+    if (!isOnline) {
+      final offlineExpenses =
+          expensesList.map((e) => e.copyWith(isPendingSync: true)).toList();
+      await _addBatchToOfflineQueue(offlineExpenses);
+      processedExpenses.addAll(offlineExpenses);
+    } else {
+      processedExpenses.addAll(expensesList);
     }
 
     final current = List<Expense>.from(getExpenses());
@@ -753,9 +752,7 @@ class ExpenseRepository {
             await client.from('expenses').insert(payloads);
           }
         } catch (_) {
-          for (final finalExpense in processedExpenses) {
-            await _addToOfflineQueue(finalExpense);
-          }
+          await _addBatchToOfflineQueue(processedExpenses);
           final updatedList = List<Expense>.from(getExpenses());
           final processedIds = processedExpenses.map((e) => e.id).toSet();
           bool changed = false;
@@ -773,7 +770,8 @@ class ExpenseRepository {
     }
   }
 
-  Future<void> _addToOfflineQueue(Expense expense) async {
+  Future<void> _addBatchToOfflineQueue(List<Expense> expenses) async {
+    if (expenses.isEmpty) return;
     try {
       final raw = _prefs.getString(_keyOfflineExpensesQueue);
       List<Expense> queue = [];
@@ -783,13 +781,25 @@ class ExpenseRepository {
             .map((e) => Expense.fromJson(e as Map<String, dynamic>))
             .toList();
       }
-      if (!queue.any((e) => e.id == expense.id)) {
-        queue.add(expense);
+      final existingIds = queue.map((e) => e.id).toSet();
+      bool added = false;
+      for (final exp in expenses) {
+        if (!existingIds.contains(exp.id)) {
+          queue.add(exp);
+          existingIds.add(exp.id);
+          added = true;
+        }
+      }
+      if (added) {
         await _prefs.setString(
             _keyOfflineExpensesQueue,
             jsonEncode(queue.map((e) => e.toJson()).toList()));
       }
     } catch (_) {}
+  }
+
+  Future<void> _addToOfflineQueue(Expense expense) async {
+    await _addBatchToOfflineQueue([expense]);
   }
 
   Future<void> deleteExpense(String expenseId) async {

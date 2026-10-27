@@ -117,5 +117,81 @@ void main() {
       expect(capturedResult!.lineItemsSavedDirectly, isTrue);
       expect(capturedResult!.selectedCount, equals(3));
     });
+
+    testWidgets('Tüm kart alanına dokunarak kalem seçimi açılıp kapatılabilmelidir (Thumb zone ergonomisi)', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () => ReceiptScannerDialog.show(ctx),
+                child: const Text('TARA'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('TARA'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Migros Market'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Seçili 4 Kalemi Ortaklığa Kaydet'), findsOneWidget);
+
+      // Doğrudan ürün metnine (SÜT 1L) dokunulduğunda da seçim kaldırılmalıdır
+      final sutText = find.text('SÜT 1L');
+      await tester.ensureVisible(sutText);
+      await tester.pumpAndSettle();
+      await tester.tap(sutText);
+      await tester.pumpAndSettle();
+
+      // Seçili sayısı 3 olmalı
+      expect(find.text('Seçili 3 Kalemi Ortaklığa Kaydet'), findsOneWidget);
+
+      // Tekrar dokunulduğunda geri seçilmeli
+      await tester.tap(sutText);
+      await tester.pumpAndSettle();
+      expect(find.text('Seçili 4 Kalemi Ortaklığa Kaydet'), findsOneWidget);
+    });
+
+    testWidgets('ReceiptScannerDialog 280x480 ultra dar ekranda ve 1.8x font ölçeğinde sıfır taşma ile render olmalıdır', (tester) async {
+      tester.view.physicalSize = const Size(280, 480);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (ctx, child) => MediaQuery(
+            data: MediaQuery.of(ctx).copyWith(textScaler: const TextScaler.linear(1.8)),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () => ReceiptScannerDialog.show(ctx),
+                child: const Text('TARA'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('TARA'));
+      await tester.pumpAndSettle();
+
+      // Migros Market örneğine kaydır ve yükle
+      final migrosChip = find.text('Migros Market');
+      await tester.ensureVisible(migrosChip);
+      await tester.pumpAndSettle();
+      await tester.tap(migrosChip);
+      await tester.pumpAndSettle();
+
+      // Hiçbir RenderFlex taşma hatası olmamalı
+      expect(tester.takeException(), isNull);
+      expect(find.text('Ayrıştırılan Finansal Veri'), findsOneWidget);
+    });
   });
 }
