@@ -110,17 +110,16 @@ class ReportsScreen extends ConsumerWidget {
             const SizedBox(height: 20),
 
             // 3. KATEGORİ BAZINDA DAĞILIM (KULLANICININ İSTEDİĞİ NET GİDER BÖLÜMÜ)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
               children: [
-                const Expanded(
-                  child: Text(
-                    'Kategori Dağılımı',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                const Text(
+                  'Kategori Dağılımı',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                 ),
-                const SizedBox(width: 8),
                 Text(
                   '${report.categorySpends.length} kategori',
                   style: TextStyle(
@@ -181,22 +180,29 @@ class ReportsScreen extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  AnimatedRollingNumber(
-                                    value: mem.amount,
-                                    isMasked: isPrivacy,
-                                    style: const TextStyle(
-                                        fontSize: 14, fontWeight: FontWeight.w700),
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 130),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerRight,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      AnimatedRollingNumber(
+                                        value: mem.amount,
+                                        isMasked: isPrivacy,
+                                        style: const TextStyle(
+                                            fontSize: 14, fontWeight: FontWeight.w700),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '(%${mem.percentage.toStringAsFixed(1)})',
+                                        style: const TextStyle(
+                                            fontSize: 14, fontWeight: FontWeight.w700),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '(%${mem.percentage.toStringAsFixed(1)})',
-                                    style: const TextStyle(
-                                        fontSize: 14, fontWeight: FontWeight.w700),
-                                  ),
-                                ],
+                                ),
                               ),
                             ],
                           ),
@@ -225,16 +231,23 @@ class ReportsScreen extends ConsumerWidget {
             // 4b. ŞAHSİ BORÇLAR DAĞILIMI (KİMİN KİME NE KADAR BORCU VAR)
             if (report.personalDebtsBreakdown.isNotEmpty) ...[
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
                 children: [
-                  const Expanded(
-                    child: Row(
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: (MediaQuery.sizeOf(context).width - 32).clamp(120.0, 400.0),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.handshake_rounded,
                             size: 20, color: AppColors.personalDebt),
                         SizedBox(width: 6),
-                        Expanded(
+                        Flexible(
                           child: Text(
                             'Şahsi Borçlar',
                             style: TextStyle(
@@ -245,7 +258,6 @@ class ReportsScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
                   Text(
                     '${report.personalDebtsBreakdown.length} borç ilişkisi',
                     style: TextStyle(
@@ -316,12 +328,20 @@ class ReportsScreen extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            Text(
-                              CurrencyFormatter.formatClean(debt.amount, checkPrivacy: true),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.personalDebt,
+                            const SizedBox(width: 8),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 110),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  CurrencyFormatter.formatClean(debt.amount, checkPrivacy: true),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.personalDebt,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -516,23 +536,31 @@ class ReportsScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      CurrencyFormatter.formatClean(cat.amount, checkPrivacy: true),
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w800),
+                const SizedBox(width: 8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 110),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          CurrencyFormatter.formatClean(cat.amount, checkPrivacy: true),
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w800),
+                        ),
+                        Text(
+                          '%${cat.percentage.toStringAsFixed(1)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: catColor,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      '%${cat.percentage.toStringAsFixed(1)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: catColor,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),

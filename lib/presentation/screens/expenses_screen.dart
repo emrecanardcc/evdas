@@ -228,155 +228,171 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                // Kategori / Tip İkonu
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: typeColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    isSettlement
-                        ? Icons.check_circle_rounded
-                        : isJoint
-                            ? Icons.people_alt_rounded
-                            : Icons.person_rounded,
-                    color: typeColor,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Başlık ve Açıklamalar
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.title,
-                        style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w700),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isUltraNarrow = constraints.maxWidth < 310;
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Kategori / Tip İkonu
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: typeColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      const SizedBox(height: 3),
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 6,
-                        runSpacing: 4,
+                      child: Icon(
+                        isSettlement
+                            ? Icons.check_circle_rounded
+                            : isJoint
+                                ? Icons.people_alt_rounded
+                                : Icons.person_rounded,
+                        color: typeColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Başlık ve Açıklamalar
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: typeColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              isJoint
-                                  ? 'Ortak Masraf'
-                                  : isSettlement
-                                      ? 'Ödeşme'
-                                      : 'Şahsi ($debtorName ➔ $paidByName)',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: typeColor,
-                              ),
-                            ),
+                          Text(
+                            item.title,
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w700),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          if (item.splitMemberWeights != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.purple.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                    color: Colors.purple.withValues(alpha: 0.3)),
-                              ),
-                              child: const Text(
-                                '⚖️ Özel Bölüşüm',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.purple,
+                          const SizedBox(height: 3),
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 4,
+                            runSpacing: 2,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 5, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: typeColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  isJoint
+                                      ? 'Ortak Masraf'
+                                      : isSettlement
+                                          ? 'Ödeşme'
+                                          : 'Şahsi ($debtorName ➔ $paidByName)',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: typeColor,
+                                  ),
                                 ),
                               ),
-                            ),
-                          Text(
-                            '• ${DateFormatter.formatSmart(item.expenseDate)}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(context).textTheme.bodyMedium?.color,
-                            ),
+                              if (item.splitMemberWeights != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.purple.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: Colors.purple.withValues(alpha: 0.3)),
+                                  ),
+                                  child: const Text(
+                                    '⚖️ Özel Bölüşüm',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.purple,
+                                    ),
+                                  ),
+                                ),
+                              Text(
+                                '• ${DateFormatter.formatSmart(item.expenseDate)}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
 
-                // Tutar ve Silme Butonu
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 110),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        CurrencyFormatter.formatClean(item.amount, checkPrivacy: true),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: typeColor,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        'Harcayan: $paidByName',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
+                    const SizedBox(width: 6),
 
-                const SizedBox(width: 4),
-
-                // Silme / Ortak Karar Butonu
-                IconButton(
-                  icon: Icon(
-                    item.isDeletionPending
-                        ? Icons.hourglass_top_rounded
-                        : Icons.delete_outline_rounded,
-                    size: 20,
-                    color: item.isDeletionPending
-                        ? AppColors.personalDebt
-                        : Colors.grey.shade400,
-                  ),
-                  tooltip: item.isDeletionPending
-                      ? 'Silme Onayı Bekleniyor'
-                      : 'Ortak Kararla Sil',
-                  onPressed: item.isDeletionPending
-                      ? () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'Bu harcama için silme onayı süreci zaten başlatılmış.'),
-                              duration: Duration(seconds: 2),
+                    // Tutar ve Silme Butonu
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: isUltraNarrow ? 80 : 100),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              CurrencyFormatter.formatClean(item.amount, checkPrivacy: true),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: typeColor,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          );
-                        }
-                      : () => _requestExpenseDeletion(
-                          item, currentMember, totalMembersCount),
-                ),
-              ],
+                            Text(
+                              'Harcayan: $paidByName',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Theme.of(context).textTheme.bodyMedium?.color,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 2),
+
+                    // Silme / Ortak Karar Butonu
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      icon: Icon(
+                        item.isDeletionPending
+                            ? Icons.hourglass_top_rounded
+                            : Icons.delete_outline_rounded,
+                        size: 18,
+                        color: item.isDeletionPending
+                            ? AppColors.personalDebt
+                            : Colors.grey.shade400,
+                      ),
+                      tooltip: item.isDeletionPending
+                          ? 'Silme Onayı Bekleniyor'
+                          : 'Ortak Kararla Sil',
+                      onPressed: item.isDeletionPending
+                          ? () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Bu harcama için silme onayı süreci zaten başlatılmış.'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          : () => _requestExpenseDeletion(
+                              item, currentMember, totalMembersCount),
+                    ),
+                  ],
+                );
+              },
             ),
 
             // Rozetler: Çevrimdışı veya Silme Onayı Bekliyor
@@ -395,26 +411,30 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: Colors.amber.shade700),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.cloud_off_rounded,
-                              size: 13, color: Colors.amber.shade900),
-                          const SizedBox(width: 4),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 220),
-                            child: Text(
-                              '⏳ Çevrimdışı (Bağlanınca Eşitlenecek)',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.amber.shade900,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: (MediaQuery.sizeOf(context).width - 80).clamp(100.0, 300.0),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.cloud_off_rounded,
+                                size: 13, color: Colors.amber.shade900),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                '⏳ Çevrimdışı (Bağlanınca Eşitlenecek)',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.amber.shade900,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   if (item.isDeletionPending)
@@ -427,26 +447,30 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                         border: Border.all(
                             color: AppColors.negative.withValues(alpha: 0.4)),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.how_to_vote_rounded,
-                              size: 13, color: AppColors.negative),
-                          const SizedBox(width: 4),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 220),
-                            child: const Text(
-                              '🗳️ Ortak Silme Onayı Bekliyor',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.negative,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: (MediaQuery.sizeOf(context).width - 80).clamp(100.0, 300.0),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.how_to_vote_rounded,
+                                size: 13, color: AppColors.negative),
+                            SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                '🗳️ Ortak Silme Onayı Bekliyor',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.negative,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                 ],

@@ -391,27 +391,44 @@ class HouseholdScreen extends ConsumerWidget {
                         border: Border.all(
                             color: AppColors.primary.withValues(alpha: 0.2)),
                       ),
-                      child: Row(
+                      child: Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 6,
                         children: [
-                          const Icon(Icons.calendar_month_rounded,
-                              size: 20, color: AppColors.primary),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: (MediaQuery.sizeOf(context).width - 60).clamp(140.0, 400.0),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Text(
-                                  'Aylık Hesaplaşma Günü',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                                Text(
-                                  'Her ayın ${house.settlementDay}. günü',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.primary,
+                                const Icon(Icons.calendar_month_rounded,
+                                    size: 20, color: AppColors.primary),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        'Aylık Hesaplaşma Günü',
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        'Her ayın ${house.settlementDay}. günü',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.primary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -477,19 +494,19 @@ class HouseholdScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 6,
+                              runSpacing: 2,
                               children: [
-                                const Flexible(
-                                  child: Text(
-                                    '🎯 Ev Karar Çarkı',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w800),
-                                  ),
+                                const Text(
+                                  '🎯 Ev Karar Çarkı',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800),
                                 ),
-                                const SizedBox(width: 6),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 6, vertical: 1),
@@ -532,15 +549,15 @@ class HouseholdScreen extends ConsumerWidget {
             const SizedBox(height: 20),
 
             // 2. ORTAKLAR LİSTESİ
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
               children: [
-                const Expanded(
-                  child: Text(
-                    'Ortaklar',
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                  ),
+                const Text(
+                  'Ortaklar',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                 ),
                 TextButton.icon(
                   onPressed: isFull
@@ -591,20 +608,20 @@ class HouseholdScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 6,
+                              runSpacing: 2,
                               children: [
-                                Flexible(
-                                  child: Text(
-                                    m.displayName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700),
-                                  ),
+                                Text(
+                                  m.displayName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700),
                                 ),
-                                if (isCurrent) ...[
-                                  const SizedBox(width: 6),
+                                if (isCurrent)
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 6, vertical: 2),
@@ -622,7 +639,6 @@ class HouseholdScreen extends ConsumerWidget {
                                       ),
                                     ),
                                   ),
-                                ],
                               ],
                             ),
                             const SizedBox(height: 3),
@@ -653,42 +669,50 @@ class HouseholdScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            balance > 0.01
-                                ? '+ ${CurrencyFormatter.formatClean(balance)}'
-                                : balance < -0.01
-                                    ? CurrencyFormatter.formatClean(balance)
-                                    : '0 ₺',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: balance > 0.01
-                                  ? AppColors.positive
-                                  : balance < -0.01
-                                      ? AppColors.negative
-                                      : AppColors.neutral,
-                            ),
+                      const SizedBox(width: 8),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 110),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                balance > 0.01
+                                    ? '+ ${CurrencyFormatter.formatClean(balance)}'
+                                    : balance < -0.01
+                                        ? CurrencyFormatter.formatClean(balance)
+                                        : '0 ₺',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: balance > 0.01
+                                      ? AppColors.positive
+                                      : balance < -0.01
+                                          ? AppColors.negative
+                                          : AppColors.neutral,
+                                ),
+                              ),
+                              Text(
+                                balance > 0.01
+                                    ? 'Alacaklı'
+                                    : balance < -0.01
+                                        ? 'Borçlu'
+                                        : 'Denk',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: balance > 0.01
+                                      ? AppColors.positive
+                                      : balance < -0.01
+                                          ? AppColors.negative
+                                          : AppColors.neutral,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            balance > 0.01
-                                ? 'Alacaklı'
-                                : balance < -0.01
-                                    ? 'Borçlu'
-                                    : 'Denk',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: balance > 0.01
-                                  ? AppColors.positive
-                                  : balance < -0.01
-                                      ? AppColors.negative
-                                      : AppColors.neutral,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
@@ -2217,21 +2241,24 @@ class HouseholdScreen extends ConsumerWidget {
         Center(
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.verified_rounded,
-                      size: 14, color: AppColors.primary),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Evdaş v1.0.0 (Build 1)',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.grey,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.verified_rounded,
+                        size: 14, color: AppColors.primary),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'Evdaş v1.0.0 (Build 1)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.grey,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 4),
               const Text(

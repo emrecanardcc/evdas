@@ -466,12 +466,16 @@ class SettlementScreen extends ConsumerWidget {
                 child: Icon(statusIcon, color: textColor, size: 20),
               ),
               const SizedBox(width: 8),
-              Text(
-                '$userName İçin Durum',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
+              Expanded(
+                child: Text(
+                  '$userName İçin Durum',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: textColor,
+                  ),
                 ),
               ),
             ],
@@ -530,7 +534,7 @@ class SettlementScreen extends ConsumerWidget {
                 Expanded(
                   child: Row(
                     children: [
-                      Flexible(
+                      Expanded(
                         child: Text(
                           item.fromMemberName,
                           style: const TextStyle(
@@ -540,11 +544,11 @@ class SettlementScreen extends ConsumerWidget {
                         ),
                       ),
                       const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 6),
+                        padding: EdgeInsets.symmetric(horizontal: 4),
                         child: Icon(Icons.arrow_forward_rounded,
                             size: 16, color: AppColors.primary),
                       ),
-                      Flexible(
+                      Expanded(
                         child: Text(
                           item.toMemberName,
                           style: const TextStyle(
@@ -557,13 +561,20 @@ class SettlementScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                AnimatedRollingNumber(
-                  value: item.amount,
-                  isMasked: isPrivacy,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 110),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: AnimatedRollingNumber(
+                      value: item.amount,
+                      isMasked: isPrivacy,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
                 ),
               ],

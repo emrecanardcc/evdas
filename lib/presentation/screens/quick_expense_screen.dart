@@ -320,56 +320,67 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: PopupMenuButton<String>(
-          tooltip: 'Ortaklık Değiştir',
-          onSelected: (pId) {
-            final target = allPartnerships.firstWhere((p) => p.id == pId);
-            ref.read(householdProvider.notifier).switchPartnership(target);
-          },
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                house?.type.icon ?? Icons.home_rounded,
-                size: 18,
-                color: house?.type.color ?? AppColors.primary,
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  house?.name ?? 'Evdaş',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w700),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
-            ],
-          ),
-          itemBuilder: (context) {
-            return allPartnerships.map((p) {
-              final isSel = p.id == house?.id;
-              return PopupMenuItem(
-                value: p.id,
-                child: Row(
-                  children: [
-                    Icon(p.type.icon, size: 18, color: p.type.color),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        p.name,
-                        style: TextStyle(
-                          fontWeight: isSel ? FontWeight.w800 : FontWeight.w500,
-                          color: isSel ? AppColors.primary : null,
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: PopupMenuButton<String>(
+                  tooltip: 'Ortaklık Değiştir',
+                  onSelected: (pId) {
+                    final target = allPartnerships.firstWhere((p) => p.id == pId);
+                    ref.read(householdProvider.notifier).switchPartnership(target);
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        house?.type.icon ?? Icons.home_rounded,
+                        size: 18,
+                        color: house?.type.color ?? AppColors.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          house?.name ?? 'Evdaş',
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w700),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ),
-                    if (isSel)
-                      const Icon(Icons.check, size: 16, color: AppColors.primary),
-                  ],
+                      const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
+                    ],
+                  ),
+                  itemBuilder: (context) {
+                    return allPartnerships.map((p) {
+                      final isSel = p.id == house?.id;
+                      return PopupMenuItem(
+                        value: p.id,
+                        child: Row(
+                          children: [
+                            Icon(p.type.icon, size: 18, color: p.type.color),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                p.name,
+                                style: TextStyle(
+                                  fontWeight: isSel ? FontWeight.w800 : FontWeight.w500,
+                                  color: isSel ? AppColors.primary : null,
+                                ),
+                              ),
+                            ),
+                            if (isSel)
+                              const Icon(Icons.check, size: 16, color: AppColors.primary),
+                          ],
+                        ),
+                      );
+                    }).toList();
+                  },
                 ),
-              );
-            }).toList();
+              ),
+            );
           },
         ),
         actions: [
@@ -395,54 +406,63 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
             onPressed: () => ApprovalCenterModal.show(context),
           ),
           if (currentMember != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 12, left: 4),
-              child: Center(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.25),
+            Builder(
+              builder: (ctx) {
+                final isNarrow = MediaQuery.sizeOf(ctx).width < 340;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8, left: 4),
+                  child: Center(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isNarrow ? 6 : 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(
+                            radius: 9,
+                            backgroundColor: AppColors.primary,
+                            child: Text(
+                              currentMember.displayName.isNotEmpty
+                                  ? currentMember.displayName[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          if (!isNarrow) ...[
+                            const SizedBox(width: 6),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 64),
+                              child: Text(
+                                currentMember.displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircleAvatar(
-                        radius: 9,
-                        backgroundColor: AppColors.primary,
-                        child: Text(
-                          currentMember.displayName.isNotEmpty
-                              ? currentMember.displayName[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 72),
-                        child: Text(
-                          currentMember.displayName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                );
+              },
             ),
         ],
       ),

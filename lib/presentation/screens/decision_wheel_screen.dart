@@ -420,18 +420,17 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
-                        const Expanded(
-                          child: Text(
-                            'Çarka Katılan Ortaklar',
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w800),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        const Text(
+                          'Çarka Katılan Ortaklar',
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w800),
                         ),
-                        const SizedBox(width: 8),
                         Text(
                           '${participating.length}/${members.length} seçildi',
                           style: TextStyle(
