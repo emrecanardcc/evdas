@@ -179,15 +179,54 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 6 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+### [DÖNGÜ 6] - Akıllı Finansal Tasarruf & Kategori Trend Analiz Motoru (Smart Financial Insights Engine) & Freemium Monetizasyonu
+**Tarih:** 27 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 1: Müşteri Tutma, Alışkanlık Döngüsü ve Freemium Büyüme (Retention & Growth)*
+2. *Pillar 2: Vektörel Hissiyat, Renk Kodlu Trend Çipleri ve Tokluk (Sensory UX)*
+3. *Pillar 3: Akıllı İçgörüler ve Tasarruf Fırsatları (Feature Differentiation)*
+4. *Pillar 4: Matematiksel Sağlık Skoru ve $O(N)$ Tek Geçiş Analizi (Zero-Bug Logic)*
+5. *Pillar 6: Evrensel Cihaz Uyumluluğu (280x480'den 4K'ya Sıfır Taşma)*
+
+#### Yapılan Geliştirmeler:
+1. **Akıllı İçgörü ve Trend Veri Modelleri (`financial_insights.dart`):**
+   - `CategoryTrend`: Kategori bazında geçen aya göre harcama farkı (`difference`), net yüzde değişimi (`percentageChange`) ve formatlı değişim rozeti (`+₺450`, `-%16.6`).
+   - `FinancialHealthScore`: Bütçe uyumu (%40), harcama eşitliği/adaleti (%35) ve borçlanma oranı (%25) üzerinden matematiksel 0-100 puanlık sağlık skoru ve durum sınıflandırması ('Mükemmel Uyum', 'Dengeli & Sağlıklı', 'Dikkat Gerektirir', 'Bütçe Aşımı Riski').
+   - `FinancialAdvice`: Eyleme dökülebilir yapay tavsiye modeli (tasarruf potansiyeli `potentialSavings`, öncelik sırası ve kategori rozeti).
+2. **$O(N)$ Tek Geçişli Trend Analiz Motoru (`financial_insights_engine.dart`):**
+   - Tek bir döngüde bu ay ve geçen ay harcamalarını ayrıştırır, kategori ve üye toplamlarını hesaplar (sıfır ara liste tahsisi).
+   - Kategori yoğunlaşması kuralı (örneğin bütçenin %40+'sı tek bir kaleme gidiyorsa tahmini %12 tasarruf potansiyeli çıkarır).
+   - Harcama yükü dengesizliği kuralı (bir üye ortak masrafların %70+'sini ödüyorsa dengeleyici tavsiye üretir).
+   - Ay bazında genel tasarruf/artış kıyaslaması.
+   - Sıfıra bölme hatalarına karşı tam koruma.
+3. **Reaktif Riverpod Sağlayıcısı (`financialInsightsProvider` in `app_providers.dart`):**
+   - Harcamalar, üyeler veya bütçe değiştiğinde milisaniyeler içinde reaktif güncellenir.
+4. **Vektörel Finansal Tasarruf ve Trend Kartı (`financial_insights_card.dart`):**
+   - `LayoutBuilder` + `ConstrainedBox` + `FittedBox` + `Wrap` mimarisiyle 280px ultra-dar ekranda 1.8x font ölçeğinde dahi sıfır piksel taşma (`zero RenderFlex overflow`).
+   - %100 keskin vektörel simgeler (`Icons.insights_rounded`, `Icons.speed_rounded`, `Icons.trending_down_rounded`, `Icons.trending_up_rounded`, `Icons.workspace_premium_rounded`). Sıfır emoji.
+   - Yatay kaydırılabilir kategori trend çipleri (yeşil tasarruf / amber artış rozetleri).
+   - Freemium Katmanı: Ücretsiz planda en önemli 2 tavsiye ve sağlık skoru gösterilir; derin tavsiyeleri açmak isteyen kullanıcılar tek tıkla `PaywallModal` ile Evdaş Plus'a yönlendirilir.
+5. **Raporlar Ekranı Entegrasyonu (`reports_screen.dart`):**
+   - Aylık Bütçe Nabız Kartının hemen altına konumlandırıldı.
+6. **Otomatik Testler & Regresyon Güvencesi:**
+   - `test/financial_insights_test.dart` (5 birim testi - trendler, sıfıra bölme, sağlık skoru, dengesizlik uyarısı, kategori yoğunlaşması).
+   - `test/financial_insights_card_widget_test.dart` (2 widget testi - render ve Plus paywall tetiklemesi).
+   - `test/stress_multi_device_test.dart` (168 testin tamamı 280x480'den 800x400'e 1.8x font ile hatasız geçti).
+   - `test/layout_overflow_audit_test.dart` (9 ekran testi hatasız geçti).
+   - Tüm proje test paketi: **270/270 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 7 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
 Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
 
-1. **Ev Karar Çarkı (Decision Wheel) Tokluk Hissi ve Fizik İyileştirmesi (Sensory UX):**
-   - Görev dağılım çarkında açısal hız yavaşlaması (deceleration physics), haptik tık sıklığı ve kazanan belirlendiğinde dinamik vektörel kutlama efekti.
-2. **Kategori Bazlı Harcama Trendleri ve Tasarruf Tavsiyeleri (Smart Financial Insights):**
-   - Geçen aya göre artan/azalan kategorileri tespit eden ve ev arkadaşlarına tasarruf önerisi sunan analiz motoru.
-3. **Gelişmiş Çevrimdışı Kuyruk ve Çakışma Yönetimi (Offline-First Resilience):**
-   - Ağ kesintisinde eklenen/silinen harcamaların yerel işlem kuyruğunda atomik tutulması ve ağ geldiğinde çakışmasız senkronizasyon.
+1. **Gelişmiş Çevrimdışı İşlem Kuyruğu ve Çakışmasız Eşitleme (Offline-First Resilience):**
+   - İnternet yokken eklenen/düzenlenen/silinen harcamaların yerel işlem kuyruğunda (`offline_queue`) sıralı tutulması, ağ geri geldiğinde otomatik arka plan senkronizasyonu ve bildirim rozeti.
+2. **Ortaklık Finansal Karne Paylaşımı (Viral Growth & Visual Share Cards):**
+   - Ay sonunda evin tasarruf başarısını ve sağlık skorunu Instagram/WhatsApp story formatında estetik bir vektörel görsel kart olarak dışa aktarma ve paylaşma mekanizması.
+3. **Kişiselleştirilmiş Kategori Bütçeleri (Granular Budget Limits):**
+   - Genel ortak bütçeye ek olarak Market, Fatura veya Eğlence için ayrı ayrı alt limitler belirleme ve kategori bazlı uyarılar.
 
 ---
 

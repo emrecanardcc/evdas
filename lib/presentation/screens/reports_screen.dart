@@ -11,6 +11,7 @@ import '../providers/app_providers.dart';
 import '../providers/customization_provider.dart';
 import '../widgets/animated_rolling_number.dart';
 import '../widgets/budget_pulse_card.dart';
+import '../widgets/financial_insights_card.dart';
 import '../widgets/paywall_modal.dart';
 
 class ReportsScreen extends ConsumerWidget {
@@ -117,6 +118,11 @@ class ReportsScreen extends ConsumerWidget {
 
             // 2. AYLIK BÜTÇE İLERLEME VE FİNANSAL NABIZ KARTI
             const BudgetPulseCard(),
+
+            const SizedBox(height: 16),
+
+            // 2b. AKILLI FİNANSAL TASARRUF & TREND KARTI
+            const FinancialInsightsCard(),
 
             const SizedBox(height: 16),
 

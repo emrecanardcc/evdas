@@ -6,9 +6,12 @@ import '../../data/models/household_member.dart';
 import '../../data/models/partnership.dart';
 import '../../data/models/payment_request.dart';
 import '../../data/models/settlement_item.dart';
+import '../../data/models/financial_insights.dart';
 import '../../data/repositories/expense_repository.dart';
 import '../../domain/debt_engine.dart';
+import '../../domain/financial_insights_engine.dart';
 import '../../domain/reporting_engine.dart';
+import '../../core/services/budget_service.dart';
 
 // REPOSITORY PROVIDER
 final expenseRepositoryProvider = Provider<ExpenseRepository>((ref) {
@@ -430,4 +433,25 @@ class HomeTabNotifier extends Notifier<int> {
 
 final homeTabProvider =
     NotifierProvider<HomeTabNotifier, int>(HomeTabNotifier.new);
+
+// COMPUTED FINANCIAL INSIGHTS PROVIDER
+final financialInsightsProvider = Provider<HouseholdFinancialInsights>((ref) {
+  final household = ref.watch(householdProvider);
+  final expenses = ref.watch(expensesProvider);
+  final budget = ref.watch(budgetProvider);
+
+  if (household == null) {
+    return FinancialInsightsEngine.analyze(
+      expenses: const [],
+      members: const [],
+      budget: budget,
+    );
+  }
+
+  return FinancialInsightsEngine.analyze(
+    expenses: expenses,
+    members: household.members,
+    budget: budget,
+  );
+});
 
