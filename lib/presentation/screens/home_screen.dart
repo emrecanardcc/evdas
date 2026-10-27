@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/haptic_service.dart';
 import '../../core/services/heartbeat_service.dart';
+import '../../core/services/recurring_expense_service.dart';
 import '../../core/services/supabase_service.dart';
 import '../../data/repositories/expense_repository.dart';
 import '../providers/app_providers.dart';
@@ -60,9 +61,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     });
 
-    // Oturum açıksa açılışta bulut ile arka planda canlı eşitle ve heartbeat gönder
+    // Oturum açıksa açılışta bulut ile arka planda canlı eşitle, vadesi gelen sabit giderleri işle
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(HeartbeatService.pingIfNeeded());
+      final house = ref.read(householdProvider);
+      if (house != null) {
+        ref.read(recurringExpensesProvider.notifier).processDueExpenses(house.id);
+      }
       if (SupabaseService.isAuthenticated) {
         ref.read(expenseRepositoryProvider).syncWithCloud().then((_) {
           if (mounted) {

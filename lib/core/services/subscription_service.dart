@@ -55,9 +55,17 @@ class SubscriptionState {
   /// Ücretsiz planda izin verilen maksimum aktif ortaklık/ev sayısı
   static const int freeTierMaxHouseholds = 2;
 
+  /// Ücretsiz planda izin verilen maksimum aktif düzenli masraf sayısı
+  static const int freeTierMaxRecurringExpenses = 2;
+
   bool canCreateHousehold(int currentActiveCount) {
     if (isPro) return true;
     return currentActiveCount < freeTierMaxHouseholds;
+  }
+
+  bool canCreateRecurringExpense(int currentActiveCount) {
+    if (isPro) return true;
+    return currentActiveCount < freeTierMaxRecurringExpenses;
   }
 
   bool canExportDetailedReports() => isPro;

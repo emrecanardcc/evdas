@@ -6,11 +6,13 @@ import '../../data/models/expense.dart';
 import '../../data/models/household_member.dart';
 import '../../data/models/partnership.dart';
 import '../../data/models/payment_request.dart';
+import '../../data/models/recurring_expense.dart';
 import '../../domain/debt_engine.dart';
 import '../constants/app_colors.dart';
 import '../utils/currency_formatter.dart';
 import '../../presentation/providers/app_providers.dart';
 import '../../presentation/providers/customization_provider.dart';
+import 'recurring_expense_service.dart';
 
 /// Bildirim ve Hatırlatıcı Türleri
 enum ReminderType {
@@ -21,6 +23,7 @@ enum ReminderType {
   pendingApproval,
   pendingPayment,
   expenseInactivity,
+  recurringDue,
 }
 
 extension ReminderTypeExtension on ReminderType {
@@ -40,6 +43,8 @@ extension ReminderTypeExtension on ReminderType {
         return 'Ödeme Doğrulama';
       case ReminderType.expenseInactivity:
         return 'Harcama Hatırlatması';
+      case ReminderType.recurringDue:
+        return 'Sabit Gider Vadesi';
     }
   }
 
@@ -59,6 +64,8 @@ extension ReminderTypeExtension on ReminderType {
         return Icons.payments_rounded;
       case ReminderType.expenseInactivity:
         return Icons.receipt_long_rounded;
+      case ReminderType.recurringDue:
+        return Icons.event_repeat_rounded;
     }
   }
 
@@ -78,6 +85,8 @@ extension ReminderTypeExtension on ReminderType {
         return AppColors.positive;
       case ReminderType.expenseInactivity:
         return const Color(0xFFD97706); // Amber 600
+      case ReminderType.recurringDue:
+        return const Color(0xFF7C3AED); // Purple 600
     }
   }
 }
@@ -133,6 +142,7 @@ class ReminderService {
     required List<ApprovalRequest> approvals,
     required List<PaymentRequest> payments,
     required HouseholdMember? currentMember,
+    List<RecurringExpense> recurringExpenses = const [],
     Set<String> dismissedIds = const {},
     Set<String> readIds = const {},
     DateTime? now,
@@ -302,6 +312,50 @@ class ReminderService {
       }
     }
 
+    // 6. Düzenli ve Sabit Gider Vadesi Kontrolü
+    if (house != null) {
+      for (final r in recurringExpenses) {
+        if (r.householdId == house.id && r.isActive) {
+          final targetDay = r.dayOfMonth.clamp(1, 28);
+          final diff = targetDay - currentTime.day;
+
+          if (diff == 0) {
+            final id = 'recurring-due-${r.id}-${currentTime.year}-${currentTime.month}-$targetDay';
+            if (!dismissedIds.contains(id)) {
+              results.add(
+                ReminderItem(
+                  id: id,
+                  type: ReminderType.recurringDue,
+                  title: 'Sabit Gider Vadesi Geldi',
+                  message: '${r.title} (${CurrencyFormatter.formatClean(r.amount)}) için bugün belirlenen sabit ödeme günü.',
+                  timestamp: currentTime,
+                  actionRoute: 'quick_expense',
+                  actionLabel: 'İncele',
+                  isRead: readIds.contains(id),
+                ),
+              );
+            }
+          } else if (diff == 1) {
+            final id = 'recurring-soon-${r.id}-${currentTime.year}-${currentTime.month}-$targetDay';
+            if (!dismissedIds.contains(id)) {
+              results.add(
+                ReminderItem(
+                  id: id,
+                  type: ReminderType.recurringDue,
+                  title: 'Sabit Gider Yaklaşıyor',
+                  message: '${r.title} (${CurrencyFormatter.formatClean(r.amount)}) ödemesine 1 gün kaldı.',
+                  timestamp: currentTime,
+                  actionRoute: 'quick_expense',
+                  actionLabel: 'İncele',
+                  isRead: readIds.contains(id),
+                ),
+              );
+            }
+          }
+        }
+      }
+    }
+
     return results;
   }
 }
@@ -337,6 +391,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
     final approvals = ref.watch(approvalRequestsProvider);
     final payments = ref.watch(paymentRequestsProvider);
     final currentMember = ref.watch(currentMemberProvider);
+    final recurring = ref.watch(recurringExpensesProvider);
 
     final items = ReminderService.evaluate(
       house: house,
@@ -344,6 +399,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
       approvals: approvals,
       payments: payments,
       currentMember: currentMember,
+      recurringExpenses: recurring,
       dismissedIds: dismissed,
       readIds: read,
     );

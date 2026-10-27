@@ -5,6 +5,7 @@ import 'package:evdas_mobile/data/models/expense.dart';
 import 'package:evdas_mobile/data/models/household_member.dart';
 import 'package:evdas_mobile/data/models/partnership.dart';
 import 'package:evdas_mobile/data/models/payment_request.dart';
+import 'package:evdas_mobile/data/models/recurring_expense.dart';
 
 void main() {
   group('ReminderService Unit Tests', () {
@@ -207,6 +208,48 @@ void main() {
 
       final settlementReminder = reminders.firstWhere((r) => r.id == settlementId);
       expect(settlementReminder.isRead, isTrue);
+    });
+
+    test('Vadesi gelen veya yaklaşan sabit gider için recurringDue hatırlatıcısı üretilmelidir', () {
+      final recurring = RecurringExpense(
+        id: 'rec-kira',
+        householdId: 'house-1',
+        title: 'Ev Kirası',
+        amount: 18000.0,
+        paidByMemberId: 'm1',
+        dayOfMonth: 15,
+      );
+
+      // Ayın 15'i (Bugün)
+      final remindersToday = ReminderService.evaluate(
+        house: testHouse,
+        expenses: [],
+        approvals: [],
+        payments: [],
+        currentMember: member1,
+        recurringExpenses: [recurring],
+        now: DateTime(2026, 10, 15),
+      );
+
+      final dueToday = remindersToday.where((r) => r.type == ReminderType.recurringDue).firstOrNull;
+      expect(dueToday, isNotNull);
+      expect(dueToday!.title, contains('Sabit Gider Vadesi'));
+      expect(dueToday.message, contains('Ev Kirası'));
+
+      // Ayın 14'ü (1 gün kala)
+      final remindersSoon = ReminderService.evaluate(
+        house: testHouse,
+        expenses: [],
+        approvals: [],
+        payments: [],
+        currentMember: member1,
+        recurringExpenses: [recurring],
+        now: DateTime(2026, 10, 14),
+      );
+
+      final dueSoon = remindersSoon.where((r) => r.type == ReminderType.recurringDue).firstOrNull;
+      expect(dueSoon, isNotNull);
+      expect(dueSoon!.title, contains('Sabit Gider Yaklaşıyor'));
     });
   });
 }

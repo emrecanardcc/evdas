@@ -109,15 +109,50 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 4 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+### [DÖNGÜ 4] - Sabit ve Düzenli Giderler Otomasyonu (Recurring Expenses Engine) & Freemium Gating
+**Tarih:** 27 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 1: Gelir Modelleri ve Freemium Koruması (Monetization & Growth)*
+2. *Pillar 3: Tekrarlanan İşleri Sıfırlama ve Sabit Masraf Otomasyonu (Feature Trimming)*
+3. *Pillar 4: Çift Çekim Koruması ve Deterministik Takvim Mantığı (Zero-Bug Logic)*
+
+#### Yapılan Geliştirmeler:
+1. **Düzenli Masraf Modeli (`recurring_expense.dart`):**
+   - Kira, aidat, internet ve faturalar için gün, periyot (`monthly`, `yearly`), ödeyen üye, kategori ve `autoPost` desteği.
+   - Deterministik $O(1)$ vade kontrolü (`isDue`): Aynı ay içerisinde zaten işlenmişse mükerrer kayıt oluşturulmasını engelleyen çift-çekim koruması.
+   - Bir sonraki vade tarihini otomatik hesaplayan `nextDueDate` motoru.
+2. **Düzenli Gider Servisi ve Notifier (`recurring_expense_service.dart`):**
+   - SharedPreferences üzerinde kalıcı JSON saklama ve Riverpod 3.x reaktif `NotifierProvider`.
+   - `processDueExpenses(householdId)`: Uygulama açılışında veya takvim geçişinde günü gelmiş masrafları otomatik `Expense` olarak üretip `ExpenseRepository` üzerinden kaydeder.
+   - `SubscriptionState.canCreateRecurringExpense`: Ücretsiz planda maksimum 2 aktif sabit gider sınırı, 3. ve üzeri için `PaywallModal` tetiklemesi (Pro monetizasyon).
+3. **Vektörel Sabit Gider Modalı (`recurring_expenses_modal.dart`):**
+   - %100 vektörel ikonlar (`Icons.event_repeat_rounded`, `Icons.home_work_rounded`, `Icons.apartment_rounded`, `Icons.wifi_rounded`, `Icons.bolt_rounded`, `Icons.subscriptions_rounded`).
+   - Hızlı şablon butonları (Kira, Site Aidatı, İnternet, Elektrik, Abonelik).
+   - Canlı aktif/pasif anahtarı (`Switch.adaptive`), silme onay modalı ve sonraki vade rozeti.
+   - Yeni sabit masraf ekleme alt sayfası (başlık, tutar, kategori çipleri, ödeyen seçici, ayın 1-28. günü slider'ı).
+4. **Ortaklık Ekranı ve Hatırlatıcı Entegrasyonu:**
+   - `HouseholdScreen`: "DÜZENLİ VE SABİT GİDERLER" ayar kartı eklendi.
+   - `HomeScreen`: Açılışta vadesi gelen sabit masrafları otomatik işleyen tetikleyici eklendi.
+   - `ReminderService`: Günü gelen veya 1 gün kalan sabit giderler için `ReminderType.recurringDue` uyarı bildirimi eklendi.
+5. **Otomatik Testler & Regresyon Güvencesi:**
+   - `test/recurring_expense_model_test.dart` (5 test - isDue, çift çekim koruması, nextDueDate, serialization).
+   - `test/recurring_expense_service_test.dart` (2 test - CRUD ve processDueExpenses otomatik üretim).
+   - `test/recurring_expenses_widget_test.dart` (2 test - boş şablonlar ve aktif liste).
+   - `test/reminder_service_test.dart` (recurringDue testi eklendi).
+   - Tüm proje test paketi: **257/257 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 5 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
 Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
 
-1. **Düzenli ve Sabit Giderler Otomasyonu (Recurring Expenses / Subscriptions):**
-   - Her ay tekrarlanan kira, aidat, internet faturası veya dijital aboneliklerin (Netflix, Spotify vb.) belirlenen günde otomatik ortak harcama olarak işlenmesi.
-2. **Gelişmiş Çevrimdışı Kuyruk ve Çakışma Yönetimi (Offline-First Resilience):**
-   - Metroda veya internet kesintisinde girilen harcamaların yerel SQLite/Hive/Prefs kuyruğunda transactional olarak saklanıp bağlantı geldiğinde atomik senkronize edilmesi.
-3. **Kişisel Bütçe Limiti ve Kategori Hedefleri (Financial Health & Alerts):**
-   - Ev sakinlerinin aylık toplam harcama hedefi belirleyip hedefe yaklaşıldığında görsel ilerleme çubuğuyla tasarruf uyarısı alması.
+1. **Gelişmiş Çevrimdışı Kuyruk ve Çakışma Yönetimi (Offline-First Resilience):**
+   - Ağ kesintisinde veya metroda eklenen/silinen harcamaların yerel işlem kuyruğunda atomik tutulması ve ağ geldiğinde çakışmasız (Last-Write-Wins / Vector Clocks) bulut senkronizasyonu.
+2. **Kişisel Bütçe Limiti ve Kategori Tasarruf Göstergesi (Financial Health & Alerts):**
+   - Ortaklık için aylık harcama tavanı belirleme, kategori bazlı bütçe çubukları ve limite %80 / %100 yaklaşıldığında görsel bütçe uyarısı.
+3. **Ev Karar Çarkı (Decision Wheel) Tokluk Hissi ve Fizik İyileştirmesi (Sensory UX):**
+   - Görev dağılım çarkında açısal hız yavaşlaması (deceleration physics), haptik tık sıklığı ve kazanan belirlendiğinde dinamik konfeti/ses entegrasyonu.
 
 ---
 

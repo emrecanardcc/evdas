@@ -22,6 +22,7 @@ import '../widgets/approval_center_modal.dart';
 import '../widgets/feedback_dialog.dart';
 import '../widgets/legal_document_modal.dart';
 import '../widgets/paywall_modal.dart';
+import '../widgets/recurring_expenses_modal.dart';
 import 'auth_screen.dart';
 import 'decision_wheel_screen.dart';
 
@@ -2007,6 +2008,41 @@ class HouseholdScreen extends ConsumerWidget {
                 ),
               ],
             ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // DÜZENLİ VE SABİT GİDERLER
+        Text(
+          'DÜZENLİ VE SABİT GİDERLER',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+            color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF7C3AED).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.event_repeat_rounded,
+                  color: Color(0xFF7C3AED), size: 20),
+            ),
+            title: const Text('Sabit Gider Otomasyonu',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            subtitle: const Text('Kira, aidat ve faturaları otomatik takvime bağlayın',
+                style: TextStyle(fontSize: 11)),
+            trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+            onTap: () {
+              HapticService.light();
+              RecurringExpensesModal.show(context);
+            },
           ),
         ),
         const SizedBox(height: 16),
