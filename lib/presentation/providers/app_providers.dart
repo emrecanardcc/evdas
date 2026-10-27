@@ -419,3 +419,15 @@ final partnershipReportProvider = Provider<PartnershipReport>((ref) {
     timeRange: range,
   );
 });
+
+// HOME TAB NOTIFIER
+class HomeTabNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void setTab(int index) => state = index;
+}
+
+final homeTabProvider =
+    NotifierProvider<HomeTabNotifier, int>(HomeTabNotifier.new);
+

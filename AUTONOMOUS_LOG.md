@@ -52,15 +52,72 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 2 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+### [DÖNGÜ 2] - Akıllı Fiş ve Belge OCR Ayrıştırıcı (Smart Receipt Engine)
+**Tarih:** 27 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 2: Arayüz Hissiyatı ve Akıllı Giriş Kolaylığı (Sensory UX)*
+2. *Pillar 3: Özellik Ekleme ve Zaman Tasarrufu (3 Saniyede Fiş Okuma)*
+
+#### Yapılan Geliştirmeler:
+1. **$O(N)$ Tek Geçişli Akıllı Fiş Ayrıştırıcı Motoru (`receipt_parser.dart`):**
+   - Market, restoran veya fatura fişlerindeki satıcı adını, işlem tarihini ve toplam tutarı regex & kurallı dilbilgisiyle otomatik ayrıştırır.
+   - Türk Lirası formatlarını (nokta/virgül kuruş ayracı, binlik ayraçlar `1.450,75 TL`, TOPLAM/KDV satırları) tam doğrulukla yakalar.
+   - Fiş içeriğindeki anahtar kelimelerden kategori (`market`, `mutfak`, `fatura`, `ulasim`, vb.) çıkarımı yapar ve güven skoru hesaplar.
+2. **Vektörel Fiş Tarama ve Önizleme Modalı (`receipt_scanner_dialog.dart`):**
+   - Sıfır emoji, %100 vektörel Material Symbols (`Icons.document_scanner_rounded`, `Icons.receipt_long_rounded`).
+   - Panodan hızlı yapıştırma, demo örnek fişler (Migros, Enerjisa, Kahve) ve anlık ayrıştırma önizleme kartı.
+   - Tek tıkla "Harcamaya Aktar ve Doldur" aksiyonu.
+3. **Kategori İkonografi ve Renk Standardizasyonu (`expense.dart`):**
+   - `ExpenseCategoryExt` altına `IconData get icon` ve `Color get color` getiren merkezi tasarım standardı kuruldu.
+4. **Hızlı Harcama Ekranı Entegrasyonu (`quick_expense_screen.dart`):**
+   - AppBar'a ve tutar giriş alanının hemen üstüne "Akıllı Fiş Oku" eylem çipi entegre edildi.
+5. **Otomatik Testler & Regresyon:**
+   - `test/receipt_parser_test.dart` (6 test) ve `test/receipt_scanner_widget_test.dart`.
+   - Tüm proje test paketi: **235/235 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 3] - Bildirim & Hatırlatıcı Merkezi (Notification Hub) ve Staggered Vektör Animasyonları
+**Tarih:** 27 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 1: Müşteri Tutma, Alışkanlık Döngüsü ve Zamanında Hesaplaşma (Retention & Growth)*
+2. *Pillar 2: Vektörel Mikro-Animasyonlar ve Tokluk Hissi (Sensory UX)*
+3. *Pillar 3: Modüler Bildirim ve Onay Entegrasyonu (Feature Integration)*
+
+#### Yapılan Geliştirmeler:
+1. **Zarif Mikro-Animasyon Motoru (`staggered_fade_slide.dart`):**
+   - Harici paket şişkinliği olmadan (zero bloatware), donanım hızlandırmalı ve bellek sızıntısına karşı korumalı (dispose güvenceli) kademeli kayma/solma animatörü.
+   - OS düzeyinde "Hareketi Azalt" (Reduced Motion) açıksa animasyonu anında atlayarak erişilebilirlik (A11y) standartlarını tam sağlar.
+   - `expenses_screen.dart` ve `settlement_screen.dart` içindeki harcama kartları ve ödeşme transferlerine entegre edildi; listelerin akıcı bir tokluk hissiyle sahneye gelmesi sağlandı.
+2. **Kişiselleştirilmiş Hatırlatıcı Motoru (`reminder_service.dart`):**
+   - **Hesaplaşma Günü:** Ortaklığın ödeşme gününde veya 2 gün öncesinde proaktif ödeşme çağrısı.
+   - **Yüksek Borç / Alacak Uyarısı:** Ortaklar arasında biriken şahsi veya ortak borç ₺250 seviyesini aştığında nazik bakiye bildirimi.
+   - **Bekleyen Onay ve Ödeme Doğrulamaları:** Kullanıcının oy vermesi gereken silme talepleri ve adına gelen ödemeler için anlık eylem tetikleyicisi.
+   - **Harcama Hareketsizliği:** Son 4 gündür evde harcama girilmediyse unutulan fişleri hatırlatan nazik bildirim.
+   - SharedPreferences ile kalıcı okundu/kaldırıldı (`isRead` / `isDismissed`) durumu.
+3. **Merkezi Bildirim Modalı (`notification_center_modal.dart`):**
+   - Tek tıkla "Tümünü Oku", bildirim kartını kaldırma (`dismiss`), doğrudan ilgili sekmeye (Ödeşme, Hızlı Giriş, Onay Merkezi) rota yönlendirmesi.
+   - %100 vektörel ikonlar, sıfır emoji, 48px thumb-zone buton ergonomisi.
+4. **QuickExpenseScreen AppBar Dinamik Rozeti:**
+   - Bildirim zili artık okunmamış hatırlatıcı sayısını (`unreadCount`) canlı badge olarak gösteriyor ve merkezi açıyor.
+   - `homeTabProvider` ile modaldan tek tıkla `SettlementScreen` sekmesine yumuşak geçiş sağlandı.
+5. **Otomatik Testler & Regresyon Güvencesi:**
+   - `test/staggered_fade_slide_test.dart` (2 test), `test/reminder_service_test.dart` (8 test), `test/notification_center_modal_test.dart` (2 test).
+   - Tüm proje test paketi: **247/247 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 4 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
 Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
 
-1. **Harcama Fişi Okuma / Akıllı OCR Hazırlığı (Sensory UX & Feature Trimming):**
-   - Kamera veya galeriden market/restoran fişi seçildiğinde tutarı ve tarihi otomatik ayrıştıran OCR servis entegrasyonu.
-2. **Kişiselleştirilmiş Bildirim ve Hatırlatıcı Motoru (Retention & Growth):**
-   - Ayın hesaplaşma gününde veya biriken şahsi borçlarda ortaklara gönderilecek nazik, otomatik yerel bildirimler (Local Notifications).
-3. **Vektörel Mikro-Animasyonlar ve Tokluk Hissi (Sensory UX):**
-   - Harcama kaydında ve borç ödeşmesinde kartların yerleşme animasyonları (Staggered List Animations) ve yumuşak geçiş fiziği.
+1. **Düzenli ve Sabit Giderler Otomasyonu (Recurring Expenses / Subscriptions):**
+   - Her ay tekrarlanan kira, aidat, internet faturası veya dijital aboneliklerin (Netflix, Spotify vb.) belirlenen günde otomatik ortak harcama olarak işlenmesi.
+2. **Gelişmiş Çevrimdışı Kuyruk ve Çakışma Yönetimi (Offline-First Resilience):**
+   - Metroda veya internet kesintisinde girilen harcamaların yerel SQLite/Hive/Prefs kuyruğunda transactional olarak saklanıp bağlantı geldiğinde atomik senkronize edilmesi.
+3. **Kişisel Bütçe Limiti ve Kategori Hedefleri (Financial Health & Alerts):**
+   - Ev sakinlerinin aylık toplam harcama hedefi belirleyip hedefe yaklaşıldığında görsel ilerleme çubuğuyla tasarruf uyarısı alması.
 
 ---
 
@@ -69,4 +126,4 @@ Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
 Ajanı döngüsel olarak çalıştırmak için:
 1. `AUTONOMOUS_LOG.md` dosyasındaki son tamamlanan döngüyü ve sıradaki hedefleri incele.
 2. Ana promptu hiçbir ek açıklama yapmadan ajana gönder.
-3. Ajan otomatik olarak [DÖNGÜ 2] hedeflerini ele alacak, kodu ve testleri yazacak, `flutter analyze` ve `flutter test` ile doğrulayacak ve bu log dosyasını bir sonraki tur için güncelleyecektir.
+3. Ajan otomatik olarak sıradaki döngünün hedeflerini ele alacak, kodu ve testleri yazacak, `flutter analyze` ve `flutter test` ile doğrulayacak ve bu log dosyasını bir sonraki tur için güncelleyecektir.

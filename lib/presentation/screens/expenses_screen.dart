@@ -11,6 +11,7 @@ import '../../data/models/household_member.dart';
 import '../providers/app_providers.dart';
 import '../providers/customization_provider.dart';
 import '../widgets/approval_center_modal.dart';
+import '../widgets/staggered_fade_slide.dart';
 
 class ExpensesScreen extends ConsumerStatefulWidget {
   const ExpensesScreen({super.key});
@@ -175,9 +176,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                             ? memberNameMap[item.debtorMemberId]
                             : null;
 
-                        return RepaintBoundary(
-                          child: _buildExpenseCard(
-                              item, paidBy, debtor, currentMember, house?.members.length ?? 1),
+                        return StaggeredFadeSlide(
+                          index: index,
+                          child: RepaintBoundary(
+                            child: _buildExpenseCard(
+                                item, paidBy, debtor, currentMember, house?.members.length ?? 1),
+                          ),
                         );
                       },
                     ),

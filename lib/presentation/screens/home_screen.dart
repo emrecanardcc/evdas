@@ -22,7 +22,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _currentIndex = 0; // Açar açmaz Hızlı Giriş Numpad Ekranı!
   StreamSubscription<String>? _syncSub;
 
   final List<Widget> _screens = const [
@@ -85,6 +84,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentIndex = ref.watch(homeTabProvider);
+
     return PatternBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -99,18 +100,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             );
           },
           child: KeyedSubtree(
-            key: ValueKey<int>(_currentIndex),
-            child: _screens[_currentIndex],
+            key: ValueKey<int>(currentIndex),
+            child: _screens[currentIndex],
           ),
         ),
         bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: currentIndex,
         onDestinationSelected: (index) {
-          if (_currentIndex != index) {
+          if (currentIndex != index) {
             HapticService.selection();
-            setState(() {
-              _currentIndex = index;
-            });
+            ref.read(homeTabProvider.notifier).setTab(index);
           }
         },
         destinations: const [

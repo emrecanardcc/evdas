@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/haptic_service.dart';
+import '../../core/services/reminder_service.dart';
 import '../../core/services/sound_service.dart';
 import '../../core/services/supabase_service.dart';
 import '../../core/theme/customization_models.dart';
@@ -15,10 +16,10 @@ import '../../data/models/household_member.dart';
 import '../../data/models/partnership.dart';
 import '../providers/app_providers.dart';
 import '../providers/customization_provider.dart';
-import '../widgets/approval_center_modal.dart';
 import '../widgets/category_selector.dart';
 import '../widgets/custom_numpad.dart';
 import '../widgets/instant_saved_dialog.dart';
+import '../widgets/notification_center_modal.dart';
 import '../widgets/receipt_scanner_dialog.dart';
 
 class QuickExpenseScreen extends ConsumerStatefulWidget {
@@ -332,7 +333,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
     final house = ref.watch(householdProvider);
     final allPartnerships = ref.watch(allPartnershipsProvider);
     final currentMember = ref.watch(currentMemberProvider);
-    final pendingCount = ref.watch(pendingApprovalsCountProvider);
+    final unreadNotificationCount = ref.watch(reminderProvider).unreadCount;
     final isPrivacy = ref.watch(privacyModeProvider);
     final numpadLayout = ref.watch(numpadLayoutProvider);
 
@@ -428,12 +429,17 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
           ),
           IconButton(
             icon: Badge(
-              isLabelVisible: pendingCount > 0,
-              label: Text('$pendingCount'),
+              isLabelVisible: unreadNotificationCount > 0,
+              label: Text('$unreadNotificationCount'),
               child: const Icon(Icons.notifications_none_rounded),
             ),
-            tooltip: 'Grup Kararları & Onay Merkezi',
-            onPressed: () => ApprovalCenterModal.show(context),
+            tooltip: 'Bildirim & Hatırlatıcı Merkezi',
+            onPressed: () => NotificationCenterModal.show(
+              context,
+              onNavigateTab: (tabIndex) {
+                ref.read(homeTabProvider.notifier).setTab(tabIndex);
+              },
+            ),
           ),
           if (currentMember != null)
             Builder(

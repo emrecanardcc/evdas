@@ -11,6 +11,7 @@ import '../providers/app_providers.dart';
 import '../providers/customization_provider.dart';
 import '../widgets/animated_rolling_number.dart';
 import '../widgets/confetti_overlay.dart';
+import '../widgets/staggered_fade_slide.dart';
 
 class SettlementScreen extends ConsumerWidget {
   const SettlementScreen({super.key});
@@ -137,21 +138,26 @@ class SettlementScreen extends ConsumerWidget {
                 ),
               )
             else
-              ...debtResult.settlements.map((s) {
+              ...debtResult.settlements.asMap().entries.map((entry) {
+                final index = entry.key;
+                final s = entry.value;
                 final toMember = house?.members.firstWhere(
                   (m) => m.id == s.toMemberId,
                   orElse: () => house.members.first,
                 );
                 final isMyDebt = s.fromMemberId == currentMember?.id;
 
-                return _buildSettlementCard(
-                  context,
-                  ref,
-                  s,
-                  toMember?.iban,
-                  isMyDebt,
-                  currentMember?.id,
-                  isPrivacy,
+                return StaggeredFadeSlide(
+                  index: index,
+                  child: _buildSettlementCard(
+                    context,
+                    ref,
+                    s,
+                    toMember?.iban,
+                    isMyDebt,
+                    currentMember?.id,
+                    isPrivacy,
+                  ),
                 );
               }),
 
