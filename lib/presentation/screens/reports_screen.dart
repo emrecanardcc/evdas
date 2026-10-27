@@ -12,6 +12,7 @@ import '../providers/customization_provider.dart';
 import '../widgets/animated_rolling_number.dart';
 import '../widgets/budget_pulse_card.dart';
 import '../widgets/financial_insights_card.dart';
+import '../widgets/financial_report_card_modal.dart';
 import '../widgets/paywall_modal.dart';
 
 class ReportsScreen extends ConsumerWidget {
@@ -30,6 +31,11 @@ class ReportsScreen extends ConsumerWidget {
         title: const Text('Gider Raporları & Analiz',
             style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.military_tech_rounded),
+            tooltip: 'Aylık Finansal Karne',
+            onPressed: () => FinancialReportCardModal.show(context),
+          ),
           IconButton(
             icon: const Icon(Icons.file_download_outlined),
             tooltip: 'Harcamaları CSV Dışa Aktar',

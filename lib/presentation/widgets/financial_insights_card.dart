@@ -6,6 +6,7 @@ import '../../core/services/subscription_service.dart';
 import '../../data/models/expense.dart';
 import '../../data/models/financial_insights.dart';
 import '../providers/app_providers.dart';
+import 'financial_report_card_modal.dart';
 import 'paywall_modal.dart';
 
 /// Evdaş Akıllı Finansal Tasarruf ve Trend Kartı
@@ -397,6 +398,26 @@ class _FinancialInsightsCardState extends ConsumerState<FinancialInsightsCard> {
                     ),
                   ),
                 ],
+
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      minimumSize: const Size(double.infinity, 44),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(Icons.military_tech_rounded, size: 18),
+                    label: const Text(
+                      'Aylık Finansal Karneyi İncele & Paylaş',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                    onPressed: () => FinancialReportCardModal.show(context),
+                  ),
+                ),
               ],
             );
           },

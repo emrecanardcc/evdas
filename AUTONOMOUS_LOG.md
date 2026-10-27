@@ -252,15 +252,45 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 8 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+### [DÖNGÜ 8] - Ortaklık Finansal Karne Paylaşımı (Viral Growth & Visual Share Engine) & Çoklu Kanal Dağıtımı
+**Tarih:** 27 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 1: Viral Büyüme ve Sosyal Paylaşılabilirlik (Viral Growth & Acquisition)*
+2. *Pillar 2: Vektörel Tasarım Hissiyatı ve Tipografi (Sensory UX)*
+3. *Pillar 3: Tek Tıkla Özet Paylaşım ve Excel/CSV Dışa Aktarma (Feature Value)*
+4. *Pillar 6: Evrensel Cihaz Uyumluluğu (280x480'den 4K'ya Sıfır Taşma)*
+
+#### Yapılan Geliştirmeler:
+1. **Aylık Finansal Karne Modalı (`financial_report_card_modal.dart`):**
+   - Ev arkadaşları ve ortaklıklar için dönemin finansal karnesini sunan görsel vektörel modal inşa edildi.
+   - **Görsel Metrik Izgarası:** Toplam Ortak Gider, Kişi Başı Pay, Aylık Tasarruf/Artış Trendi, Lider Kategori ve Dönemin En Çok Katkı Sağlayanı.
+   - %100 keskin Material Symbols (`Icons.military_tech_rounded`, `Icons.insights_rounded`, `Icons.star_rounded`, `Icons.share_rounded`, `Icons.table_chart_rounded`). Sıfır emoji.
+   - `LayoutBuilder` + `ConstrainedBox` + `FittedBox` + `Wrap` mimarisiyle 280px dar ekranlarda 1.8x font ölçeğinde dahi sıfır piksel taşma (`zero RenderFlex overflow`).
+2. **Çoklu Kanal Paylaşım Motoru (WhatsApp / Telegram / SMS):**
+   - Tek tıkla "Karneyi Paylaş": Ev ortaklığına ait sağlık skoru, toplam harcama, kişi başı düşen pay ve tasarruf oranını formatlı profesyonel metin olarak dışa aktarır (`SharePlus`).
+   - "Detaylı CSV / Excel Tablosu Al": Evdaş Plus abonelik korumalı veri dışa aktarım akışıyla tam entegre çalışır.
+3. **Ekran Entegrasyonu (`reports_screen.dart` & `financial_insights_card.dart`):**
+   - `FinancialInsightsCard` altına "Aylık Finansal Karneyi İncele & Paylaş" aksiyon butonu eklendi.
+   - `ReportsScreen` AppBar'ına hızlı erişim madalya ikonu (`Icons.military_tech_rounded`) eklendi.
+4. **Otomatik Testler & Regresyon Güvencesi:**
+   - `test/financial_report_card_modal_test.dart` (Görsel karne renderı, sağlık skoru, metrikler ve paylaşım aksiyonları doğrulandı).
+   - `test/stress_multi_device_test.dart` (ReportsScreen ve tüm ekranlar 280x480'den 800x400'e 1.8x font ile hatasız geçti).
+   - `test/layout_overflow_audit_test.dart` (9 ekran testi hatasız geçti).
+   - `test/emoji_audit_test.dart` (Sıfır emoji doğrulandı).
+   - Tüm proje test paketi: **273/273 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 9 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
 Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
 
 1. **Gelişmiş Çevrimdışı İşlem Kuyruğu ve Çakışmasız Eşitleme (Offline-First Resilience):**
    - İnternet yokken eklenen/düzenlenen/silinen harcamaların yerel işlem kuyruğunda (`offline_queue`) sıralı tutulması, ağ geri geldiğinde otomatik arka plan senkronizasyonu ve bildirim rozeti.
-2. **Ortaklık Finansal Karne Paylaşımı (Viral Growth & Visual Share Cards):**
-   - Ay sonunda evin tasarruf başarısını ve sağlık skorunu Instagram/WhatsApp story formatında estetik bir vektörel görsel kart olarak dışa aktarma ve paylaşma mekanizması.
-3. **Kişiselleştirilmiş Kategori Bütçeleri (Granular Budget Limits):**
+2. **Kişiselleştirilmiş Kategori Bütçeleri ve Alt Limit Takibi (Granular Category Budgets):**
    - Genel ortak bütçeye ek olarak Market, Fatura veya Eğlence için ayrı ayrı alt limitler belirleme ve kategori bazlı uyarılar.
+3. **Akıllı Fiş OCR Ayrıştırıcısında Çoklu Kalem Desteği (Multi-Item Receipt Parser):**
+   - Tek bir fiş içerisindeki birden çok kalemi ayrı kategorilere bölerek kaydetme seçeneği (Örn: Market fişindeki temizlik maddeleri vs gıda).
 
 ---
 
