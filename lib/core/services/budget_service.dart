@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../data/models/burn_rate_analysis.dart';
 import '../../data/models/expense.dart';
 import '../../data/models/household_budget.dart';
 import '../../presentation/providers/app_providers.dart';
 import '../../presentation/providers/customization_provider.dart';
+import 'burn_rate_engine.dart';
 
 /// Bütçe Yönetim Notifier'ı (Riverpod 3.x)
 class BudgetNotifier extends Notifier<HouseholdBudget?> {
@@ -116,4 +118,16 @@ final currentMonthCategorySpendsProvider =
     }
   }
   return map;
+});
+
+/// Bu ayki harcama temposu ve ay sonu bütçe projeksiyonunu hesaplayan reaktif provider
+final burnRateAnalysisProvider = Provider<BurnRateAnalysis?>((ref) {
+  final budget = ref.watch(budgetProvider);
+  if (budget == null) return null;
+
+  final spent = ref.watch(currentMonthJointSpendProvider);
+  return BurnRateEngine.calculate(
+    monthlyLimit: budget.monthlyLimit,
+    currentSpent: spent,
+  );
 });

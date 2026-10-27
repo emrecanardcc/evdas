@@ -315,15 +315,55 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 10 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+### [DÖNGÜ 10] - Ay Sonu Harcama Temposu & Projeksiyon Motoru (Predictive Burn Rate Engine) & Vektörel Hız Kartı
+**Tarih:** 27 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 1: Ay Sonu Bütçe & Harcama Tahmin Motoru (Predictive Burn Rate Engine & Cashflow Projection)*
+2. *Pillar 2: Vektörel Hissiyat, Renk Kodlu Tempo Rozetleri ve Parametre İnceleme (Sensory UX)*
+3. *Pillar 4: Deterministik $O(1)$ Projeksiyon, Tükenme Günü ve Matematiksel Güvenlik (Zero-Bug Logic)*
+4. *Pillar 6: Evrensel Cihaz Uyumluluğu (280x480'den 4K'ya, 1.8x Metin Ölçeğinde Sıfır Taşma)*
+
+#### Yapılan Geliştirmeler:
+1. **Ay Sonu Harcama Temposu ve Projeksiyon Modeli (`burn_rate_analysis.dart`):**
+   - `BurnRateStatus` sınıflandırması (`onTrack`, `warning`, `critical`).
+   - Günlük harcama hızı (`dailyVelocity`), beklenen ay sonu harcaması (`projectedMonthEndSpend`), öngörülen sapma (`projectedVariance`), bütçe oranı (`projectedRatio`), tahmini tükenme günü (`budgetDepletionDay`), güvenli günlük bütçe (`safeDailyRemainingBudget`) ve akıllı tavsiye (`smartRecommendation`).
+2. **$O(1)$ Deterministik Tahmin Motoru (`burn_rate_engine.dart`):**
+   - Ayın geçen günleri, kalan günleri ve artık yıllar/Şubat ayı takvimi üzerinden deterministik kapalı formül hesaplaması.
+   - Bütçe tükenme günü matematiksel modeli: `(monthlyLimit / dailyVelocity).floor()`.
+   - Sıfıra bölme ve sınır durum korumaları (ayın ilk günü, harcama 0, bütçe 0, bütçenin önceden aşılmış olması durumları).
+3. **Reaktif Riverpod Sağlayıcısı (`budget_service.dart`):**
+   - `burnRateAnalysisProvider`: Bütçe veya kümülatif ortak harcama değiştiğinde anında tetiklenen reaktif analiz sağlayıcısı.
+4. **Proaktif Erken Uyarı Bildirimleri (`reminder_service.dart`):**
+   - `ReminderType.burnRateWarning` ve `burn-rate-warning-...` tetikleyicisi (Ayın 5. gününden sonra tempo kritik seviyeye çıkarsa bütçe henüz tükenmeden önce kullanıcıyı nazikçe uyarır).
+   - Doğrudan Raporlar ve Analiz ekranına eylem yönlendirmesi (`actionRoute: 'reports'`).
+5. **Vektörel Harcama Temposu & Projeksiyon Kartı (`burn_rate_card.dart`):**
+   - %100 keskin Material Symbols (`Icons.speed_rounded`, `Icons.trending_up_rounded`, `Icons.event_available_rounded`, `Icons.shield_outlined`, `Icons.insights_rounded`). Sıfır emoji.
+   - Renk kodlu durum rozeti (Dengeli Tempo / Hafif Risk / Kritik Hız).
+   - Metrik kutuları: Günlük Hız, Ay Sonu Tahmini, Güvenli Kalan Günlük Limit.
+   - Genişletilebilir projeksiyon parametreleri (Geçen/Toplam gün, Kalan gün, Güvenli Limit, Öngörülen Tükenme Günü).
+   - `ConstrainedBox` + `FittedBox` + `Wrap` mimarisiyle 280px ultra-dar ekranda 1.8x font ölçeğinde dahi sıfır piksel taşma (`zero RenderFlex overflow`).
+6. **Raporlar Ekranı Entegrasyonu (`reports_screen.dart`):**
+   - `BudgetPulseCard` ve `FinancialInsightsCard` hemen altına konumlandırıldı.
+7. **Otomatik Testler & Regresyon Güvencesi:**
+   - `test/burn_rate_engine_test.dart` (7 birim ve entegrasyon testi).
+   - `test/burn_rate_card_widget_test.dart` (2 widget testi).
+   - `test/stress_multi_device_test.dart` (168 ekran senaryosu 280x480'den 800x400'e 1.8x font ile hatasız geçti).
+   - `test/layout_overflow_audit_test.dart` (9 ekran testi hatasız geçti).
+   - `test/emoji_audit_test.dart` (Sıfır emoji tam doğrulandı).
+   - Tüm proje test paketi: **286/286 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 11 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
 Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
 
 1. **Gelişmiş Çevrimdışı İşlem Kuyruğu ve Çakışmasız Eşitleme (Offline-First Resilience):**
    - İnternet yokken eklenen/düzenlenen/silinen harcamaların yerel işlem kuyruğunda (`offline_queue`) sıralı tutulması, ağ geri geldiğinde otomatik arka plan senkronizasyonu ve bildirim rozeti.
 2. **Akıllı Fiş OCR Ayrıştırıcısında Çoklu Kalem Desteği (Multi-Item Receipt Parser):**
    - Tek bir fiş içerisindeki birden çok kalemi ayrı kategorilere bölerek kaydetme seçeneği (Örn: Market fişindeki temizlik maddeleri vs gıda).
-3. **Ay Sonu Bütçe & Harcama Tahmin Motoru (Predictive Burn Rate Engine):**
-   - Geçen gün sayısı ve mevcut harcama temposuna göre ay sonu tahmini toplam harcamayı matematiksel modelle hesaplayıp proaktif tasarruf önerisi sunma.
+3. **Bütçe Simülasyonu ve "Ne Olur Eğer?" Senaryo Motoru (What-If Expense Simulation):**
+   - Büyük bir harcama yapmadan önce bütçeye ve ay sonu hızına etkisini önizleme aracı.
 
 ---
 

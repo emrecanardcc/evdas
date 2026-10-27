@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/models/approval_request.dart';
+import '../../data/models/burn_rate_analysis.dart';
 import '../../data/models/expense.dart';
 import '../../data/models/household_budget.dart';
 import '../../data/models/household_member.dart';
@@ -14,6 +15,7 @@ import '../utils/currency_formatter.dart';
 import '../../presentation/providers/app_providers.dart';
 import '../../presentation/providers/customization_provider.dart';
 import 'budget_service.dart';
+import 'burn_rate_engine.dart';
 import 'recurring_expense_service.dart';
 
 /// Bildirim ve Hatırlatıcı Türleri
@@ -27,6 +29,7 @@ enum ReminderType {
   expenseInactivity,
   recurringDue,
   budgetAlert,
+  burnRateWarning,
 }
 
 extension ReminderTypeExtension on ReminderType {
@@ -50,6 +53,8 @@ extension ReminderTypeExtension on ReminderType {
         return 'Sabit Gider Vadesi';
       case ReminderType.budgetAlert:
         return 'Bütçe Uyarısı';
+      case ReminderType.burnRateWarning:
+        return 'Harcama Temposu Uyarısı';
     }
   }
 
@@ -73,6 +78,8 @@ extension ReminderTypeExtension on ReminderType {
         return Icons.event_repeat_rounded;
       case ReminderType.budgetAlert:
         return Icons.pie_chart_rounded;
+      case ReminderType.burnRateWarning:
+        return Icons.speed_rounded;
     }
   }
 
@@ -95,6 +102,8 @@ extension ReminderTypeExtension on ReminderType {
       case ReminderType.recurringDue:
         return const Color(0xFF7C3AED); // Purple 600
       case ReminderType.budgetAlert:
+        return const Color(0xFFE11D48); // Rose 600
+      case ReminderType.burnRateWarning:
         return const Color(0xFFE11D48); // Rose 600
     }
   }
@@ -451,6 +460,46 @@ class ReminderService {
                 ),
               );
             }
+          }
+        }
+      }
+
+      // 7c. Harcama Temposu ve Erken Projeksiyon Uyarısı (Burn Rate Warning)
+      if (budget.monthlyLimit > 0 && currentTime.day >= 5) {
+        final currentMonthSpend = expenses.fold<double>(0.0, (acc, e) {
+          if (e.type == ExpenseType.joint &&
+              e.expenseDate.year == currentTime.year &&
+              e.expenseDate.month == currentTime.month) {
+            return acc + e.amount;
+          }
+          return acc;
+        });
+
+        final burnRate = BurnRateEngine.calculate(
+          monthlyLimit: budget.monthlyLimit,
+          currentSpent: currentMonthSpend,
+          now: currentTime,
+        );
+
+        if (burnRate.status == BurnRateStatus.critical &&
+            currentMonthSpend < budget.monthlyLimit &&
+            budget.alertAt80Percent) {
+          final id =
+              'burn-rate-warning-${house.id}-${currentTime.year}-${currentTime.month}';
+          if (!dismissedIds.contains(id)) {
+            results.add(
+              ReminderItem(
+                id: id,
+                type: ReminderType.burnRateWarning,
+                title: 'Harcama Temposu Kritik Seviyede',
+                message:
+                    'Mevcut hızla ay sonunda bütçenizi ${CurrencyFormatter.formatClean(burnRate.projectedVariance)} aşmanız öngörülüyor. Günlük harcamanızı ${CurrencyFormatter.formatClean(burnRate.safeDailyRemainingBudget)} altında tutmanız önerilir.',
+                timestamp: currentTime,
+                actionRoute: 'reports',
+                actionLabel: 'Analizi Gör',
+                isRead: readIds.contains(id),
+              ),
+            );
           }
         }
       }
