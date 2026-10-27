@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/models/approval_request.dart';
 import '../../data/models/expense.dart';
+import '../../data/models/household_budget.dart';
 import '../../data/models/household_member.dart';
 import '../../data/models/partnership.dart';
 import '../../data/models/payment_request.dart';
@@ -12,6 +13,7 @@ import '../constants/app_colors.dart';
 import '../utils/currency_formatter.dart';
 import '../../presentation/providers/app_providers.dart';
 import '../../presentation/providers/customization_provider.dart';
+import 'budget_service.dart';
 import 'recurring_expense_service.dart';
 
 /// Bildirim ve Hatırlatıcı Türleri
@@ -24,6 +26,7 @@ enum ReminderType {
   pendingPayment,
   expenseInactivity,
   recurringDue,
+  budgetAlert,
 }
 
 extension ReminderTypeExtension on ReminderType {
@@ -45,6 +48,8 @@ extension ReminderTypeExtension on ReminderType {
         return 'Harcama Hatırlatması';
       case ReminderType.recurringDue:
         return 'Sabit Gider Vadesi';
+      case ReminderType.budgetAlert:
+        return 'Bütçe Uyarısı';
     }
   }
 
@@ -66,6 +71,8 @@ extension ReminderTypeExtension on ReminderType {
         return Icons.receipt_long_rounded;
       case ReminderType.recurringDue:
         return Icons.event_repeat_rounded;
+      case ReminderType.budgetAlert:
+        return Icons.pie_chart_rounded;
     }
   }
 
@@ -87,6 +94,8 @@ extension ReminderTypeExtension on ReminderType {
         return const Color(0xFFD97706); // Amber 600
       case ReminderType.recurringDue:
         return const Color(0xFF7C3AED); // Purple 600
+      case ReminderType.budgetAlert:
+        return const Color(0xFFE11D48); // Rose 600
     }
   }
 }
@@ -143,6 +152,7 @@ class ReminderService {
     required List<PaymentRequest> payments,
     required HouseholdMember? currentMember,
     List<RecurringExpense> recurringExpenses = const [],
+    HouseholdBudget? budget,
     Set<String> dismissedIds = const {},
     Set<String> readIds = const {},
     DateTime? now,
@@ -356,6 +366,54 @@ class ReminderService {
       }
     }
 
+    // 7. Bütçe Durumu ve Sınır Kontrolü
+    if (house != null && budget != null && budget.monthlyLimit > 0) {
+      double currentMonthJointSpend = 0.0;
+      for (final e in expenses) {
+        if (e.type == ExpenseType.joint &&
+            e.expenseDate.year == currentTime.year &&
+            e.expenseDate.month == currentTime.month) {
+          currentMonthJointSpend += e.amount;
+        }
+      }
+
+      final ratio = budget.ratio(currentMonthJointSpend);
+
+      if (ratio >= 1.0 && budget.alertAt100Percent) {
+        final id = 'budget-exceeded-${house.id}-${currentTime.year}-${currentTime.month}';
+        if (!dismissedIds.contains(id)) {
+          results.add(
+            ReminderItem(
+              id: id,
+              type: ReminderType.budgetAlert,
+              title: 'Aylık Ortak Bütçe Aşıldı',
+              message: '${house.name} için hedeflenen ${CurrencyFormatter.formatClean(budget.monthlyLimit)} bütçe limiti aşıldı! Toplam harcama: ${CurrencyFormatter.formatClean(currentMonthJointSpend)}.',
+              timestamp: currentTime,
+              actionRoute: 'reports',
+              actionLabel: 'Raporu Gör',
+              isRead: readIds.contains(id),
+            ),
+          );
+        }
+      } else if (ratio >= 0.8 && budget.alertAt80Percent) {
+        final id = 'budget-80pct-${house.id}-${currentTime.year}-${currentTime.month}';
+        if (!dismissedIds.contains(id)) {
+          results.add(
+            ReminderItem(
+              id: id,
+              type: ReminderType.budgetAlert,
+              title: 'Bütçe Sınırına Yaklaşıldı',
+              message: 'Aylık ortak bütçenizin %${(ratio * 100).toStringAsFixed(0)} seviyesine ulaştınız. Kalan harcama payı: ${CurrencyFormatter.formatClean(budget.remaining(currentMonthJointSpend))}.',
+              timestamp: currentTime,
+              actionRoute: 'reports',
+              actionLabel: 'Bütçeyi İncele',
+              isRead: readIds.contains(id),
+            ),
+          );
+        }
+      }
+    }
+
     return results;
   }
 }
@@ -392,6 +450,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
     final payments = ref.watch(paymentRequestsProvider);
     final currentMember = ref.watch(currentMemberProvider);
     final recurring = ref.watch(recurringExpensesProvider);
+    final budget = ref.watch(budgetProvider);
 
     final items = ReminderService.evaluate(
       house: house,
@@ -400,6 +459,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
       payments: payments,
       currentMember: currentMember,
       recurringExpenses: recurring,
+      budget: budget,
       dismissedIds: dismissed,
       readIds: read,
     );

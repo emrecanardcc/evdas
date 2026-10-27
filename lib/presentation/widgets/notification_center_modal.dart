@@ -344,6 +344,8 @@ class NotificationCenterModal extends ConsumerWidget {
       onNavigateTab?.call(3); // Ödeşme Sekmesi
     } else if (route == 'quick_expense') {
       onNavigateTab?.call(0); // Hızlı Harcama
+    } else if (route == 'reports') {
+      onNavigateTab?.call(2); // Raporlar Sekmesi
     } else if (route == 'approvals') {
       ApprovalCenterModal.show(context);
     }

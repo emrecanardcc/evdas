@@ -144,15 +144,50 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 5 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+### [DÖNGÜ 5] - Aylık Ortak Bütçe & Finansal Nabız Motoru (Household Budget Engine) & Dinamik Duyarlılık
+**Tarih:** 27 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 1: Müşteri Tutma ve Finansal Kontrol (Retention & Growth)*
+2. *Pillar 2: Vektörel İlerleme Çubuğu ve Renk Kodlu Sağlık Durumu (Sensory UX)*
+3. *Pillar 4: Bütçe Aşım Uyarıları ve Bildirim Entegrasyonu (Zero-Bug Logic)*
+4. *Pillar 6: Evrensel Cihaz Uyumluluğu (280x480 Ultra Dar Ekrandan Tablete Sıfır Taşma)*
+
+#### Yapılan Geliştirmeler:
+1. **Aylık Ortak Bütçe Modeli (`household_budget.dart`):**
+   - Ortaklığın aylık harcama tavanı (`monthlyLimit`), kategori kısıtları (`categoryLimits`), %80 sınır ve %100 aşım uyarı anahtarları.
+   - Matematiksel bütçe sağlık analizi: `BudgetHealth.safe` (< %80), `BudgetHealth.warning` (%80 - %100), `BudgetHealth.exceeded` (> %100).
+   - Harcama oranı (`ratio`) ve kalan harcama payı (`remaining`) $O(1)$ kapalı formül hesaplaması.
+2. **Reaktif Bütçe Servisi (`budget_service.dart`):**
+   - Riverpod 3.x `NotifierProvider` mimarisi (`budgetProvider`, `currentMonthJointSpendProvider`).
+   - Diske yerel kalıcı saklama (SharedPreferences), bütçe hedefi ve bildirim tercihleri anında güncellenir.
+3. **Akıllı Bütçe Bildirimleri (`reminder_service.dart`):**
+   - Harcama eklendiğinde veya bütçe güncellendiğinde %80 ve %100 aşım durumunda otomatik `ReminderType.budgetAlert` bildirimi üretilir.
+   - `NotificationCenterModal` üzerinden tek tıkla Raporlar & Analiz sekmesine doğrudan yönlendirme.
+4. **Vektörel Finansal Nabız Kartı (`budget_pulse_card.dart`):**
+   - `LayoutBuilder` + `ConstrainedBox` + `FittedBox` + `Wrap` mimarisiyle 280px ultra-dar ekranda 1.8x font ölçeğinde dahi sıfır piksel taşma (`zero RenderFlex overflow`).
+   - Renk kodlu dinamik durum rozeti (Yeşil / Amber / Kırmızı), yumuşak geçişli mikro-animasyonlu ilerleme çubuğu (`TweenAnimationBuilder`).
+   - Hızlı bütçe ayarları modalı: ₺15.000, ₺25.000, ₺35.000, ₺50.000 hızlı çipleri ve özel tutar girişi.
+5. **Raporlar Ekranı Entegrasyonu (`reports_screen.dart`):**
+   - Zaman aralığı seçicinin hemen altına, net gider özet kartlarının üstüne konumlandırıldı.
+6. **Otomatik Testler & Regresyon:**
+   - `test/budget_model_and_service_test.dart` (4 test).
+   - `test/budget_pulse_card_test.dart` (2 test).
+   - `test/stress_multi_device_test.dart` (168 testin tamamı 280x480'den 800x400'e 1.8x font ile hatasız geçti).
+   - `test/layout_overflow_audit_test.dart` (9 ekran testi hatasız geçti).
+   - Tüm proje test paketi: **263/263 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 6 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
 Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
 
-1. **Gelişmiş Çevrimdışı Kuyruk ve Çakışma Yönetimi (Offline-First Resilience):**
-   - Ağ kesintisinde veya metroda eklenen/silinen harcamaların yerel işlem kuyruğunda atomik tutulması ve ağ geldiğinde çakışmasız (Last-Write-Wins / Vector Clocks) bulut senkronizasyonu.
-2. **Kişisel Bütçe Limiti ve Kategori Tasarruf Göstergesi (Financial Health & Alerts):**
-   - Ortaklık için aylık harcama tavanı belirleme, kategori bazlı bütçe çubukları ve limite %80 / %100 yaklaşıldığında görsel bütçe uyarısı.
-3. **Ev Karar Çarkı (Decision Wheel) Tokluk Hissi ve Fizik İyileştirmesi (Sensory UX):**
-   - Görev dağılım çarkında açısal hız yavaşlaması (deceleration physics), haptik tık sıklığı ve kazanan belirlendiğinde dinamik konfeti/ses entegrasyonu.
+1. **Ev Karar Çarkı (Decision Wheel) Tokluk Hissi ve Fizik İyileştirmesi (Sensory UX):**
+   - Görev dağılım çarkında açısal hız yavaşlaması (deceleration physics), haptik tık sıklığı ve kazanan belirlendiğinde dinamik vektörel kutlama efekti.
+2. **Kategori Bazlı Harcama Trendleri ve Tasarruf Tavsiyeleri (Smart Financial Insights):**
+   - Geçen aya göre artan/azalan kategorileri tespit eden ve ev arkadaşlarına tasarruf önerisi sunan analiz motoru.
+3. **Gelişmiş Çevrimdışı Kuyruk ve Çakışma Yönetimi (Offline-First Resilience):**
+   - Ağ kesintisinde eklenen/silinen harcamaların yerel işlem kuyruğunda atomik tutulması ve ağ geldiğinde çakışmasız senkronizasyon.
 
 ---
 
