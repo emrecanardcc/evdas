@@ -250,7 +250,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
         : null;
 
     if (shouldClose) {
-      // ⚡ Kasa Modu Kapatma Protokolü
+      // Kasa Modu Kapatma Protokolu
       if (defaultTargetPlatform == TargetPlatform.android) {
         await SystemNavigator.pop();
       } else {
@@ -265,8 +265,8 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
       }
     } else {
       final message = isPersonal
-          ? '🔔 ${CurrencyFormatter.formatClean(amount)} şahsi borç kaydedildi ($debtorName ➔ $paidByName)'
-          : '🔔 $paidByName ${CurrencyFormatter.formatClean(amount)} ortak ev masrafı kaydetti!';
+          ? '${CurrencyFormatter.formatClean(amount)} şahsi borç kaydedildi ($debtorName ➔ $paidByName)'
+          : '$paidByName ${CurrencyFormatter.formatClean(amount)} ortak ev masrafı kaydetti!';
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -628,7 +628,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                     // 5. ÇİFT FONKSİYONLU KAYDET BUTONLARI (KASA MODU)
                     Row(
                       children: [
-                        // Ana Buton: "⚡ Kaydet & Kapat"
+                        // Ana Buton: "Kaydet ve Kapat"
                         Expanded(
                           flex: 3,
                           child: ElevatedButton(
@@ -658,7 +658,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                                 Flexible(
                                   child: Text(
                                     amount > 0
-                                        ? '⚡ Kaydet & Kapat'
+                                        ? 'Kaydet ve Kapat'
                                         : 'Tutar Girin',
                                     style: const TextStyle(
                                       fontSize: 14,

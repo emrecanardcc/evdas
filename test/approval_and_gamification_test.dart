@@ -229,8 +229,8 @@ void main() {
 
       // Başlık ve görev seçenekleri doğrulanmalıdır
       expect(find.text('Ev Karar Çarkı'), findsOneWidget);
-      expect(find.text('🗑️ Çöpü Dök'), findsOneWidget);
-      expect(find.text('🍽️ Bulaşıkları Yıka'), findsOneWidget);
+      expect(find.text('Çöpü Dök'), findsOneWidget);
+      expect(find.text('Bulaşıkları Yıka'), findsOneWidget);
 
       // Çevir butonu doğrulanmalıdır
       expect(find.textContaining('Çarkı Çevir!'), findsOneWidget);

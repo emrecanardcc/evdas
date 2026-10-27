@@ -9,12 +9,12 @@ class ShareService {
     required String inviteCode,
   }) async {
     final message = '''
-🤝 $householdName ortaklığına davet edildiniz!
+$householdName ortaklığına davet edildiniz!
 
 Ortak masraflarımızı, harcamalarımızı ve borç mahsuplaşmasını Evdaş uygulaması ile kolayca takip ediyoruz.
 
 Uygulamayı indirip aşağıdaki davet koduyla ortaklığımıza hemen katılabilirsiniz:
-🔑 Davet Kodu: $inviteCode
+Davet Kodu: $inviteCode
 
 Evdaş uygulamasını indir ve masrafları anında bölüşelim!
 ''';
@@ -35,28 +35,28 @@ Evdaş uygulamasını indir ve masrafları anında bölüşelim!
     String? ibanInfo,
   }) async {
     final buffer = StringBuffer();
-    buffer.writeln('📊 *$householdName - Masraf & Hesaplaşma Özeti*');
+    buffer.writeln('*$householdName - Masraf ve Hesaplaşma Özeti*');
     buffer.writeln('------------------------------------');
-    buffer.writeln('💰 Toplam Ortak Harcama: ${CurrencyFormatter.formatClean(totalExpenses)}');
+    buffer.writeln('Toplam Ortak Harcama: ${CurrencyFormatter.formatClean(totalExpenses)}');
     buffer.writeln('------------------------------------');
-    buffer.writeln('*Ödeşme Durumu:*');
+    buffer.writeln('Ödeşme Durumu:');
 
     if (settlements.isEmpty) {
-      buffer.writeln('✅ Hesaplar tamamen denk, kimsenin borcu bulunmuyor.');
+      buffer.writeln('Hesaplar tamamen denk, kimsenin borcu bulunmuyor.');
     } else {
       for (final item in settlements) {
-        buffer.writeln('👉 *${item.fromMemberName}* ➔ *${item.toMemberName}*: ${CurrencyFormatter.formatClean(item.amount)}');
+        buffer.writeln('• *${item.fromMemberName}* -> *${item.toMemberName}*: ${CurrencyFormatter.formatClean(item.amount)}');
       }
     }
 
     if (ibanInfo != null && ibanInfo.trim().isNotEmpty) {
       buffer.writeln('------------------------------------');
-      buffer.writeln('💳 *Ödeme Bilgileri (IBAN):*');
+      buffer.writeln('Ödeme Bilgileri (IBAN):');
       buffer.writeln(ibanInfo.trim());
     }
 
     buffer.writeln('------------------------------------');
-    buffer.writeln('✨ Evdaş ile hesaplandı');
+    buffer.writeln('Evdaş ile hesaplandı');
 
     await SharePlus.instance.share(
       ShareParams(

@@ -32,7 +32,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     // Watch privacyMode to trigger rebuild on toggle
     ref.watch(privacyModeProvider);
 
-    // ⚡ TEK GEÇİŞTE (O(N)) FİLTRELEME VE SAYAÇ HESAPLAMA
+    // TEK GECISTE (O(N)) FILTRELEME VE SAYAC HESAPLAMA
     int jointCount = 0;
     int personalCount = 0;
     int settlementCount = 0;
@@ -54,7 +54,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       }
     }
 
-    // ⚡ O(1) ÜYE HARİTASI
+    // O(1) UYE HARITASI
     final Map<String, String> memberNameMap = {
       for (final m in house?.members ?? <HouseholdMember>[]) m.id: m.displayName,
     };
@@ -303,7 +303,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                         color: Colors.purple.withValues(alpha: 0.3)),
                                   ),
                                   child: const Text(
-                                    '⚖️ Özel Bölüşüm',
+                                    'Özel Bölüşüm',
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.w700,
@@ -423,7 +423,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                '⏳ Çevrimdışı (Bağlanınca Eşitlenecek)',
+                                'Çevrimdışı (Bağlanınca Eşitlenecek)',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -459,7 +459,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                             SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                '🗳️ Ortak Silme Onayı Bekliyor',
+                                'Ortak Silme Onayı Bekliyor',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(

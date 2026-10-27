@@ -24,7 +24,7 @@ class ExpenseRepository {
   SharedPreferences get prefs => _prefs;
   final _uuid = const Uuid();
 
-  // ⚡ L1 IN-MEMORY CACHE (Sıfır Gecikme & Sıfır Gereksiz JSON Çözümleme)
+  // L1 IN-MEMORY CACHE (Sıfır Gecikme & Sıfır Gereksiz JSON Çözümleme)
   Partnership? _cachedActivePartnership;
   List<Partnership>? _cachedAllPartnerships;
   final Map<String, List<Expense>> _cachedExpenses = {};
@@ -65,7 +65,7 @@ class ExpenseRepository {
     }
   }
 
-  /// ⚡ CANLI BULUT SENKRONİZASYONU (Supabase Sync Engine)
+  /// CANLI BULUT SENKRONİZASYONU (Supabase Sync Engine)
   Future<void> syncWithCloud() async {
     final client = SupabaseService.client;
     final user = SupabaseService.currentUser;
@@ -173,7 +173,7 @@ class ExpenseRepository {
     }
   }
 
-  /// ⚡ Çevrimdışı biriken masrafları sırayla buluta gönder ve kullanıcıyı bilgilendir
+  /// Çevrimdışı biriken masrafları sırayla buluta gönder ve kullanıcıyı bilgilendir
   Future<int> _processOfflineQueue() async {
     final raw = _prefs.getString(_keyOfflineExpensesQueue);
     if (raw == null) return 0;
@@ -267,7 +267,7 @@ class ExpenseRepository {
 
     if (syncedCount > 0) {
       _syncNotificationController.add(
-          '☁️ Çevrimdışıyken kaydettiğiniz $syncedCount harcama buluta başarıyla eşitlendi!');
+          'Çevrimdışıyken kaydettiğiniz $syncedCount harcama buluta başarıyla eşitlendi!');
     }
 
     return syncedCount;

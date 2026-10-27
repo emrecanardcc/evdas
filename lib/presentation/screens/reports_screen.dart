@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/export_service.dart';
+import '../../core/services/subscription_service.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/models/expense.dart';
 import '../../domain/reporting_engine.dart';
 import '../providers/app_providers.dart';
 import '../providers/customization_provider.dart';
 import '../widgets/animated_rolling_number.dart';
+import '../widgets/paywall_modal.dart';
 
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
@@ -30,6 +32,14 @@ class ReportsScreen extends ConsumerWidget {
             icon: const Icon(Icons.file_download_outlined),
             tooltip: 'Harcamaları CSV Dışa Aktar',
             onPressed: () async {
+              final subService = ref.read(subscriptionProvider);
+              if (!subService.canExportDetailedReports()) {
+                PaywallModal.show(
+                  context,
+                  featureTrigger: 'Excel / CSV Veri Dışa Aktarımı',
+                );
+                return;
+              }
               final expenses = ref.read(expensesProvider);
               if (expenses.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(

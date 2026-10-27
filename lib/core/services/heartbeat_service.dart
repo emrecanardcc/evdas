@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'supabase_service.dart';
 
-/// 💓 Supabase Otomatik Canlı Tutma & Heartbeat Servisi
+/// Supabase Otomatik Canli Tutma & Heartbeat Servisi
 ///
 /// Supabase ücretsiz katmanı 7 gün boyunca API isteği almazsa veritabanını uyku moduna alır.
 /// Bu servis, uygulama açıldığında ve periyodik aralıklarla veritabanına hafif bir istek atarak
@@ -33,12 +33,12 @@ class HeartbeatService {
       // Başarılı ping zamanını kaydet
       await prefs.setInt(_keyLastPing, now);
       if (kDebugMode) {
-        debugPrint('💓 [Supabase Heartbeat] Veritabanı uyanık tutma pingi başarıyla iletildi.');
+        debugPrint('[Supabase Heartbeat] Veritabanı uyanık tutma pingi başarıyla iletildi.');
       }
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('⚠️ [Supabase Heartbeat] Ping iletimi atlandı: $e');
+        debugPrint('[Supabase Heartbeat] Ping iletimi atlandı: $e');
       }
       return false;
     }

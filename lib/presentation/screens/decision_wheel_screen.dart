@@ -24,14 +24,14 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
   late Animation<double> _animation;
 
   final List<String> _taskPresets = [
-    '🗑️ Çöpü Dök',
-    '🍽️ Bulaşıkları Yıka',
-    '🥖 Sabah Ekmeği Al',
-    '🧹 Evi Süpür',
-    '☕ Kahve Yap',
-    '🛒 Markete Git',
-    '🍕 Yemeği Söyle',
-    '🎲 Özel Görev',
+    'Çöpü Dök',
+    'Bulaşıkları Yıka',
+    'Sabah Ekmeği Al',
+    'Evi Süpür',
+    'Kahve Yap',
+    'Markete Git',
+    'Yemeği Söyle',
+    'Özel Görev',
   ];
 
   late String _selectedTask;
@@ -167,7 +167,7 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
 
   void _showWinnerDialog() {
     final winner = _calculateWinner();
-    final taskName = _selectedTask == '🎲 Özel Görev' &&
+    final taskName = _selectedTask == 'Özel Görev' &&
             _customTaskController.text.trim().isNotEmpty
         ? _customTaskController.text.trim()
         : _selectedTask;
@@ -177,12 +177,24 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Center(
+        title: Center(
           child: Column(
             children: [
-              Text('🎉', style: TextStyle(fontSize: 48)),
-              SizedBox(height: 8),
-              Text(
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.emoji_events_rounded,
+                  size: 32,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
                 'Çark Kararını Verdi!',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
               ),
@@ -230,7 +242,7 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
               ),
               const SizedBox(height: 14),
               Text(
-                '🎯 Evdaş Karar Çarkı konuştu, itiraz kabul edilmez!',
+                'Evdaş Karar Çarkı sonucu belirlendi, iyi şanslar!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
@@ -246,10 +258,10 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
           TextButton.icon(
             onPressed: () {
               final shareText =
-                  '🎯 *Evdaş Karar Çarkı Sonucu!*\n'
-                  '📌 Görev: $taskName\n'
-                  '👑 Seçilen Kişi: *${winner.displayName}*\n\n'
-                  'Çark konuştu, görevi yapma sırası sende! 😄';
+                  '*Evdaş Karar Çarkı Sonucu*\n'
+                  'Görev: $taskName\n'
+                  'Seçilen Kişi: *${winner.displayName}*\n\n'
+                  'Çark sonucu belirlendi, görevi yapma sırası sende!';
               SharePlus.instance.share(
                 ShareParams(
                   text: shareText,
@@ -557,7 +569,7 @@ class _DecisionWheelScreenState extends ConsumerState<DecisionWheelScreen>
                 }).toList(),
               ),
             ),
-            if (_selectedTask == '🎲 Özel Görev') ...[
+            if (_selectedTask == 'Özel Görev') ...[
               const SizedBox(height: 8),
               TextField(
                 controller: _customTaskController,

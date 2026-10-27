@@ -76,7 +76,7 @@ class InstantSavedDialog {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      '⚡ Masraf Kaydedildi!',
+                      'Masraf Kaydedildi',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,

@@ -120,7 +120,7 @@ class SettlementScreen extends ConsumerWidget {
                             color: AppColors.positive, size: 48),
                         const SizedBox(height: 8),
                         const Text(
-                          'Hesaplar Tamamen Denk 🎉',
+                          'Hesaplar Tamamen Denk',
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 4),
@@ -786,8 +786,8 @@ class SettlementScreen extends ConsumerWidget {
               children: [
                 Text(
                   isToday
-                      ? '🔔 Bugün Aylık Hesaplaşma Günü!'
-                      : '📅 Aylık Hesaplaşma: Her ayın $settlementDay. günü',
+                      ? 'Bugün Aylık Hesaplaşma Günü!'
+                      : 'Aylık Hesaplaşma: Her ayın $settlementDay. günü',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,

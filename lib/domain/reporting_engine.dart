@@ -91,15 +91,15 @@ class PartnershipReport {
   /// Paylaşılmak üzere formatlı özet metin üretir
   String toSummaryString(String partnershipName) {
     final buffer = StringBuffer();
-    buffer.writeln('📋 *$partnershipName - Net Gider Raporu*');
-    buffer.writeln('📅 Dönem: ${timeRange.displayName}');
+    buffer.writeln('*$partnershipName - Net Gider Raporu*');
+    buffer.writeln('Dönem: ${timeRange.displayName}');
     buffer.writeln('------------------------------------');
-    buffer.writeln('💰 *Toplam Harcama:* ${CurrencyFormatter.formatClean(grandTotal)}');
-    buffer.writeln('🏢 *Ortak Masraflar:* ${CurrencyFormatter.formatClean(totalJointExpenses)}');
+    buffer.writeln('*Toplam Harcama:* ${CurrencyFormatter.formatClean(grandTotal)}');
+    buffer.writeln('*Ortak Masraflar:* ${CurrencyFormatter.formatClean(totalJointExpenses)}');
     if (totalPersonalDebts > 0) {
-      buffer.writeln('🤝 *Şahsi Borçlar:* ${CurrencyFormatter.formatClean(totalPersonalDebts)}');
+      buffer.writeln('*Şahsi Borçlar:* ${CurrencyFormatter.formatClean(totalPersonalDebts)}');
     }
-    buffer.writeln('👥 *Kişi Başı Düşen:* ${CurrencyFormatter.formatClean(perMemberAverage)}');
+    buffer.writeln('*Kişi Başı Düşen:* ${CurrencyFormatter.formatClean(perMemberAverage)}');
     buffer.writeln('------------------------------------');
     buffer.writeln('*Kategori Dağılımı:*');
 
@@ -122,7 +122,7 @@ class PartnershipReport {
     }
 
     buffer.writeln('------------------------------------');
-    buffer.writeln('✨ Evdaş ile oluşturuldu');
+    buffer.writeln('Evdaş ile oluşturuldu');
     return buffer.toString();
   }
 }
@@ -139,7 +139,7 @@ class ReportingEngine {
     final lastMonthYear = nowMonth == 1 ? nowYear - 1 : nowYear;
     final lastMonth = nowMonth == 1 ? 12 : nowMonth - 1;
 
-    // ⚡ TEK GEÇİŞTE (O(N)) FİLTRELEME VE TOPLAMA (Sıfır Ara Liste & Sıfır Gereksiz DateTime Tahsisi)
+    // TEK GECISTE (O(N)) FILTRELEME VE TOPLAMA (Sıfır Ara Liste & Sıfır Gereksiz DateTime Tahsisi)
     double totalJoint = 0;
     double totalPersonal = 0;
     final catAmounts = <ExpenseCategory, double>{};

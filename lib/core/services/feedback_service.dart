@@ -1,16 +1,30 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'supabase_service.dart';
 
 enum FeedbackType {
-  suggestion('💡 Öneri / Fikir'),
-  bug('🐛 Hata Bildirimi'),
-  complaint('⚠️ Şikayet'),
-  support('❓ Soru ve Destek');
+  suggestion('Öneri ve Fikir'),
+  bug('Hata Bildirimi'),
+  complaint('Şikayet'),
+  support('Soru ve Destek');
 
   final String label;
   const FeedbackType(this.label);
+
+  IconData get icon {
+    switch (this) {
+      case FeedbackType.suggestion:
+        return Icons.lightbulb_outline_rounded;
+      case FeedbackType.bug:
+        return Icons.bug_report_outlined;
+      case FeedbackType.complaint:
+        return Icons.warning_amber_rounded;
+      case FeedbackType.support:
+        return Icons.help_outline_rounded;
+    }
+  }
 }
 
 class FeedbackService {

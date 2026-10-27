@@ -33,6 +33,7 @@ void main() async {
   runApp(
     ProviderScope(
       overrides: [
+        sharedPreferencesProvider.overrideWithValue(expenseRepo.prefs),
         expenseRepositoryProvider.overrideWithValue(expenseRepo),
       ],
       child: const EvdasApp(),

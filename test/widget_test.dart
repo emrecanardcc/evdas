@@ -141,6 +141,6 @@ void main() {
     await tester.tap(find.text('5'));
     await tester.pumpAndSettle();
 
-    expect(find.text('⚡ Kaydet & Kapat'), findsOneWidget);
+    expect(find.text('Kaydet ve Kapat'), findsOneWidget);
   });
 }

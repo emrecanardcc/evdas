@@ -74,13 +74,13 @@ class ExportService {
     final buffer = StringBuffer();
 
     buffer.writeln('==============================================');
-    buffer.writeln('🏠 EVDAS FİNANSAL GİDER VE MAHSUPLAŞMA RAPORU');
+    buffer.writeln('EVDAS FINANSAL GIDER VE MAHSUPLASMA RAPORU');
     buffer.writeln('==============================================');
     buffer.writeln('Ortaklık: $householdName');
     buffer.writeln('Rapor Dönemi: ${report.timeRange.displayName}');
     buffer.writeln('Oluşturulma Tarihi: $now');
     buffer.writeln('----------------------------------------------');
-    buffer.writeln('📊 GENEL ÖZET');
+    buffer.writeln('[GENEL ÖZET]');
     buffer.writeln('Toplam Dönem Harcaması: ${CurrencyFormatter.formatClean(report.grandTotal)}');
     buffer.writeln('Ortak Ev Harcamaları: ${CurrencyFormatter.formatClean(report.totalJointExpenses)}');
     buffer.writeln('Kişi Başı Ortalama Pay: ${CurrencyFormatter.formatClean(report.perMemberAverage)}');
@@ -89,7 +89,7 @@ class ExportService {
     buffer.writeln('----------------------------------------------');
 
     if (report.categorySpends.isNotEmpty) {
-      buffer.writeln('🛒 KATEGORİ DAĞILIMI:');
+      buffer.writeln('[KATEGORİ DAĞILIMI]');
       for (final cat in report.categorySpends) {
         buffer.writeln(
             '  • ${cat.category.displayName}: ${CurrencyFormatter.formatClean(cat.amount)} (%${cat.percentage.toStringAsFixed(1)} - ${cat.count} işlem)');
@@ -98,7 +98,7 @@ class ExportService {
     }
 
     if (report.memberSpends.isNotEmpty) {
-      buffer.writeln('👥 ORTAKLARIN HARCAMA PAYLARI:');
+      buffer.writeln('[ORTAKLARIN HARCAMA PAYLARI]');
       for (final mem in report.memberSpends) {
         buffer.writeln(
             '  • ${mem.member.displayName}: ${CurrencyFormatter.formatClean(mem.amount)} (%${mem.percentage.toStringAsFixed(1)})');
@@ -107,15 +107,15 @@ class ExportService {
     }
 
     if (report.personalDebtsBreakdown.isNotEmpty) {
-      buffer.writeln('🤝 ŞAHSİ (BİREBİR) BORÇLAR:');
+      buffer.writeln('[ŞAHSİ (BİREBİR) BORÇLAR]');
       for (final debt in report.personalDebtsBreakdown) {
         buffer.writeln(
-            '  • ${debt.debtorName} ➔ ${debt.creditorName}: ${CurrencyFormatter.formatClean(debt.amount)} (${debt.count} işlem)');
+            '  • ${debt.debtorName} -> ${debt.creditorName}: ${CurrencyFormatter.formatClean(debt.amount)} (${debt.count} işlem)');
       }
       buffer.writeln('----------------------------------------------');
     }
 
-    buffer.writeln('⚡ Evdaş Ortak Harcama Sistemi tarafından oluşturulmuştur.');
+    buffer.writeln('Evdaş Ortak Harcama Sistemi tarafından oluşturulmuştur.');
 
     await SharePlus.instance.share(
       ShareParams(

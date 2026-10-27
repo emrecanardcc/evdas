@@ -9,6 +9,7 @@ import '../../core/services/feedback_service.dart';
 import '../../core/services/haptic_service.dart';
 import '../../core/services/share_service.dart';
 import '../../core/services/sound_service.dart';
+import '../../core/services/subscription_service.dart';
 import '../../core/services/supabase_service.dart';
 import '../../core/theme/customization_models.dart';
 import '../../core/utils/currency_formatter.dart';
@@ -20,6 +21,7 @@ import '../providers/customization_provider.dart';
 import '../widgets/approval_center_modal.dart';
 import '../widgets/feedback_dialog.dart';
 import '../widgets/legal_document_modal.dart';
+import '../widgets/paywall_modal.dart';
 import 'auth_screen.dart';
 import 'decision_wheel_screen.dart';
 
@@ -30,6 +32,7 @@ class HouseholdScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final house = ref.watch(householdProvider);
     final allPartnerships = ref.watch(allPartnershipsProvider);
+    final subService = ref.watch(subscriptionProvider);
     final currentMember = ref.watch(currentMemberProvider);
     final debtResult = ref.watch(debtEngineResultProvider);
 
@@ -72,7 +75,9 @@ class HouseholdScreen extends ConsumerWidget {
             icon: const Icon(Icons.swap_horiz_rounded),
             tooltip: 'Ortaklık Seç / Oluştur',
             onSelected: (val) {
-              if (val == 'new') {
+              if (val == 'plus') {
+                PaywallModal.show(context);
+              } else if (val == 'new') {
                 _showCreatePartnershipDialog(context, ref);
               } else if (val == 'join') {
                 _showJoinDialog(context, ref);
@@ -119,6 +124,20 @@ class HouseholdScreen extends ConsumerWidget {
                   );
                 }),
                 const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'plus',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.workspace_premium_rounded,
+                          size: 18, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        subService.isPro ? 'Evdaş Plus (Aktif)' : 'Evdaş Plus\'a Yükselt',
+                        style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary),
+                      ),
+                    ],
+                  ),
+                ),
                 const PopupMenuItem(
                   value: 'new',
                   child: Row(
@@ -500,7 +519,7 @@ class HouseholdScreen extends ConsumerWidget {
                               runSpacing: 2,
                               children: [
                                 const Text(
-                                  '🎯 Ev Karar Çarkı',
+                                  'Ev Karar Çarkı',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
@@ -903,6 +922,16 @@ class HouseholdScreen extends ConsumerWidget {
   }
 
   void _showCreatePartnershipDialog(BuildContext context, WidgetRef ref) {
+    final subService = ref.read(subscriptionProvider);
+    final allPartnerships = ref.read(allPartnershipsProvider);
+    if (!subService.canCreateHousehold(allPartnerships.length)) {
+      PaywallModal.show(
+        context,
+        featureTrigger: '3. veya daha fazla ortaklık/ev grubu ekleme',
+      );
+      return;
+    }
+
     final nameController = TextEditingController();
     final userFullName =
         SupabaseService.currentUser?.userMetadata?['full_name'] as String? ?? '';

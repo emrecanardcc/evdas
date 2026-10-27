@@ -275,19 +275,28 @@ class ApprovalCenterModal extends ConsumerWidget {
                       .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Center(
-                  child: Text(
-                    approvedByMe
-                        ? '✓ Bu talebi onayladınız'
-                        : '✗ Bu talebi reddettiniz',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: approvedByMe
-                          ? AppColors.positive
-                          : AppColors.negative,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      approvedByMe ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                      size: 14,
+                      color: approvedByMe ? AppColors.positive : AppColors.negative,
                     ),
-                  ),
+                    const SizedBox(width: 6),
+                    Text(
+                      approvedByMe
+                          ? 'Bu talebi onayladınız'
+                          : 'Bu talebi reddettiniz',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: approvedByMe
+                            ? AppColors.positive
+                            : AppColors.negative,
+                      ),
+                    ),
+                  ],
                 ),
               )
             else

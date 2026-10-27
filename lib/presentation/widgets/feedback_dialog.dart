@@ -110,6 +110,11 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
               children: FeedbackType.values.map((type) {
                 final isSelected = type == _selectedType;
                 return ChoiceChip(
+                  avatar: Icon(
+                    type.icon,
+                    size: 16,
+                    color: isSelected ? AppColors.primary : Colors.grey,
+                  ),
                   label: Text(
                     type.label,
                     style: TextStyle(
