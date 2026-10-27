@@ -19,6 +19,7 @@ import '../widgets/approval_center_modal.dart';
 import '../widgets/category_selector.dart';
 import '../widgets/custom_numpad.dart';
 import '../widgets/instant_saved_dialog.dart';
+import '../widgets/receipt_scanner_dialog.dart';
 
 class QuickExpenseScreen extends ConsumerStatefulWidget {
   const QuickExpenseScreen({super.key});
@@ -303,6 +304,29 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
     });
   }
 
+  Future<void> _openReceiptScanner() async {
+    HapticService.light();
+    final result = await ReceiptScannerDialog.show(context);
+    if (result != null && result.hasValidData && mounted) {
+      setState(() {
+        _amountStr = result.amount!.toStringAsFixed(2).replaceAll('.00', '');
+        if (result.merchantName != null && result.merchantName!.isNotEmpty) {
+          _titleController.text = result.merchantName!;
+        }
+        if (result.suggestedCategory != null) {
+          _selectedCategory = result.suggestedCategory!;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${result.merchantName ?? "Fiş"} verileri harcamaya aktarıldı.'),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final house = ref.watch(householdProvider);
@@ -384,6 +408,12 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
           },
         ),
         actions: [
+          // AKILLI FİŞ VE BELGE OKUYUCU
+          IconButton(
+            icon: const Icon(Icons.document_scanner_rounded),
+            tooltip: 'Akıllı Fiş / Belge Oku',
+            onPressed: _openReceiptScanner,
+          ),
           // GİZLİ BAKİYE MODU BUTONU (Tek Tıkla •••• Maskeleme)
           IconButton(
             icon: Icon(
@@ -488,6 +518,19 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                     ],
 
                     const SizedBox(height: 8),
+
+                    // Fiş Tarama Hızlı Erişim Çipi
+                    Center(
+                      child: ActionChip(
+                        avatar: const Icon(Icons.document_scanner_rounded, size: 15, color: AppColors.primary),
+                        label: const Text('Akıllı Fiş Oku', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+                        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
+                        onPressed: _openReceiptScanner,
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
 
                     // 2. TUTAR ALANI (HESAP MAKİNESİ VE GİZLİLİK DESTEKLİ)
                     isPrivacy

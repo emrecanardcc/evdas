@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
+
 enum ExpenseType {
   joint, // Ortak ev masrafı (Her üyeye eşit bölünür)
   personalDebt, // Şahsi borç (Doğrudan 1'e 1 borç)
@@ -50,6 +53,44 @@ extension ExpenseCategoryExt on ExpenseCategory {
         return 'directions_car';
       case ExpenseCategory.diger:
         return 'receipt';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case ExpenseCategory.market:
+        return Icons.shopping_basket_rounded;
+      case ExpenseCategory.fatura:
+        return Icons.bolt_rounded;
+      case ExpenseCategory.kira:
+        return Icons.home_rounded;
+      case ExpenseCategory.mutfak:
+        return Icons.restaurant_rounded;
+      case ExpenseCategory.esya:
+        return Icons.chair_rounded;
+      case ExpenseCategory.ulasim:
+        return Icons.directions_car_rounded;
+      case ExpenseCategory.diger:
+        return Icons.receipt_long_rounded;
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case ExpenseCategory.market:
+        return AppColors.categoryMarket;
+      case ExpenseCategory.fatura:
+        return AppColors.categoryFatura;
+      case ExpenseCategory.kira:
+        return AppColors.categoryKira;
+      case ExpenseCategory.mutfak:
+        return AppColors.categoryMutfak;
+      case ExpenseCategory.esya:
+        return AppColors.categoryEsya;
+      case ExpenseCategory.ulasim:
+        return AppColors.categoryUlasim;
+      case ExpenseCategory.diger:
+        return AppColors.categoryDiger;
     }
   }
 }
