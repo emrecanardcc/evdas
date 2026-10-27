@@ -12,13 +12,30 @@ class CategorySelector extends StatelessWidget {
     required this.onSelect,
   });
 
+  /// Günlük sık harcanan kategoriler (Kira ayda 1 kez yapıldığı için Sabit Giderler altındadır)
+  static const List<ExpenseCategory> dailyCategories = [
+    ExpenseCategory.market,
+    ExpenseCategory.mutfak,
+    ExpenseCategory.esya,
+    ExpenseCategory.fatura,
+    ExpenseCategory.ulasim,
+    ExpenseCategory.diger,
+  ];
+
+  List<ExpenseCategory> get _visibleCategories {
+    if (dailyCategories.contains(selectedCategory)) {
+      return dailyCategories;
+    }
+    return [...dailyCategories, selectedCategory];
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
       child: Row(
-        children: ExpenseCategory.values.map((cat) {
+        children: _visibleCategories.map((cat) {
           final isSelected = cat == selectedCategory;
           return Padding(
             padding: const EdgeInsets.only(right: 8.0),

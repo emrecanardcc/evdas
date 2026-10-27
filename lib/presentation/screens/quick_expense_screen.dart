@@ -47,12 +47,14 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
 
   final List<({String title, ExpenseCategory category, IconData icon})>
       _smartTags = const [
-    (title: 'Market', category: ExpenseCategory.market, icon: Icons.shopping_cart_outlined),
-    (title: 'Fatura', category: ExpenseCategory.fatura, icon: Icons.bolt_outlined),
-    (title: 'Ekmek', category: ExpenseCategory.mutfak, icon: Icons.bakery_dining_outlined),
-    (title: 'Kahve', category: ExpenseCategory.mutfak, icon: Icons.coffee_outlined),
-    (title: 'Ulaşım', category: ExpenseCategory.ulasim, icon: Icons.directions_car_outlined),
-    (title: 'Yemek', category: ExpenseCategory.mutfak, icon: Icons.restaurant_outlined),
+    (title: 'Market', category: ExpenseCategory.market, icon: Icons.shopping_basket_rounded),
+    (title: 'Damacana Su', category: ExpenseCategory.market, icon: Icons.water_drop_rounded),
+    (title: 'Temizlik', category: ExpenseCategory.esya, icon: Icons.cleaning_services_rounded),
+    (title: 'Ekmek', category: ExpenseCategory.mutfak, icon: Icons.bakery_dining_rounded),
+    (title: 'Ortak Yemek', category: ExpenseCategory.mutfak, icon: Icons.restaurant_rounded),
+    (title: 'Fatura', category: ExpenseCategory.fatura, icon: Icons.bolt_rounded),
+    (title: 'Kahve', category: ExpenseCategory.mutfak, icon: Icons.coffee_rounded),
+    (title: 'Ulaşım', category: ExpenseCategory.ulasim, icon: Icons.directions_car_rounded),
   ];
 
   @override

@@ -1,0 +1,448 @@
+<Window x:Class="EvdasManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Evdas Proje ve Evrim Yonetim Merkezi" 
+        Height="780" Width="1180"
+        MinHeight="650" MinWidth="950"
+        Background="#0F172A"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <!-- Styles -->
+        <Style TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI, Roboto, sans-serif"/>
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Background" Value="#1E293B"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Border" Background="{TemplateBinding Background}" BorderBrush="#334155" BorderThickness="1,1,1,0" CornerRadius="6,6,0,0" Margin="0,0,4,0" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#3B82F6"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="btnBorder" Background="{TemplateBinding Background}" CornerRadius="6" BorderBrush="#2563EB" BorderThickness="1" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="btnBorder" Property="Background" Value="#2563EB"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="btnBorder" Property="Background" Value="#1D4ED8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="AutonomousButton" TargetType="Button">
+            <Setter Property="Background" Value="#10B981"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="autoBorder" Background="{TemplateBinding Background}" CornerRadius="8" BorderBrush="#059669" BorderThickness="1.5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="autoBorder" Property="Background" Value="#059669"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="autoBorder" Property="Background" Value="#047857"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="#EF4444"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="dBorder" Background="{TemplateBinding Background}" CornerRadius="6" BorderBrush="#DC2626" BorderThickness="1" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="dBorder" Property="Background" Value="#DC2626"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CustomListBox" TargetType="ListBox">
+            <Setter Property="Background" Value="#0B132B"/>
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="8,6"/>
+                        <Setter Property="Margin" Value="2,2"/>
+                        <Setter Property="Background" Value="#1E293B"/>
+                        <Setter Property="Foreground" Value="#F8FAFC"/>
+                        <Setter Property="Cursor" Value="Hand"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="itemBorder" Background="{TemplateBinding Background}" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}" Margin="{TemplateBinding Margin}">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="itemBorder" Property="Background" Value="#2563EB"/>
+                                            <Setter TargetName="itemBorder" Property="BorderBrush" Value="#60A5FA"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="itemBorder" Property="BorderBrush" Value="#38BDF8"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- TOP BAR: Title & Autonomous Prompt Trigger -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="EVDAS PROJE VE EVRIM YONETIM MERKEZI" FontSize="20" FontWeight="Bold" Foreground="#38BDF8"/>
+                <TextBlock Text="Fikir Havuzu - Secilenler - Ucretsiz / Ev Premium - Siskinlik Ayiklama" FontSize="12" Foreground="#94A3B8" Margin="0,3,0,0"/>
+            </StackPanel>
+
+            <Button Grid.Column="1" Style="{StaticResource AutonomousButton}" Click="BtnAutonomousLoop_Click" ToolTip="Gorev komutunu panoya kopyalar ve otonom donguyu tetikler">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="[#]" FontWeight="ExtraBold" Margin="0,0,6,0" Foreground="#A7F3D0"/>
+                    <TextBlock Text="GOREV: OTONOM PROJE MUKEMMELLESTIRME VE EVRIM MOTORU" FontWeight="Bold"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- STATUS & PATH INFO -->
+        <Border Grid.Row="1" Background="#1E293B" CornerRadius="6" BorderBrush="#334155" BorderThickness="1" Padding="10,6" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Proje Dizini: " Foreground="#64748B" FontSize="11"/>
+                    <TextBlock x:Name="TxtProjectPath" Text="C:\Projeler\evdas_mobile" Foreground="#CBD5E1" FontSize="11" FontWeight="SemiBold"/>
+                    <TextBlock Text=" | SIFIR EMOJI STANDARDI AKTIF" Foreground="#10B981" FontSize="11" FontWeight="Bold" Margin="10,0,0,0"/>
+                </StackPanel>
+
+                <TextBlock x:Name="TxtStatus" Grid.Column="1" Text="Hazir" Foreground="#38BDF8" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- MAIN CONTENT TABS -->
+        <TabControl Grid.Row="2" Background="Transparent" BorderThickness="0">
+
+            <!-- TAB 1: FIKIRLER YONETIMI (fikirler.md) -->
+            <TabItem Header="FIKIRLER YONETIMI (fikirler.md)">
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="60"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Column 1: Fikir Havuzu -->
+                    <Border Grid.Column="0" Background="#1E293B" CornerRadius="8" BorderBrush="#334155" BorderThickness="1" Padding="10">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                                <TextBlock Text="Fikir Havuzu (Backlog)" FontSize="15" FontWeight="Bold" Foreground="#F59E0B"/>
+                                <TextBlock Text="Surekli fikir toplanan genel banka. Buradan secilenler gelistirilecekler bolumune aktarilir." FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <ListBox x:Name="LstFikirHavuzu" Grid.Row="1" Style="{StaticResource CustomListBox}" 
+                                     PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
+                                     MouseMove="ListBox_MouseMove"
+                                     Drop="LstFikirHavuzu_Drop" AllowDrop="True">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="{Binding Tag, StringFormat='[{0}]'}" FontWeight="Bold" Foreground="#FBBF24" FontSize="12"/>
+                                            <TextBlock Text="{Binding Description}" Foreground="#E2E8F0" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                                <Button Content="Sil" Style="{StaticResource DangerButton}" Click="BtnDeleteFikirHavuzu_Click" Margin="0,0,4,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Transfer Action Buttons -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Button Content="[ AKTAR ]" Style="{StaticResource ActionButton}" Margin="0,4" Width="55" Height="38" ToolTip="Secilen Fikirlere Aktar" Click="BtnMoveToSecilen_Click"/>
+                        <Button Content="[ GERI ]" Style="{StaticResource ActionButton}" Margin="0,4" Width="55" Height="38" ToolTip="Fikir Havuzuna Geri Al" Click="BtnMoveToHavuz_Click"/>
+                    </StackPanel>
+
+                    <!-- Column 2: Secilen Fikirler -->
+                    <Border Grid.Column="2" Background="#1E293B" CornerRadius="8" BorderBrush="#334155" BorderThickness="1" Padding="10">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                                <TextBlock Text="Secilen Fikirler (Gelistirilecekler)" FontSize="15" FontWeight="Bold" Foreground="#10B981"/>
+                                <TextBlock Text="Onaylanan ve bir sonraki gelistirme dongusunde koda dokulecek secilmis ozellikler." FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <ListBox x:Name="LstSecilenFikirler" Grid.Row="1" Style="{StaticResource CustomListBox}" 
+                                     PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
+                                     MouseMove="ListBox_MouseMove"
+                                     Drop="LstSecilenFikirler_Drop" AllowDrop="True">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="{Binding Tag, StringFormat='[{0}]'}" FontWeight="Bold" Foreground="#34D399" FontSize="12"/>
+                                            <TextBlock Text="{Binding Description}" Foreground="#E2E8F0" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                                <Button Content="Sil" Style="{StaticResource DangerButton}" Click="BtnDeleteSecilen_Click" Margin="0,0,4,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 2: OZELLIKLER VE SISKINLIK (ozellikler.md) -->
+            <TabItem Header="OZELLIKLER VE SISKINLIK (ozellikler.md)">
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Column 1: Ucretsiz (Free) -->
+                    <Border Grid.Column="0" Background="#1E293B" CornerRadius="8" BorderBrush="#334155" BorderThickness="1" Padding="10" Margin="0,0,6,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                                <TextBlock Text="Ucretsiz Ozellikler (Free)" FontSize="14" FontWeight="Bold" Foreground="#38BDF8"/>
+                                <TextBlock Text="Standart gunluk kullanim, 3 saniyede giris, esit bolusum." FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <ListBox x:Name="LstAktifUcretsiz" Grid.Row="1" Style="{StaticResource CustomListBox}"
+                                     PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
+                                     MouseMove="ListBox_MouseMove"
+                                     Drop="LstAktifUcretsiz_Drop" AllowDrop="True">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="{Binding Tag, StringFormat='[{0}]'}" FontWeight="Bold" Foreground="#38BDF8" FontSize="11"/>
+                                            <TextBlock Text="{Binding Description}" Foreground="#E2E8F0" FontSize="10.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="[Pro'ya Tasi]" Style="{StaticResource ActionButton}" Click="BtnMoveFreeToPro_Click" Margin="0,0,4,0"/>
+                                <Button Content="[Kaldirilacaklara At]" Style="{StaticResource DangerButton}" Click="BtnMoveFreeToKaldir_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Column 2: Ev Premium (Pro) -->
+                    <Border Grid.Column="1" Background="#1E293B" CornerRadius="8" BorderBrush="#334155" BorderThickness="1" Padding="10" Margin="3,0,3,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                                <TextBlock Text="Ev Premium (Ortak Pro)" FontSize="14" FontWeight="Bold" Foreground="#A78BFA"/>
+                                <TextBlock Text="Eve 300 TL/ay (kisi basi 100 TL), otomatik talimatlar, raporlar." FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <ListBox x:Name="LstAktifPro" Grid.Row="1" Style="{StaticResource CustomListBox}"
+                                     PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
+                                     MouseMove="ListBox_MouseMove"
+                                     Drop="LstAktifPro_Drop" AllowDrop="True">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="{Binding Tag, StringFormat='[{0}]'}" FontWeight="Bold" Foreground="#C084FC" FontSize="11"/>
+                                            <TextBlock Text="{Binding Description}" Foreground="#E2E8F0" FontSize="10.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="[Free'ye Geri Al]" Style="{StaticResource ActionButton}" Click="BtnMoveProToFree_Click" Margin="0,0,4,0"/>
+                                <Button Content="[Kaldirilacaklara At]" Style="{StaticResource DangerButton}" Click="BtnMoveProToKaldir_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Column 3: Kaldirilacaklar (Bloat) -->
+                    <Border Grid.Column="2" Background="#1E293B" CornerRadius="8" BorderBrush="#334155" BorderThickness="1" Padding="10" Margin="6,0,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                                <TextBlock Text="Kaldirilacaklar (Bloat)" FontSize="14" FontWeight="Bold" Foreground="#F87171"/>
+                                <TextBlock Text="Gereksiz yapay zeka ozellikleri (OCR, ayri hesap makinasi, kira butonu)." FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <ListBox x:Name="LstKaldirilacaklar" Grid.Row="1" Style="{StaticResource CustomListBox}"
+                                     PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
+                                     MouseMove="ListBox_MouseMove"
+                                     Drop="LstKaldirilacaklar_Drop" AllowDrop="True">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="{Binding Tag, StringFormat='[{0}]'}" FontWeight="Bold" Foreground="#F87171" FontSize="11"/>
+                                            <TextBlock Text="{Binding Description}" Foreground="#CBD5E1" FontSize="10.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="[Free'ye Geri Al]" Style="{StaticResource ActionButton}" Click="BtnMoveKaldirToFree_Click" Margin="0,0,4,0"/>
+                                <Button Content="Sil" Style="{StaticResource DangerButton}" Click="BtnDeleteKaldir_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- QUICK ADD BAR -->
+        <Border Grid.Row="3" Background="#1E293B" CornerRadius="8" BorderBrush="#334155" BorderThickness="1" Padding="10,8" Margin="0,10,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="Yeni Madde:" VerticalAlignment="Center" Foreground="#94A3B8" FontSize="12" Margin="0,0,8,0"/>
+                <TextBox x:Name="TxtNewTag" Grid.Column="1" Background="#0F172A" Foreground="#F8FAFC" BorderBrush="#334155" Padding="6,4" VerticalAlignment="Center" FontSize="12" ToolTip="Etiket / Tag (Orn: SU_ABONELIGI)"/>
+
+                <TextBlock Grid.Column="2" Text="Aciklama:" VerticalAlignment="Center" Foreground="#94A3B8" FontSize="12" Margin="10,0,8,0"/>
+                <TextBox x:Name="TxtNewDesc" Grid.Column="3" Background="#0F172A" Foreground="#F8FAFC" BorderBrush="#334155" Padding="6,4" VerticalAlignment="Center" FontSize="12" ToolTip="Detayli Aciklama"/>
+
+                <TextBlock Grid.Column="4" Text="Hedef:" VerticalAlignment="Center" Foreground="#94A3B8" FontSize="12" Margin="10,0,8,0"/>
+                <ComboBox x:Name="CmbTargetSection" Grid.Column="5" Background="#0F172A" Foreground="#F8FAFC" BorderBrush="#334155" Padding="6,4" VerticalAlignment="Center" FontSize="12">
+                    <ComboBoxItem Content="Fikir Havuzu" IsSelected="True"/>
+                    <ComboBoxItem Content="Secilen Fikirler"/>
+                    <ComboBoxItem Content="Ucretsiz (Free)"/>
+                    <ComboBoxItem Content="Ev Premium (Pro)"/>
+                    <ComboBoxItem Content="Kaldirilacaklar"/>
+                </ComboBox>
+
+                <Button Grid.Column="6" Content="Listeye Ekle" Style="{StaticResource ActionButton}" Margin="10,0,0,0" Click="BtnAddNewItem_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- BOTTOM ACTIONS BAR -->
+        <Grid Grid.Row="4" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="Disk'ten Yenile" Style="{StaticResource ActionButton}" Click="BtnReload_Click" Margin="0,0,8,0"/>
+                <Button Content="Proje Klasorunu Ac" Style="{StaticResource ActionButton}" Click="BtnOpenFolder_Click" Margin="0,0,8,0"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="DEGISIKLIKLERI KAYDET (.MD GUNCELLE)" Style="{StaticResource AutonomousButton}" Click="BtnSaveAll_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

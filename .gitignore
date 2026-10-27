@@ -53,3 +53,10 @@ app.*.map.json
 *.env
 .env.*
 !.env.example
+
+# Tools & .NET build artifacts
+**/bin/
+**/obj/
+**/publish/
+**/publish_standalone/
+

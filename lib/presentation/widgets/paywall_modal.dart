@@ -31,6 +31,11 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
 
   final List<({IconData icon, String title, String subtitle})> _proFeatures = const [
     (
+      icon: Icons.home_work_rounded,
+      title: 'Ev Ortak Lisansı & Otomatik Bölüşüm',
+      subtitle: 'Tüm ev için tek lisans, 3 kişilik evde kişi başı yalnızca ₺100/ay',
+    ),
+    (
       icon: Icons.all_inclusive_rounded,
       title: 'Sınırsız Ortaklık ve Ev',
       subtitle: 'Dilediğiniz kadar ev, ofis veya tatil grubu oluşturun',
@@ -41,14 +46,9 @@ class _PaywallModalState extends ConsumerState<PaywallModal> {
       subtitle: 'Detaylı muhasebe dökümlerini tek tıkla paylaşın',
     ),
     (
-      icon: Icons.palette_rounded,
-      title: 'Özel Temalar & Kişiselleştirme',
-      subtitle: 'Gelişmiş renk paletleri ve kişiselleştirilmiş arayüz',
-    ),
-    (
-      icon: Icons.cloud_done_rounded,
-      title: 'Öncelikli Bulut Senkronizasyonu',
-      subtitle: 'Anlık yüksek bant genişlikli yedekleme garantisi',
+      icon: Icons.event_repeat_rounded,
+      title: 'Otomatik Talimatlar & Sabit Giderler',
+      subtitle: 'Kira, aidat ve faturaların otomatik kaydı ve asgari transfer',
     ),
   ];
 

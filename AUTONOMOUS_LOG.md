@@ -399,21 +399,62 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 12 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+### [DÖNGÜ 12] - Vizyon Sadeleştirmesi, Fikir & Özellik Yönetim Motoru, Gerçekçi Kategori Mimarisi ve Ev Bazlı Ortak Premium
+**Tarih:** 28 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 1: Ürün Vizyonu, Hedef Persona Analizi ve Şişkinlik Ayıklama (Product Vision & Bloat Trimming)*
+2. *Pillar 2: Gerçek Hayat Frekansına Uygun Kategori Mimarisi (Sensory UX & Fast Logging)*
+3. *Pillar 3: Ev Bazlı Ortak Premium Modeli (Household Subscription & Social Monetization)*
+4. *Pillar 4: Dinamik Yönetim Dokümanları (`fikirler.md` & `ozellikler.md`) ve Masaüstü Yönetim Paneli (`EvdasManager.exe`)*
+
+#### Yapılan Geliştirmeler:
+1. **Derin Ürün Vizyonu ve Persona Çıkartımı:**
+   - Evdaş'ın temel varlık sebebi netleştirildi: Ev arkadaşları (örnek: Kadıköy'de 3 üniversite öğrencisi/genç profesyonel Can, Ece, Arda) arasındaki para konuşmanın yarattığı sosyal gerilimi, "kim ne aldı, kime ne kadar borcum var" karmaşasını 3 saniyede yok etmek.
+   - 30 günlük gerçek ev hayatı döngüsü simüle edildi (Gün 1 Kira/Aidat, Gün 3 Damacana su, Gün 7 Temizlik alışverişi, Gün 9 Bulaşık/Çöp çarkı, Gün 14 Ortak yemek, Gün 18 İkili maç gecesi, Gün 22 Fatura, Gün 30 Tek transferle ay sonu borç kapatma).
+2. **Yapay Zeka Gösterişi ve Gereksiz Şişkinliklerin Tespiti (Bloat Trimming):**
+   - Karmaşık fiş kamerası/OCR ayrıştırıcıları ve ayrı hesap makinesi modüllerinin günlük hayatta bilişsel yük oluşturduğu tespit edildi; `ozellikler.md` içerisinde "Kaldırılacaklar (Bloat)" listesine alındı.
+   - Günlük hızlı harcama butonlarında ayda 1 kez ödenen "Kira" ve "Aidat" butonlarının bulunması ergonomik hata olarak değerlendirildi; bu sabit giderler "Otomatik Talimatlar" (Recurring Expenses) bölümüne taşındı.
+3. **Gerçekçi Kategori Sıralaması & Akıllı Etiketler (`category_selector.dart` & `quick_expense_screen.dart`):**
+   - `CategorySelector`: Günlük sık kullanılan kategoriler önceliklendirildi (`Market`, `Mutfak`, `Temizlik & Eşya`, `Fatura`, `Ulaşım`, `Diğer`). Kira seçicisi günlük hızlı akıştan çıkarıldı.
+   - `QuickExpenseScreen`: Akıllı etiketler listesine öğrenci evinin en kritik iki gideri olan `Damacana Su` ve `Temizlik` eklendi; sıfır emoji kuralına tam uyuldu.
+4. **Ev Bazlı Ortak Premium Modeli (Household Pro Engine):**
+   - Bireysel kullanıcıya ₺150 satmak yerine, tüm eve ₺300/ay (veya yıllık ₺2.400) ortak lisans vizyonu kurgulandı.
+   - 3 kişilik evde kişi başı yalnızca ₺100/ay harcama olarak otomatik bilançoya işlenir; psikolojik bariyer "bir kahve parasına tüm ev otomasyona kavuşuyor" şeklinde aşılır.
+   - `PaywallModal`: "Ev Ortak Lisansı & Otomatik Bölüşüm" pro özelliği modal yapısına sıfır taşma ile entegre edildi.
+5. **Dinamik Yönetim Dosyaları (`fikirler.md` & `ozellikler.md`):**
+   - Proje kökünde iki ayrı kontrol dosyası oluşturuldu:
+     - `fikirler.md`: Fikir Havuzu (Backlog) ve Seçilen Fikirler (Geliştirilecekler).
+     - `ozellikler.md`: Ücretsiz (Free), Ev Premium (Pro), Kaldırılacaklar (Bloat) ve Yol Haritası (Roadmap).
+6. **Masaüstü Yönetim Paneli (`EvdasManager.exe`):**
+   - C# .NET 10.0 WPF ile modern koyu tema (`#0F172A`, `#1E293B`, `#3B82F6`, `#10B981`) mimarisinde geliştirildi.
+   - `C:\Projeler\evdas_mobile\tools\evdas_manager\` kaynak dizinine yerleştirildi.
+   - Bağımsız, tek parça (self-contained single-file) `.exe` derlenerek doğrudan kullanıcının Masaüstüne (`C:\Users\ardce\Desktop\EvdasManager.exe` ve `Evdas_Yonetim_Paneli.exe`) kopyalandı.
+   - Sürükle-bırak (Drag-and-Drop) ve hızlı butonlarla sütunlar arası taşıma, yeni madde ekleme, silme ve tek tıkla `.md` dosyalarını diske kaydetme yeteneği sağlandı.
+   - `# GÖREV: OTONOM PROJE MÜKEMMELLEŞTİRME VE EVRİM MOTORU` aksiyon butonu: Tıklandığında otonom evrim döngüsü promptunu Windows panosuna kopyalar ve `AUTONOMOUS_TRIGGER.flag` dosyasını günceller.
+7. **Otomatik Testler & Regresyon Güvencesi:**
+   - `test/emoji_audit_test.dart` tavizsiz doğrulandı (0 emoji ihlali).
+   - `test/subscription_and_paywall_test.dart` ve `test/widget_test.dart` güncellenen yapılara tam uyumlu geçti.
+   - Tüm proje test paketi: **303/303 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 13 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
 Bir sonraki döngüde ele alınacak en yüksek etkili stratejik konular:
 
-1. **Bütçe Simülasyonu ve "Ne Olur Eğer?" Senaryo Motoru (What-If Expense Simulation Engine):**
-   - Büyük bir harcama (örn: ₺15.000 yeni beyaz eşya, tatil veya kombi tamiri) yapılmadan önce ortak bütçeye, kişi başı borç dengesine ve ay sonu harcama temposuna (burn rate) etkisini anlık simüle eden vektörel önizleme aracı.
-2. **Gelişmiş Çevrimdışı İşlem Kuyruğu Senkronizasyonu ve Çakışma Çözümü (Advanced Offline Queue & Conflict-Free Resolution):**
-   - Zayıf veya kesintili ağlarda yerel işlem kuyruğunda bekleyen kayıtlar için otomatik yeniden deneme, bağlantı geri geldiğinde anlık senkronizasyon rozeti ve görsel durum göstergesi.
-3. **Akıllı Fiş Fotoğraf Yakalama & Cihaz Galerisi Entegrasyonu (Receipt Image OCR Pipeline):**
-   - Fotoğraf veya galeri görselinden doğrudan metin çıkararak fiş ayrıştırıcıya iletme desteği.
+1. **Ev Bazlı Premium Harcama Otomasyonu (Household Subscription Split Trigger):**
+   - Ev lisansı aktive edildiğinde, hanedeki tüm aktif üyelere otomatik olarak eşit bölünmüş ₺300 harcama kaydı oluşturan entegrasyon.
+2. **Kişiselleştirilebilir Özel Kategori Yöneticisi (Custom Category Builder):**
+   - Ev arkadaşı grubunun kendi jargonuna uygun özel kategoriler (örneğin "Kedi Maması & Kumu", "PlayStation / Oyun Masrafı", "Kamp & Doğa") ekleyebileceği arayüz.
+3. **Gereksiz Kod Tabanı Ayıklaması (Bloat Cleanup Phase 2):**
+   - `ozellikler.md -> Kaldirilacaklar` listesindeki kullanılmayan karmaşık OCR ayrıştırıcı kodlarını ve bağımlılıklarını güvenle depodan kaldırma.
 
 ---
 
 ## 🛠️ BU DÖNGÜYÜ ÇALIŞTIRMA TALİMATI
 
 Ajanı döngüsel olarak çalıştırmak için:
-1. `AUTONOMOUS_LOG.md` dosyasındaki son tamamlanan döngüyü ve sıradaki hedefleri incele.
-2. Ana promptu hiçbir ek açıklama yapmadan ajana gönder.
-3. Ajan otomatik olarak sıradaki döngünün hedeflerini ele alacak, kodu ve testleri yazacak, `flutter analyze` ve `flutter test` ile doğrulayacak, bu log dosyasını güncelleyecek ve **her adımın sonunda Git commit atıp `git push origin main` ile GitHub'a gönderecektir.**
+1. Masaüstündeki `EvdasManager.exe` üzerinden fikirleri ve özellikleri düzenle, onayladıklarını "Secilen Fikirler"e aktar.
+2. `[# GOREV: OTONOM PROJE MUKEMMELLESTIRME VE EVRIM MOTORU]` butonuna tıkla (komut panoya kopyalanır).
+3. Panodaki talimatı ajana ilet. Ajan `fikirler.md` ve `ozellikler.md` dosyalarını okuyarak seçilenleri koda dökecek, testleri geçirecek ve GitHub'a pushlayacaktır.
+
