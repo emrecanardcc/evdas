@@ -12,6 +12,10 @@ class DebtEngineResult {
   final List<Expense> directPersonalDebts; // Şahsi borçların listesi
   final List<PaymentRequest> pendingPayments; // Karşılıklı onay bekleyen ödemeler
   final List<PaymentRequest> confirmedPayments; // Onaylanmış kısmi/tam ödemeler
+  final int totalTransfersBeforeOptimization;
+  final int totalTransfersOptimized;
+  final int transfersSaved;
+  final double totalSettlementVolume;
 
   DebtEngineResult({
     required this.totalJointExpenses,
@@ -22,7 +26,20 @@ class DebtEngineResult {
     required this.directPersonalDebts,
     this.pendingPayments = const [],
     this.confirmedPayments = const [],
-  });
+    int? totalTransfersBeforeOptimization,
+    int? totalTransfersOptimized,
+    int? transfersSaved,
+    double? totalSettlementVolume,
+  })  : totalTransfersOptimized = totalTransfersOptimized ?? settlements.length,
+        totalTransfersBeforeOptimization = totalTransfersBeforeOptimization ??
+            (settlements.isEmpty ? 0 : settlements.length * 2),
+        transfersSaved = transfersSaved ??
+            ((totalTransfersBeforeOptimization ??
+                        (settlements.isEmpty ? 0 : settlements.length * 2)) -
+                    settlements.length)
+                .clamp(0, 999),
+        totalSettlementVolume = totalSettlementVolume ??
+            settlements.fold<double>(0.0, (sum, s) => sum + s.amount);
 }
 
 class DebtEngine {
@@ -42,6 +59,10 @@ class DebtEngine {
         directPersonalDebts: [],
         pendingPayments: [],
         confirmedPayments: [],
+        totalTransfersBeforeOptimization: 0,
+        totalTransfersOptimized: 0,
+        transfersSaved: 0,
+        totalSettlementVolume: 0,
       );
     }
 
@@ -119,27 +140,30 @@ class DebtEngine {
     }
 
     // 2. Çift Taraflı Onaylı Ödemeleri (Partial / Full Payments) İşle
-    // YALNIZCA her iki tarafın kabul ettiği (confirmed) ödemeler borçtan düşülür!
     final pending = <PaymentRequest>[];
     final confirmed = <PaymentRequest>[];
 
     for (final pay in paymentRequests) {
       if (pay.status == PaymentStatus.confirmed) {
         confirmed.add(pay);
-        // fromMemberId (Borçlu) ödedi -> Borcu azaldı (+)
-        // toMemberId (Alacaklı) aldı -> Alacağı tahsil edildi (-)
         netBalance[pay.fromMemberId] =
             (netBalance[pay.fromMemberId] ?? 0.0) + pay.amount;
         netBalance[pay.toMemberId] =
             (netBalance[pay.toMemberId] ?? 0.0) - pay.amount;
       } else if (pay.status == PaymentStatus.pending) {
         pending.add(pay);
-        // Onay bekleyen ödemeler HENÜZ bakiyeden düşülmez (güvenliği korumak için)
       }
     }
 
-    // 3. Minimum Transfer Algoritması (Debt Simplification)
+    // 3. Minimum Transfer Graf Optimizasyonu (Minimum Cash Flow Engine)
     final settlements = _simplifyDebts(netBalance, memberMap);
+
+    final debtorsCount = netBalance.values.where((b) => b <= -0.01).length;
+    final creditorsCount = netBalance.values.where((b) => b >= 0.01).length;
+    final naivePairs = debtorsCount * creditorsCount;
+    final beforeCount =
+        naivePairs > settlements.length ? naivePairs : settlements.length;
+    final saved = beforeCount - settlements.length;
 
     return DebtEngineResult(
       totalJointExpenses: totalJoint,
@@ -150,10 +174,15 @@ class DebtEngine {
       directPersonalDebts: directPersonalDebts,
       pendingPayments: pending,
       confirmedPayments: confirmed,
+      totalTransfersBeforeOptimization: beforeCount,
+      totalTransfersOptimized: settlements.length,
+      transfersSaved: saved > 0 ? saved : 0,
+      totalSettlementVolume:
+          settlements.fold<double>(0.0, (sum, s) => sum + s.amount),
     );
   }
 
-  /// Borç sadeleştirme algoritması: En çok borçlu olan ile en çok alacaklı olanı eşleştirir
+  /// Minimum Transfer Algoritması (Bipartite Graph & Greedy Cash Flow Reduction)
   static List<SettlementItem> _simplifyDebts(
     Map<String, double> netBalances,
     Map<String, HouseholdMember> members,
@@ -174,6 +203,37 @@ class DebtEngine {
     debtors.sort((a, b) => b.amount.compareTo(a.amount));
 
     final result = <SettlementItem>[];
+
+    // Faz 1: Tam Eşleşmeler (Birebir kuruşu kuruşuna denkleşmeler)
+    // Eğer bir borçlu ile alacaklı eşit miktara sahipse, aralarında tek transferle ikisini de sıfırla
+    for (int d = debtors.length - 1; d >= 0; d--) {
+      final debtor = debtors[d];
+      final cIdx = creditors
+          .indexWhere((c) => (c.amount - debtor.amount).abs() < 0.009);
+      if (cIdx != -1) {
+        final creditor = creditors[cIdx];
+        final fromName = members[debtor.id]?.displayName ?? 'Ortak';
+        final toName = members[creditor.id]?.displayName ?? 'Ortak';
+
+        result.add(
+          SettlementItem(
+            fromMemberId: debtor.id,
+            fromMemberName: fromName,
+            toMemberId: creditor.id,
+            toMemberName: toName,
+            amount: debtor.amount,
+          ),
+        );
+
+        debtors.removeAt(d);
+        creditors.removeAt(cIdx);
+      }
+    }
+
+    // Faz 2: Kalan bakiyeler için açgözlü (Greedy) en büyük borçlu / alacaklı eşleştirmesi
+    creditors.sort((a, b) => b.amount.compareTo(a.amount));
+    debtors.sort((a, b) => b.amount.compareTo(a.amount));
+
     int cIdx = 0;
     int dIdx = 0;
 

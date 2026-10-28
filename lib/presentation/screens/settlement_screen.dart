@@ -5,8 +5,11 @@ import '../../core/constants/app_colors.dart';
 import '../../core/services/share_service.dart';
 import '../../core/services/sound_service.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/fast_transfer_helper.dart';
+import '../../data/models/household_member.dart';
 import '../../data/models/payment_request.dart';
 import '../../data/models/settlement_item.dart';
+import '../../domain/debt_engine.dart';
 import '../providers/app_providers.dart';
 import '../providers/customization_provider.dart';
 import '../widgets/animated_rolling_number.dart';
@@ -79,7 +82,15 @@ class SettlementScreen extends ConsumerWidget {
             _buildBalanceCard(context, myBalance, isCreditor, isDebtor, isSettled,
                 currentMember?.displayName ?? 'Sen', isPrivacy),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
+
+            // 2.1 KULLANICI KİŞİSEL FAST IBAN KARTI
+            _buildUserIbanCard(context, ref, currentMember),
+
+            // 2.2 MİNİMUM FAST TRANSFER GRAF OPTİMİZASYON BANNERI
+            _buildOptimizationBanner(context, debtResult),
+
+            const SizedBox(height: 14),
 
             // 3. ÖDEŞME LİSTESİ (KISMİ VEYA TAM ÖDEME DESTEKLİ)
             Row(
@@ -155,7 +166,7 @@ class SettlementScreen extends ConsumerWidget {
                     s,
                     toMember?.iban,
                     isMyDebt,
-                    currentMember?.id,
+                    currentMember,
                     isPrivacy,
                   ),
                 );
@@ -520,20 +531,290 @@ class SettlementScreen extends ConsumerWidget {
     );
   }
 
+  /// Minimum Transfer Graf Optimizasyonu Bilgi Kartı
+  Widget _buildOptimizationBanner(
+      BuildContext context, DebtEngineResult result) {
+    if (result.settlements.isEmpty) return const SizedBox.shrink();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final savedText = result.transfersSaved > 0
+        ? '${result.transfersSaved} gereksiz transfer elendi (Bipartite Graph)'
+        : 'Tüm bakiyeler en az işlemle sadeleştirildi';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF132238) : const Color(0xFFF0FDF4),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF10B981).withValues(alpha: 0.4)
+              : const Color(0xFF10B981).withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.positive.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.auto_graph_rounded,
+              color: AppColors.positive,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    const Text(
+                      'Minimum Transfer Optimizasyonu',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.positive,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: AppColors.positive.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '${result.totalTransfersOptimized} Transfer',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.positive,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  savedText,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Oturum Açmış Kullanıcının FAST IBAN Kartı
+  Widget _buildUserIbanCard(
+    BuildContext context,
+    WidgetRef ref,
+    HouseholdMember? member,
+  ) {
+    if (member == null) return const SizedBox.shrink();
+
+    final hasIban = member.iban != null && member.iban!.trim().isNotEmpty;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : const Color(0xFFE2E8F0),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 14,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                child: const Icon(Icons.account_balance_rounded,
+                    color: AppColors.primary, size: 16),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  hasIban ? 'Kayıtlı FAST IBAN Numaranız' : 'FAST IBAN Tanımlanmadı',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (hasIban) ...[
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.copy_rounded, size: 16),
+                  tooltip: 'IBAN Kopyala',
+                  onPressed: () => FastTransferHelper.copyWithFeedback(
+                    context,
+                    text: FastTransferHelper.cleanIban(member.iban!),
+                    successMessage: 'FAST IBAN numaranız panoya kopyalandı.',
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  tooltip: 'IBAN Düzenle',
+                  onPressed: () => _showEditIbanDialog(context, ref, member),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  hasIban
+                      ? FastTransferHelper.formatIban(member.iban!)
+                      : 'Ortaklarının sana hızlıca ödeme yapabilmesi için IBAN ekle.',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontFamily: hasIban ? 'monospace' : null,
+                    color: hasIban
+                        ? (isDark ? Colors.white70 : Colors.black87)
+                        : Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
+              ),
+              if (!hasIban) ...[
+                const SizedBox(width: 6),
+                OutlinedButton(
+                  onPressed: () => _showEditIbanDialog(context, ref, member),
+                  style: OutlinedButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    minimumSize: const Size(0, 30),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  child: const Text('IBAN Ekle', style: TextStyle(fontSize: 11)),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// FAST IBAN Düzenleme / Ekleme Dialogu
+  void _showEditIbanDialog(
+    BuildContext context,
+    WidgetRef ref,
+    HouseholdMember member,
+  ) {
+    HapticFeedback.selectionClick();
+    final ibanController =
+        TextEditingController(text: FastTransferHelper.formatIban(member.iban ?? ''));
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('FAST IBAN Bilgisi'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Ortaklarının sana FAST ile anında borç ödeyebilmesi için IBAN numaranı kaydet.',
+              style: TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ibanController,
+              textCapitalization: TextCapitalization.characters,
+              decoration: const InputDecoration(
+                labelText: 'TR ile Başlayan IBAN',
+                hintText: 'TR00 0000 0000 0000 0000 0000 00',
+                prefixIcon: Icon(Icons.account_balance_outlined),
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Girilen IBAN yalnızca ev arkadaşlarınla paylaşılır ve güvenle saklanır.',
+              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final raw = ibanController.text.trim();
+              final cleaned = raw.isEmpty ? null : FastTransferHelper.cleanIban(raw);
+              Navigator.pop(dialogCtx);
+              await ref.read(householdProvider.notifier).updateMemberProfile(
+                    memberId: member.id,
+                    displayName: member.displayName,
+                    iban: cleaned,
+                  );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('FAST IBAN bilgisi başarıyla güncellendi.'),
+                    backgroundColor: AppColors.positive,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    ).then((_) => ibanController.dispose());
+  }
+
   Widget _buildSettlementCard(
     BuildContext context,
     WidgetRef ref,
     SettlementItem item,
     String? iban,
     bool isMyDebt,
-    String? currentUserId,
+    HouseholdMember? currentMember,
     bool isPrivacy,
   ) {
+    final hasIban = iban != null && iban.trim().isNotEmpty;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
@@ -586,53 +867,254 @@ class SettlementScreen extends ConsumerWidget {
               ],
             ),
 
-            if (iban != null && iban.isNotEmpty) ...[
+            if (hasIban) ...[
               const Divider(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'IBAN: $iban',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                        fontFamily: 'monospace',
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      Clipboard.setData(ClipboardData(text: iban));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('IBAN panoya kopyalandı!'),
-                          duration: Duration(seconds: 1),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFF1E293B)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.account_balance_rounded,
+                            size: 15, color: AppColors.primary),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Alıcı: ${item.toMemberName}',
+                            style: const TextStyle(
+                                fontSize: 11, fontWeight: FontWeight.w700),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(6),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      child: Row(
-                        children: [
-                          Icon(Icons.copy_rounded,
-                              size: 14, color: AppColors.primary),
-                          SizedBox(width: 4),
-                          Text(
-                            'Kopyala',
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: AppColors.positive.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'FAST Transfer',
                             style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.positive,
                             ),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    SelectableText(
+                      FastTransferHelper.formatIban(iban),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        InkWell(
+                          onTap: () => FastTransferHelper.copyWithFeedback(
+                            context,
+                            text: FastTransferHelper.cleanIban(iban),
+                            successMessage: 'IBAN kopyalandı!',
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.copy_rounded,
+                                    size: 13, color: AppColors.primary),
+                                SizedBox(width: 4),
+                                Text(
+                                  'IBAN Kopyala',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () => FastTransferHelper.copyWithFeedback(
+                            context,
+                            text: FastTransferHelper.buildFullFastSummary(
+                              recipientName: item.toMemberName,
+                              iban: iban,
+                              amount: item.amount,
+                              fromName: item.fromMemberName,
+                            ),
+                            successMessage:
+                                'FAST transfer şablonu kopyalandı! Banka uygulamana yapıştırabilirsin.',
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppColors.positive.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.bolt_rounded,
+                                    size: 13, color: AppColors.positive),
+                                SizedBox(width: 4),
+                                Text(
+                                  'FAST Bilgisini Kopyala',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.positive,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () => FastTransferHelper.copyWithFeedback(
+                            context,
+                            text: FastTransferHelper.buildRemittanceDescription(
+                              fromName: item.fromMemberName,
+                              toName: item.toMemberName,
+                              amount: item.amount,
+                            ),
+                            successMessage: 'Banka dekont açıklaması kopyalandı!',
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.description_outlined,
+                                    size: 13, color: Color(0xFF64748B)),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Açıklama',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              const Divider(height: 20),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.info_outline_rounded,
+                            size: 15, color: Color(0xFF94A3B8)),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Alıcının (${item.toMemberName}) IBAN ı henüz kayıtlı değil.',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF64748B),
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (isMyDebt) ...[
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () => FastTransferHelper.copyWithFeedback(
+                            context,
+                            text: FastTransferHelper.buildIbanRequestMessage(
+                              debtorName: item.fromMemberName,
+                              creditorName: item.toMemberName,
+                              amount: item.amount,
+                            ),
+                            successMessage:
+                                'IBAN isteme mesajı kopyalandı! WhatsApp veya SMS ile gönderebilirsin.',
+                          ),
+                          icon: const Icon(Icons.chat_bubble_outline_rounded,
+                              size: 14),
+                          label: const Text('IBAN İste',
+                              style: TextStyle(fontSize: 11)),
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            minimumSize: const Size(0, 30),
+                          ),
+                        ),
+                      ),
+                    ] else if (item.toMemberId == currentMember?.id &&
+                        currentMember != null) ...[
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () =>
+                              _showEditIbanDialog(context, ref, currentMember),
+                          icon: const Icon(Icons.add_rounded, size: 14),
+                          label: const Text('IBAN Ekle',
+                              style: TextStyle(fontSize: 11)),
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            minimumSize: const Size(0, 30),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ],
 

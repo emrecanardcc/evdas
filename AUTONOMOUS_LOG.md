@@ -517,9 +517,44 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 15 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
-1. **Minimum Transfer Borç Sadeleştirme Motoru:** 10 farklı ikili borcu netleştirip tüm evi en fazla 1 veya 2 kişi arasında tek EFT/FAST transferi ile sıfırlayan minimum cash flow graf optimizasyon algoritması.
-2. **Tek Tıkla FAST IBAN Kopyalama:** Ödeşme ekranında kime borcun varsa onun banka IBAN'ını tek dokunuşla panoya kopyalama ve hazır açıklama şablonu üretme.
+### [DÖNGÜ 15] - Minimum Transfer Graf Borç Sadeleştirme Motoru ve Tek Tıkla FAST IBAN Kopyalama Merkezi
+**Tarih:** 28 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 1: Sosyal Gerilimi Bitirme ve İşlem Sayısını Azaltma (Frictionless Settlements)*
+2. *Pillar 2: Bipartite Graph ve Greedy Cash Flow Optimizasyonu (Minimum Transfer Engine)*
+3. *Pillar 3: Tek Tıkla FAST IBAN Formatlama, Kopyalama ve WhatsApp İsteme Şablonları (Sensory UX)*
+
+#### Yapılan Geliştirmeler:
+1. **FAST & IBAN Yardımcı Mimarisi (`fast_transfer_helper.dart`):**
+   - `cleanIban`: Boşluk ve geçersiz karakterleri ayıklayarak standart bankacılık formatına (`TR...`) dönüştürür.
+   - `formatIban`: 4'erli bloklar halinde okunabilir (`TRxx xxxx xxxx ...`) format üretir.
+   - `buildRemittanceDescription`: Banka dekontu için standart ödeşme açıklaması (`Evdas Odesme - Kimden -> Kime (Tutar TL)`) üretir.
+   - `buildFullFastSummary`: Mobil bankacılık uygulamasına yapıştırılacak alıcı, IBAN, tutar ve açıklama şablonunu tek tıkla panoya hazırlar.
+   - `buildIbanRequestMessage`: IBAN'ı henüz kayıtlı olmayan alacaklıya WhatsApp veya SMS üzerinden gönderilecek kibar ve net isteme mesajı üretir.
+   - `copyWithFeedback`: Titreşim (haptic) ve sıfır-emoji vektörel bildirim ile panoya kopyalar.
+2. **Minimum Transfer Graf Algoritması (`debt_engine.dart`):**
+   - Faz 1: Tam eşleşmeler (birebir eşit borçlu ve alacaklıların tek transferle anında sıfırlanması).
+   - Faz 2: Kalan bakiyeler için açgözlü (greedy bipartite flow reduction) algoritması.
+   - `totalTransfersBeforeOptimization`, `totalTransfersOptimized`, `transfersSaved` ve `totalSettlementVolume` metrikleri hesaplanarak kullanıcıya kaç gereksiz transferin elendiği şeffafça sunulur.
+3. **Hesaplaşma Ekranı Zenginleştirmeleri (`settlement_screen.dart`):**
+   - **Minimum Transfer Optimizasyon Bilgi Kartı:** Algoritmanın kaç transfer tasarruf ettirdiğini gösteren modern vektörel banner (`Icons.auto_graph_rounded`).
+   - **Kişisel FAST IBAN Kartı:** Kullanıcının kendi kayıtlı FAST IBAN'ını gösterir, tek dokunuşla kopyalama veya düzenleme modalı (`_showEditIbanDialog`) açar. Kayıtlı değilse tek tıkla ekleme teşviki sunar.
+   - **Zenginleştirilmiş Transfer Kartları:**
+     - Alacaklının IBAN'ı varsa: 4'lü bloklu monospace görünüm, tek tıkla IBAN kopyalama, tam FAST bilgisi kopyalama ve dekont açıklaması kopyalama çipleri.
+     - Alacaklının IBAN'ı yoksa: Kibar uyarı rozeti ve borçlu için tek dokunuşla "IBAN İste" mesaj kopyalama butonu.
+   - **Kusursuz Duyarlı Tasarım (Responsive Layout):** 280px dar ekranlardan (Galaxy Fold cover) 800px geniş ekranlara ve 1.8x büyük metin ölçeğine kadar sıfır RenderFlex taşması.
+4. **Otomatik Testler & Regresyon Güvencesi:**
+   - Yeni `test/minimum_transfer_and_fast_iban_test.dart` (9 test) oluşturuldu: formatlayıcılar, sablonlar, minimum transfer graf testleri ve widget entegrasyonu.
+   - `test/emoji_audit_test.dart`: Sıfır emoji kuralı %100 doğrulandı.
+   - `test/stress_multi_device_test.dart` ve `test/layout_overflow_audit_test.dart`: Tüm cihaz ve metin boyutlarında %100 başarılı.
+   - Tüm proje test paketi: **326/326 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 16 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+1. **Damacana Su Hızlı Butonu:** Kapıda nakit veya kartla ödenen 19L damacana su siparişleri için ana ekranda 1 tıkla son sipariş tutarını (örn. 90 TL) harcamaya ekleme kısayolu.
+2. **Kira ve Aidat Otomatik Talimat Uyarısı:** Ayın 1'inde ev sahibine ve site yönetimine gidecek kira/aidat için sorumlu kişiye hatırlatma ve ev arkadaşlarına kişi başı pay bildirimi.
 
 ---
 

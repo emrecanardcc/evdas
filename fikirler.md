@@ -8,22 +8,22 @@ Agent/Gelistirici her evrim dongusunde oncelikle 'Secilen Fikirler' bolumundeki 
 
 ## 1. Fikir Havuzu (Backlog)
 
-- **[DAMACANA_SU_HIZLI_BUTON]**: Kapida nakit veya kartla odenen 19L damacana su siparisleri icin ana ekranda 1 tikla son siparis tutarini (orn. 90 TL) harcamaya ekleme kisayolu.
 - **[EVCIL_HAYVAN_MAMAVEKUM_HAVUZU]**: Evde kedi/kopek bakan ortaklar icin mama, veteriner ve kum masraflarini genel ev butcesinden izole eden ozel alt kategori kurali.
-- **[KIRA_VE_AIDAT_TALIMAT_UYARISI]**: Ayin 1'inde ev sahibine ve site yonetimine gidecek kira/aidat icin sorumlu kisiye hatirlatma ve ev arkadaslarina kisi basi pay bildirimi.
 - **[MISAFIR_VE_ETKINLIK_AYRACISI]**: Evde parti veya ortak mac gecesi yapildiginda, harcamayi sadece o gece katilanlar arasinda esit bolme; sehir disinda olan arkadasi muaf tutma.
 
 ---
 
 ## 2. Secilen Fikirler (Sıradaki Geliştirilecekler)
 
-- **[MINIMUM_TRANSFER_SETTLEMENT]**: Ay sonunda 10 farkli ikili borc yerine, borclari netlestirip tum evi en fazla 1 veya 2 kisi arasinda tek EFT/FAST transferi ile sifirlayan minimum transfer graf algoritmasi.
-- **[TEK_TIKLA_FAST_IBAN_KOPYALAMA]**: Hesaplasma ekraninda kime borcun varsa onun banka IBAN'ini tek tusla kopyalama ve banka uygulamasina gonderim kolayligi.
+- **[DAMACANA_SU_HIZLI_BUTON]**: Kapida nakit veya kartla odenen 19L damacana su siparisleri icin ana ekranda 1 tikla son siparis tutarini (orn. 90 TL) harcamaya ekleme kisayolu.
+- **[KIRA_VE_AIDAT_TALIMAT_UYARISI]**: Ayin 1'inde ev sahibine ve site yonetimine gidecek kira/aidat icin sorumlu kisiye hatirlatma ve ev arkadaslarina kisi basi pay bildirimi.
 
 ---
 
 ## 3. Tamamlanan Fikirler (Gecmis Donguler)
 
+- **[TAMAMLANDI_DONGU_15_MINIMUM_TRANSFER_SETTLEMENT]**: Ay sonunda 10 farkli ikili borc yerine, borclari bipartite graph & greedy reduction ile netlestirip tum evi minimum transferle sifirlayan, tasarruf edilen transfer sayisini gosteren akilli motor.
+- **[TAMAMLANDI_DONGU_15_TEK_TIKLA_FAST_IBAN_KOPYALAMA]**: Hesaplasma ekraninda alacaklinin TR IBAN'ini tek dokunusla bicimli kopyalama, banka mobil uygulamalari icin tam FAST sablonu uretme, IBAN'i olmayanlar icin nazik WhatsApp isteme mesaji olusturma ve kullanicinin kendi FAST IBAN'ini kaydedebilmesi.
 - **[TAMAMLANDI_DONGU_14_AKILLI_ALISVERIS_LISTESI]**: Evdekilerin ortak eksikleri (tuz, deterjan, damacana su vb.) tek listede topladigi, hizli sablonlarla ekledigi ve markete gidenin aldiklarini tek tikla harcamaya donusturdugu entegre liste.
 - **[TAMAMLANDI_DONGU_14_EV_KURALLARI_VE_ACIL_PANOSU]**: Wi-Fi ag adi ve sifresi (tek tikla kopyalama), bina kapi kodu, kombi/su vanalari, ev sahibi iletisim ve kira IBAN'i, ev ici kurallari iceren sabit bilgi panosu.
 - **[TAMAMLANDI_DONGU_13_GERCEKCI_KATEGORI_VE_OZELLESTIRME]**: Gunluk hizli harcamalardan kiranin kaldirilmasi, gercek hayat frekansi ve kullanicinin kendi ozel kategorilerini tanimlayabilmesi.
