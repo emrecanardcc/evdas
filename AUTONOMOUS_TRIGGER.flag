@@ -1,0 +1,31 @@
+﻿# GÖREV: OTONOM PROJE MÜKEMMELLEŞTİRME VE EVRİM MOTORU
+
+Hedef Proje: C:\Projeler\evdas_mobile
+Tarih / Tetikleme: 2026-10-28 01:05:44
+
+ÖNCELİKLİ DİREKTİFLER:
+1. fikirler.md dosyasını oku ve 'Secilen Fikirler' bölümündeki şu maddeleri öncelikle koda dönüştür:
+   - [SECILEN_01_GERCEKCI_KATEGORI_VE_OZELLESTIRME] Gunluk hizli harcamalardan kiranin kaldirilmasi, gercek hayat frekansi (Market, Mutfak, Temizlik, Fatura, Ulasim, Diger) ve kullanicinin kendi ozel kategorilerini tanimlayabilmesi.
+   - [SECILEN_02_EV_BAZLI_ORTAK_PREMIUM] Bireysel abonelik yerine tek bir 'Ev Lisansi' (300 TL/ay). Alindiginda otomatik olarak 3 kisi arasinda 100 TL kisi basi ortak harcama olarak bolusturulur.
+   - [SECILEN_03_SISKINLIK_TEMIZLIGI] Hizli ekrandan karmasik kamera OCR fis okuyucu ve numpad uzerindeki gereksiz hesap makinasi isleclerinin arayuzden kaldirilmasi.
+   - [AKILLI_ALISVERIS_LISTESI] Evdekilerin 'evde tuz bitti', 'deterjan alinacak' gibi ortak eksikleri tek listede topladigi ve markete gidenin aldiklarini tek tikla harcamaya donusturdugu entegre liste.
+   - [EV_KURALLARI_VE_ACIL_PANOSU] Wi-Fi sifresi, kombi basinci, acil durum anahtari ve ev sahibi iletisim bilgilerini iceren sabit bilgi koku.
+
+2. ozellikler.md dosyasını oku ve 'Kaldirilacaklar' bölümündeki şu gereksiz şişkinlikleri temizle:
+   - [KALDIRILDI_FIS_FOTOGRAF_OCR] Karmasik kamera OCR ve fis ayristirici. Hizli harcama giris ekranindan tamamen temizlendi; kullanici bilissel yuku sifirlandi.
+   - [KALDIRILDI_HESAP_MAKINASI_SERIDI] Hizli giris numpad'indeki gereksiz formul islecleri (+, -, x, /) temizlendi; tek odak aninda tutar yazip kaydetmeye cevrildi.
+   - [KALDIRILDI_HIZLI_BUTONDA_KIRA] Hizli harcama secicisinden ayda bir odenen kira butonu kaldirildi; Sabit Giderler ve Otomatik Talimatlara delege edildi.
+   - [KALDIRILACAK_ASIRI_FINANSAL_GRAFIKLER] Borsa tarzi agir grafikler ve asiri burn-rate tahminleri yerine yalnizca net kisi basi harcama kartlari.
+
+3. KATEGORİ REFAKTÖRÜ:
+   - Günlük hızlı harcamalardan ayda 1 kez ödenen 'Kira' butonunu çıkar.
+   - Gerçek hayat sıklığı: Market & Bakkal, Damacana Su, Temizlik, Ortak Yemek, İçecek & Eğlence, Faturalar.
+   - Kullanıcı tanımlı özel kategorilere olanak sağla.
+
+4. EV BAZLI ORTAK PREMİUM MODELİ:
+   - Bireysel ₺150 yerine tüm eve ₺300/ay ortak lisans kurgula.
+   - 3 kişilik evde otomatik ortak ev harcaması olarak kaydet (kişi başı ₺100).
+
+5. KURAL 1: SIFIR EMOJİ! Sadece keskin vektörel Material Symbols / Icons. test/emoji_audit_test.dart geçmelidir.
+6. flutter analyze ve flutter test %100 başarılı olmalıdır.
+7. git add ., commit ve git push origin main ile GitHub'a gönderilmelidir.
