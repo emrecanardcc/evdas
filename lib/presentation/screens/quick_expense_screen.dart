@@ -16,11 +16,13 @@ import '../../data/models/household_member.dart';
 import '../../data/models/partnership.dart';
 import '../providers/app_providers.dart';
 import '../providers/customization_provider.dart';
+import '../../core/services/shopping_service.dart';
 import '../widgets/category_selector.dart';
 import '../widgets/custom_numpad.dart';
 import '../widgets/instant_saved_dialog.dart';
 import '../widgets/notification_center_modal.dart';
 import '../widgets/receipt_scanner_dialog.dart';
+import '../widgets/shopping_list_modal.dart';
 
 class QuickExpenseScreen extends ConsumerStatefulWidget {
   const QuickExpenseScreen({super.key});
@@ -386,6 +388,7 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
     final allPartnerships = ref.watch(allPartnershipsProvider);
     final currentMember = ref.watch(currentMemberProvider);
     final unreadNotificationCount = ref.watch(reminderProvider).unreadCount;
+    final activeShoppingCount = ref.watch(activeShoppingCountProvider);
     final isPrivacy = ref.watch(privacyModeProvider);
     final numpadLayout = ref.watch(numpadLayoutProvider);
 
@@ -486,6 +489,18 @@ class _QuickExpenseScreenState extends ConsumerState<QuickExpenseScreen> {
                 ref.read(homeTabProvider.notifier).setTab(tabIndex);
               },
             ),
+          ),
+          IconButton(
+            icon: Badge(
+              isLabelVisible: activeShoppingCount > 0,
+              label: Text('$activeShoppingCount'),
+              child: const Icon(Icons.shopping_basket_outlined),
+            ),
+            tooltip: 'Ortak İhtiyaç Listesi',
+            onPressed: () {
+              HapticService.selection();
+              ShoppingListModal.show(context);
+            },
           ),
           if (currentMember != null)
             Builder(

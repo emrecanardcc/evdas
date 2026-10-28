@@ -8,6 +8,7 @@ import '../../core/services/export_service.dart';
 import '../../core/services/feedback_service.dart';
 import '../../core/services/haptic_service.dart';
 import '../../core/services/share_service.dart';
+import '../../core/services/shopping_service.dart';
 import '../../core/services/sound_service.dart';
 import '../../core/services/subscription_service.dart';
 import '../../core/services/supabase_service.dart';
@@ -20,9 +21,11 @@ import '../providers/app_providers.dart';
 import '../providers/customization_provider.dart';
 import '../widgets/approval_center_modal.dart';
 import '../widgets/feedback_dialog.dart';
+import '../widgets/house_notice_modal.dart';
 import '../widgets/legal_document_modal.dart';
 import '../widgets/paywall_modal.dart';
 import '../widgets/recurring_expenses_modal.dart';
+import '../widgets/shopping_list_modal.dart';
 import 'auth_screen.dart';
 import 'decision_wheel_screen.dart';
 
@@ -36,6 +39,7 @@ class HouseholdScreen extends ConsumerWidget {
     final subService = ref.watch(subscriptionProvider);
     final currentMember = ref.watch(currentMemberProvider);
     final debtResult = ref.watch(debtEngineResultProvider);
+    final activeShoppingCount = ref.watch(activeShoppingCountProvider);
 
     final isFull = (house?.members.length ?? 0) >= Partnership.maxMembers;
     final pendingCount = ref.watch(pendingApprovalsCountProvider);
@@ -548,6 +552,182 @@ class HouseholdScreen extends ConsumerWidget {
                             const SizedBox(height: 3),
                             Text(
                               'Çöpü kim dökecek, bulaşığı kim yıkayacak? Çarkı çevir, şansına razı ol!',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // 1c. ORTAK ALIŞVERİŞ VE İHTİYAÇ LİSTESİ
+            Card(
+              color: AppColors.positive.withValues(alpha: 0.08),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                    color: AppColors.positive.withValues(alpha: 0.3)),
+              ),
+              child: InkWell(
+                onTap: () {
+                  HapticService.selection();
+                  ShoppingListModal.show(context);
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.positive,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.shopping_basket_rounded,
+                            color: Colors.white, size: 26),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 6,
+                              runSpacing: 2,
+                              children: [
+                                const Text(
+                                  'Ortak İhtiyaç Listesi',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.positive,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    activeShoppingCount > 0
+                                        ? '$activeShoppingCount EKSİK'
+                                        : 'GÜNCEL',
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'Evdeki ortak eksikleri topla, markete giden tek tıkla ortak harcamaya aktarsın.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // 1d. EV PANOSU VE ACİL DURUM BİLGİLERİ
+            Card(
+              color: Colors.purple.withValues(alpha: 0.08),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                    color: Colors.purple.withValues(alpha: 0.3)),
+              ),
+              child: InkWell(
+                onTap: () {
+                  HapticService.selection();
+                  HouseNoticeModal.show(context);
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.purple,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.info_outline_rounded,
+                            color: Colors.white, size: 26),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 6,
+                              runSpacing: 2,
+                              children: [
+                                const Text(
+                                  'Ev Panosu ve Acil Bilgiler',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: Colors.purple,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    'WIFI & KURALLAR',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'Wi-Fi şifresi, vanalar, kapı kodu, ev sahibi ve ortak yaşam kuralları.',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Theme.of(context)

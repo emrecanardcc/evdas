@@ -473,9 +473,53 @@ Bu dosya, projenin **Kurucu Ortağı (Co-Founder), Baş Ürün Yöneticisi (CPO)
 
 ---
 
-### [DÖNGÜ 14 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
-1. **Minimum Transfer Borç Sadeleştirme Motoru:** 10 farklı ikili borcu tek bir FAST/EFT transferine indirgeyen graf algoritmasının tam entegrasyonu.
-2. **Ev Kuralları ve Wi-Fi / Acil Durum Panosu:** Ev içi sabit bilgilerin (Wi-Fi şifresi, sayaç vanaları) paylaşıldığı minimalist bilgi kartı.
+### [DÖNGÜ 14] - Akıllı Alışveriş & İhtiyaç Listesi, Tek Tıkla Harcamaya Dönüştürme, Ev Panosu ve Wi-Fi / Acil Durum Bilgi Merkezi
+**Tarih:** 28 Ekim 2026  
+**Stratejik Odak:** 
+1. *Pillar 1: Günlük Ortak Yaşamın Bilişsel Yükünü Sıfırlama (Cognitive Offloading & Retention)*
+2. *Pillar 2: Vektörel Hissiyat, Sıfır Emoji ve 48px Thumb Zone Ergonomisi (Sensory UX)*
+3. *Pillar 3: Alışverişten Tek Tıkla Ortak Harcamaya Dönüştürme Motoru (Smart Conversion Engine)*
+4. *Pillar 4: Ev Panosu, Wi-Fi ve Tesisat Bilgileri ile Sosyal Gerilimi Bitirme (House Notice Board)*
+
+#### Yapılan Geliştirmeler:
+1. **Akıllı İhtiyaç ve Alışveriş Listesi Modeli (`shopping_item.dart`):**
+   - Ev sakinlerinin ortak eksiklerini (başlık, kategori, miktar, birim, ekleyen kişi, tahmini tutar, satın alınma ve harcamaya dönüştürülme durumu) takip eden veri yapısı.
+   - `toJson`, `fromJson`, `copyWith` eksiksiz tamamlandı.
+2. **Reaktif Alışveriş Servisi ve Dönüştürme Motoru (`shopping_service.dart`):**
+   - Riverpod 3.x `ShoppingListNotifier` ve kalıcı yerel saklama (`SharedPreferences`).
+   - Evdeki bekleyen eksik sayısını anlık bildiren `activeShoppingCountProvider`.
+   - **Tek Tıkla Harcamaya Dönüştürme (`convertToExpense`):** Markete giden üye aldıklarını işaretler; tek tıkla ödenen toplam tutarı girerek ortak masrafa dönüştürür. Harcama kaydı otomatik oluşur, kasa sesi (`SoundService.playKaChing()`) ve haptik tetiklenir, kalemler harcamaya işlendi olarak arşivlenir.
+3. **Vektörel Alışveriş ve İhtiyaç Modalı (`shopping_list_modal.dart`):**
+   - Sıfır emoji, %100 keskin Material Symbols (`Icons.shopping_basket_rounded`, `Icons.format_list_bulleted_rounded`, `Icons.check_circle_rounded`, `Icons.payments_rounded`).
+   - Öğrenci evi için hızlı eksik şablonları (Damacana Su, Bulaşık Tableti, Çamaşır Deterjanı, Tuvalet Kağıdı, Zeytinyağı, Ekmek, Süt, Kahve, Çöp Poşeti).
+   - Özel eksik ekleme alanı ve dinamik Alınacaklar/Alınanlar sekmesi.
+4. **Ev Panosu ve Acil Durum Bilgi Modeli (`house_notice_board.dart`):**
+   - Wi-Fi ağ adı ve şifresi, bina dış kapı şifresi, çöp saatleri, kombi su basınç vanası yeri, ana su vanası, sigorta kutusu, yedek anahtar konumu, ev sahibi bilgileri ve kira IBAN'ı ile ortak ev kurallarını kapsayan model.
+5. **Reaktif Ev Panosu Servisi (`house_notice_service.dart`):**
+   - SharedPreferences ile kalıcı saklama.
+   - Tek dokunuşla Wi-Fi şifresi, kapı kodu ve IBAN kopyalama (`Clipboard` API, haptik geri bildirim ve şık SnackBar).
+   - Dinamik ev içi kural ekleme ve silme motoru.
+6. **Vektörel Ev Panosu Modalı (`house_notice_modal.dart`):**
+   - Şık, modern koyu tema uyumlu bilgi kartları (Wi-Fi, Bina & Giriş, Tesisat & Acil Durum, Ev Sahibi & Kira IBAN, Ev İçi Kurallar).
+   - "Bilgileri Düzenle" form dialogu ile tüm sabit ev verilerinin kolayca güncellenebilmesi.
+7. **Ekran Entegrasyonları (`quick_expense_screen.dart` & `household_screen.dart`):**
+   - `QuickExpenseScreen`: AppBar'a canlı bekleyen eksik rozeti taşıyan "İhtiyaç Listesi" butonu eklendi.
+   - `HouseholdScreen`: 1c ve 1d kartları olarak "Ortak İhtiyaç Listesi" ve "Ev Panosu ve Acil Bilgiler" kartları eklendi.
+8. **Test Hesabı Hazır Entegrasyonu (`test@evdas.app`):**
+   - Hazır test hesabı ile açılışta Kadıköy Evi için örnek ihtiyaç listesi ve örnek ev panosu otomatik yüklenir; incelemeciler ve geliştiriciler tüm özellikleri anında deneyimleyebilir.
+9. **Otomatik Testler & Regresyon Güvencesi:**
+   - `test/shopping_list_test.dart` (Model, servis, harcamaya dönüştürme ve widget testleri).
+   - `test/house_notice_test.dart` (Model, servis, kural ekleme/silme ve widget testleri).
+   - `test/emoji_audit_test.dart`: Sıfır emoji kuralı %100 doğrulandı.
+   - `test/stress_multi_device_test.dart` ve `test/layout_overflow_audit_test.dart`: 280x480'den 800x400'e kadar tüm ekranlarda sıfır taşma garantilendi.
+   - Tüm proje test paketi: **317/317 test %100 başarılı.**
+   - Statik analiz: `flutter analyze` — **0 hata, 0 uyarı.**
+
+---
+
+### [DÖNGÜ 15 - SIRADAKİ HEDEFLER] (Next Strategic Milestones)
+1. **Minimum Transfer Borç Sadeleştirme Motoru:** 10 farklı ikili borcu netleştirip tüm evi en fazla 1 veya 2 kişi arasında tek EFT/FAST transferi ile sıfırlayan minimum cash flow graf optimizasyon algoritması.
+2. **Tek Tıkla FAST IBAN Kopyalama:** Ödeşme ekranında kime borcun varsa onun banka IBAN'ını tek dokunuşla panoya kopyalama ve hazır açıklama şablonu üretme.
 
 ---
 

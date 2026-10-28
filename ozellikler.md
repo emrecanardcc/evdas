@@ -1,4 +1,4 @@
-﻿# EVDAS OZELLIK MATRISI, URUN FELSEFESI VE SISKINLIK AYIKLAMA PLANI
+# EVDAS OZELLIK MATRISI, URUN FELSEFESI VE SISKINLIK AYIKLAMA PLANI
 
 Bu dokuman, Evdas uygulamasinin gercek varlik amacini, kullanici profilini, aktif/planlanan ozelliklerini ve gereksiz yapay zeka siskinliklerinin ayiklanma takvimini tanimlar.
 Masaustu yonetim paneli (EvdasManager.exe) uzerinden ozellikler 'Ucretsiz', 'Ev Premium' ve 'Kaldirilacaklar' arasinda suruklenip yonetilebilir.
@@ -43,6 +43,8 @@ Kullanici deneyimini karmasiklastiran, yapay zeka gosterisi olan ve gercek hayat
 ## 3. Aktif Ozellikler - Ucretsiz (Free Tier)
 
 - **[HIZLI_HARCAMA_GIRISI]**: 3 saniyede baslik, tutar ve kategori secerek harcama kaydetme.
+- **[AKILLI_ALISVERIS_LISTESI]**: Evdekilerin ortak eksikleri (tuz, deterjan, damacana su vb.) tek listede topladigi, hizli sablonlarla ekledigi ve markete gidenin aldiklarini tek tikla harcamaya donusturdugu entegre liste.
+- **[EV_KURALLARI_VE_ACIL_PANOSU]**: Wi-Fi ag adi ve sifresi (tek tikla kopyalama), bina kapi kodu, kombi/su vanalari, ev sahibi iletisim ve kira IBAN'i, ev ici kurallari iceren sabit bilgi panosu.
 - **[GERCEKCI_KATEGORI_LISTESI]**: Gercek hayat sikligina gore siralanmis ana kategoriler (Market, Mutfak, Temizlik, Fatura, Ulasim, Diger).
 - **[OZELLESTIRILEBILIR_KATEGORILER]**: Kullanicinin kendi evine ozel kategori ekleyebilmesi (Damacana Su, Kedi Mamasi, Eglence), vektor ikon ve renk secebilmesi.
 - **[ESIT_VEYA_KISI_SECIMLI_BOLUSUM]**: Tum eve esit veya o harcamaya katilan secili kisiler arasinda bolme.

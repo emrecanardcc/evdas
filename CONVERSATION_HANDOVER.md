@@ -28,7 +28,7 @@
 
 3. **OTOMATİK TEST VE KALİTE ZORUNLULUĞU:**
    - Projede her özellik için kapsamlı birim ve widget testleri yazılmıştır.
-   - Her evrim döngüsü tamamlandığında `flutter test` %100 başarılı olmak zorundadır.
+   - Her evrim döngüsü tamamlandığında `flutter test` %100 başarılı olmak zorundadır (Şu an 317/317 test aktif ve %100 başarılıdır).
 
 4. **HER ADIMDA GITHUB COMMIT & PUSH:**
    - Her evrim döngüsü veya görev tamamlandığında kod yerel depoya commit edilmeli ve KESİNLİKLE `git push origin main` ile GitHub uzak sunucusuna itilmelidir. Asla itilmemiş kod bırakılamaz.
@@ -56,11 +56,11 @@ Evdaş, ev arkadaşlarının (özellikle üniversite öğrencileri ve genç çal
 
 ---
 
-## 5. SIRADAKİ GÖREVLER (SECILEN FIKIRLER)
+## 5. SIRADAKİ GÖREVLER (SECILEN FIKIRLER - DÖNGÜ 15)
 
 `fikirler.md` dosyasında kullanıcı tarafından seçilen ve sıradaki döngüde koda dönüştürülecek maddeler:
-1. **`[AKILLI_ALISVERIS_LISTESI]`**: Evdekilerin ortak eksikleri (tuz, deterjan vb.) tek listede topladığı ve markete gidenin aldıklarını tek tıkla ortak harcamaya dönüştürdüğü entegre liste.
-2. **`[EV_KURALLARI_VE_ACIL_PANOSU]`**: Wi-Fi şifresi, sayaç vanaları, ev sahibi iletişim bilgileri ve acil durum anahtarı bilgi panosu.
+1. **`[MINIMUM_TRANSFER_SETTLEMENT]`**: Ay sonunda 10 farklı ikili borcu netleştirip tüm evi en fazla 1 veya 2 kişi arasında tek EFT/FAST transferi ile sıfırlayan minimum cash flow graf optimizasyon algoritması.
+2. **`[TEK_TIKLA_FAST_IBAN_KOPYALAMA]`**: Hesaplaşma ekranında kime borcun varsa onun banka IBAN'ını tek dokunuşla panoya kopyalama ve hazır banka açıklama şablonu üretme.
 
 ---
 
@@ -70,5 +70,5 @@ Yeni açılacak temiz Antigravity sohbetinde ajana şu komut gönderildiğinde a
 
 ```
 # GÖREV: OTONOM PROJE MÜKEMMELLEŞTİRME VE EVRİM MOTORU
-CONVERSATION_HANDOVER.md, AUTONOMOUS_LOG.md, fikirler.md ve ozellikler.md dosyalarını oku. Projeyi sıfır emoji kuralı, hazır test hesabı (test@evdas.app / Evdas2026!), 308+ test güvencesi ve her adımda GitHub push kuralıyla kaldığı yerden evrimleştirmeye devam et.
+CONVERSATION_HANDOVER.md, AUTONOMOUS_LOG.md, fikirler.md ve ozellikler.md dosyalarını oku. Projeyi sıfır emoji kuralı, hazır test hesabı (test@evdas.app / Evdas2026!), 317+ test güvencesi ve her adımda GitHub push kuralıyla kaldığı yerden evrimleştirmeye devam et.
 ```
